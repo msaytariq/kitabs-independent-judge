@@ -3,6 +3,7 @@ from html import escape
 from independent_judge.infrastructure.apparatus_report import apparatus_html
 from independent_judge.infrastructure.source_review_report import source_review_html
 from independent_judge.infrastructure.effort_report import effort_html
+from independent_judge.infrastructure.hadith_report import hadith_html
 
 LABELS = {'K': 'Критические', 'T': 'Терминология', 'A': 'Научный аппарат', 'S': 'Стиль', '?': 'Категория спорная'}
 
@@ -57,8 +58,9 @@ def comparison_html(view: dict) -> str:
     <h1>Независимый судья</h1><h2>{e(view['title'])}</h2><p>{e(view.get('description') or '')}</p>
     {apparatus_html(view.get('generated_apparatus'))}
     {effort_html(view['effort'])}
+    {hadith_html(view.get('hadith'))}
     {source_review_html(view.get('source_review'))}
-    <p>{'Сохранённая машинная оценка. Новый запуск не выполнялся.' if summary['measured'] else 'Завершённой ИИ-оценки нет.'}</p>
+    <p>{'Машинная оценка сохранена в отчёте.' if summary['measured'] else 'Завершённой ИИ-оценки нет.'}</p>
     <p>Необходимых правок: <b>не установлено</b>. Экспертная проверка не завершена.</p>
     <p>Оригинал: {summary['source_chars']} знаков, {summary['source_pages']} условной страницы по 1800 знаков.</p>
     <p>{'Выборка меньше 3 страниц: обобщать результат на книгу или платформу нельзя.' if not summary['negotiation_grade'] else ''}</p>
