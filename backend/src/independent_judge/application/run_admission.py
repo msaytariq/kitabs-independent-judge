@@ -1,7 +1,6 @@
 """Reserve before every request, record raw receipt, then reconcile reported spend."""
 from dataclasses import asdict
 from datetime import datetime,timezone
-from decimal import Decimal,InvalidOperation
 from independent_judge.domain.budget import reservation
 from independent_judge.domain.evaluation import EvaluationError
 from independent_judge.domain.run_manifest import digest
@@ -26,12 +25,8 @@ class AdmittedCalls:
             self.repository.receipt(self.run_id,call_id,record)
             self.calls.append({k:v for k,v in record.items() if k not in ('prompt','raw')})
             # A priced but truncated response is still a paid response.
-            if exc.raw:
-                value=exc.raw.get('usage',{}).get('cost')
-                try: cost=Decimal(str(value))
-                except InvalidOperation: cost=None
-                if cost is not None and cost.is_finite() and cost>=0:
-                    self.budget.settle(self.run_id,call_id,cost)
+            if exc.cost_usd is not None:
+                self.budget.settle(self.run_id,call_id,exc.cost_usd)
             raise
         record.update(raw=result.raw,actual_model=result.actual_model,usage=result.usage,
                       cost_usd=str(result.cost_usd),finished_at=datetime.now(timezone.utc).isoformat())

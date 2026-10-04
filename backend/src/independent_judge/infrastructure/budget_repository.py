@@ -3,6 +3,7 @@ from contextlib import closing
 from decimal import Decimal
 from pathlib import Path
 import sqlite3
+import re
 from independent_judge.domain.budget import micros, usd
 from independent_judge.domain.evaluation import EvaluationError
 
@@ -16,7 +17,8 @@ class BudgetLedger:
         self.path=directory/'budget.sqlite3'
         with closing(self.connect()) as db, db:
             db.executescript('''CREATE TABLE IF NOT EXISTS policy (id INTEGER PRIMARY KEY CHECK(id=1), total INTEGER, per_run INTEGER, halted INTEGER DEFAULT 0);
-                CREATE TABLE IF NOT EXISTS calls (run_id TEXT, call_id TEXT, reserved INTEGER, actual INTEGER, PRIMARY KEY(run_id,call_id));''')
+                CREATE TABLE IF NOT EXISTS calls (run_id TEXT, call_id TEXT, reserved INTEGER, actual INTEGER, PRIMARY KEY(run_id,call_id));
+                CREATE TABLE IF NOT EXISTS reconciliations (run_id TEXT, call_id TEXT, actual INTEGER, receipt_hash TEXT NOT NULL, PRIMARY KEY(run_id,call_id));''')
             db.execute('INSERT OR IGNORE INTO policy(id,total,per_run) VALUES(1,?,?)',(self.total,self.per_run))
             row=db.execute('SELECT total,per_run FROM policy').fetchone()
             if tuple(row)!=(self.total,self.per_run):
@@ -35,8 +37,10 @@ class BudgetLedger:
                 raise EvaluationError('budget_halted','Usage exceeded its reservation; review required.')
             if db.execute('SELECT 1 FROM calls WHERE run_id=? AND call_id=?',(run_id,call_id)).fetchone():
                 raise EvaluationError('duplicate_call','This call was already admitted; automatic retries are disabled.')
-            total=db.execute('SELECT COALESCE(SUM(COALESCE(actual,reserved)),0) FROM calls').fetchone()[0]
-            run=db.execute('SELECT COALESCE(SUM(COALESCE(actual,reserved)),0) FROM calls WHERE run_id=?',(run_id,)).fetchone()[0]
+            usage = '''SELECT COALESCE(SUM(COALESCE(r.actual,c.actual,c.reserved)),0)
+                       FROM calls c LEFT JOIN reconciliations r USING(run_id,call_id)'''
+            total=db.execute(usage).fetchone()[0]
+            run=db.execute(usage+' WHERE c.run_id=?',(run_id,)).fetchone()[0]
             if total+value>self.total or run+value>self.per_run:
                 raise EvaluationError('budget_exceeded','The next call would exceed the total or per-run limit.')
             db.execute('INSERT INTO calls VALUES(?,?,?,NULL)',(run_id,call_id,value))
@@ -53,10 +57,32 @@ class BudgetLedger:
             if over: db.execute('UPDATE policy SET halted=1')
         if over: raise EvaluationError('budget_halted','Reported usage exceeded the conservative reservation.')
 
+    def reconcile(self, run_id: str, call_id: str, actual: Decimal, receipt_hash: str):
+        """Append a verified receipt total while preserving the original settlement."""
+        value=micros(actual)
+        if not re.fullmatch('[0-9a-f]{64}',receipt_hash):
+            raise EvaluationError('invalid_reconciliation','A saved receipt hash is required.')
+        over=False
+        with closing(self.connect()) as db, db:
+            db.execute('BEGIN IMMEDIATE')
+            row=db.execute('SELECT reserved,actual FROM calls WHERE run_id=? AND call_id=?',(run_id,call_id)).fetchone()
+            if row is None or row[1] is None or value < row[1]:
+                raise EvaluationError('invalid_reconciliation','A reconciliation must preserve settled spend.')
+            previous=db.execute('SELECT actual,receipt_hash FROM reconciliations WHERE run_id=? AND call_id=?',(run_id,call_id)).fetchone()
+            if previous is not None:
+                if tuple(previous)!=(value,receipt_hash):
+                    raise EvaluationError('immutable_reconciliation','Receipt reconciliation already recorded.')
+                return
+            db.execute('INSERT INTO reconciliations VALUES(?,?,?,?)',(run_id,call_id,value,receipt_hash))
+            over=value>row[0]
+            if over: db.execute('UPDATE policy SET halted=1')
+        if over: raise EvaluationError('budget_halted','Reconciled spend exceeded its reservation.')
+
     def summary(self, run_id: str | None = None) -> dict:
-        where=' WHERE run_id=?' if run_id else ''; args=(run_id,) if run_id else ()
+        where=' WHERE c.run_id=?' if run_id else ''; args=(run_id,) if run_id else ()
         with closing(self.connect()) as db:
-            rows=db.execute('SELECT reserved,actual FROM calls'+where,args).fetchall()
+            rows=db.execute('''SELECT c.reserved,COALESCE(r.actual,c.actual)
+                FROM calls c LEFT JOIN reconciliations r USING(run_id,call_id)'''+where,args).fetchall()
         return {'reported_usd':usd(sum(a or 0 for _,a in rows)),
                 'unresolved_reserved_usd':usd(sum(r for r,a in rows if a is None)),
                 'committed_usd':usd(sum(r if a is None else a for r,a in rows)),

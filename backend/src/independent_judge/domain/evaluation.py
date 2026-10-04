@@ -4,8 +4,10 @@ from decimal import Decimal
 
 
 class EvaluationError(RuntimeError):
-    def __init__(self, code: str, message: str, *, raw: dict | None = None):
+    def __init__(self, code: str, message: str, *, raw: dict | None = None,
+                 cost_usd: Decimal | None = None):
         self.code, self.raw = code, raw
+        self.cost_usd = cost_usd
         super().__init__(message)
 
 
@@ -14,6 +16,7 @@ class Prompt:
     system: str
     user: str
     version: str
+    response_schema: dict | None = None
 
 
 @dataclass(frozen=True)
