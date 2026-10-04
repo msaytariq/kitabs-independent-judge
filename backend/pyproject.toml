@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools==82.0.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "independent-judge-backend"
+version = "0.1.0"
+description = "Standalone source and two-version text quality comparison"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi==0.141.1",
+  "python-multipart==0.0.32",
+  "PyMuPDF==1.27.2.3",
+  "defusedxml==0.7.1",
+  "uvicorn==0.39.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "httpx==0.28.1"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

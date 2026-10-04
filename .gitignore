@@ -1,0 +1,13 @@
+.venv/
+.env
+.env.*
+!.env.example
+.judge-data/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.DS_Store
+.superpowers/
