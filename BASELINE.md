@@ -8,9 +8,14 @@ README. On 4 October the separate intake milestone was implemented: independent
 application composition, upload/paste contracts, local extraction adapters,
 atomic SQLite storage, original-file and text hashes, bounded requests and tests.
 
-The quality-assessment core has not yet been extracted into this milestone.
-Subsequent work will record the origin of reused components and the specific
-adaptations, with actual Git commits and dates. No history from the full platform
+The pilot reimplements the existing comparison methodology: three passes,
+K/T/A/S categories, majority consensus, critical appeals, cross-checks and
+source-unit coverage. October adaptations are standalone ports/adapters, English
+author-blind prompts, strict response validation, exact evidence anchors,
+conservative exact-quote consensus, immutable provenance and persistent cost
+admission. These adaptations are new; the underlying methodology predates the
+contest. The new protocol is versioned and is not numerically interchangeable
+with historical reports. No history from the full platform
 is included here.
 
 Historical book comparisons remain historical. They are not represented as new

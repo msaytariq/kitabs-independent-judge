@@ -3,11 +3,11 @@
 Compare two translations or edited versions against their source, using the same
 assessment rules for both. Materials may come from KITABS.AI or external sources.
 
-**Current milestone — 4 October 2026:** a runnable local intake API. It accepts
-three documents or pasted texts, extracts preview text and stores an immutable
-draft with original bytes and SHA-256 hashes in its own SQLite database.
-Evaluation, the jury interface, session access and the public demo are subsequent
-milestones. This version makes no model calls and does not score translations.
+**Current milestone — 4 October 2026:** standalone intake, confirmed text ranges,
+and an operator-only evaluation pilot with Claude Sonnet 5.5 through Vercel AI
+Gateway. Three blind passes per translation, critical appeals, cross-checks and
+shared source-unit coverage produce an immutable report and cost receipts.
+The jury interface, session access, PDF export and public demo remain pending.
 
 ## Local setup
 
@@ -69,3 +69,28 @@ or evidence of translation quality.
 
 See [architecture](docs/architecture.md), [baseline](BASELINE.md) and the
 [milestone verification](docs/intake-verification-2026-10-04.md).
+
+## Bounded evaluation pilot
+
+Create a confirmed scope with `POST /api/comparisons/{id}/scopes` (see
+[scope contract](docs/scope-verification-2026-10-04.md)). Offsets are Unicode code
+points, not UTF-16 browser offsets. Each range includes the entire input text hash.
+Check the three previews before setting `confirmed: true`.
+
+```sh
+.venv/bin/python -m independent_judge.cli --scope-id SCOPE_ID --run-id UNIQUE_RUN_ID
+```
+
+This preflight makes no model call. To run, supply `AI_GATEWAY_API_KEY`,
+`JUDGE_BUDGET_TOTAL_USD` and `JUDGE_BUDGET_RUN_USD` securely in the process environment,
+then add `--live`. An explicit example budget is total `3`, per-run `1` USD.
+`--translator-a-vendor` / `--translator-b-vendor` record known model families;
+omitted provenance remains unknown. Use the same data directory for all budgeted
+runs. Changing the data directory creates a different ledger; this operator CLI
+is not a multi-tenant billing boundary.
+
+Live runs require a clean committed checkout. Failed/uncertain calls are not
+silently retried; unresolved cost reservations stay held. Duplicate run IDs cannot
+trigger another request. Reports and raw receipts stay in the private data
+folder, never Git. An incomplete run has no final scores. See
+[protocol and limitations](docs/evaluation-protocol.md).
