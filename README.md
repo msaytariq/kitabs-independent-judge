@@ -94,3 +94,5 @@ silently retried; unresolved cost reservations stay held. Duplicate run IDs cann
 trigger another request. Reports and raw receipts stay in the private data
 folder, never Git. An incomplete run has no final scores. See
 [protocol and limitations](docs/evaluation-protocol.md).
+
+A [real Sonnet 5.5 pilot](docs/sonnet-pilot-2026-10-04.md) completed on 4 October: 15 calls in the full protocol, status `needs_review`. All attempts cost $0.313172. Findings require review; this is not a validated platform ranking.
