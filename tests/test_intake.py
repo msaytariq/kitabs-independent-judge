@@ -183,8 +183,8 @@ def test_upload_filename_is_metadata_not_a_filesystem_path(client, tmp_path):
     assert not (tmp_path / "outside.txt").exists()
 
 
-def test_health_describes_local_intake_stage(client):
+def test_health_describes_local_workbench_stage(client):
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json()["stage"] == "intake"
+    assert response.json()["stage"] == "editorial-workbench"
     assert response.json()["live_enabled"] is False

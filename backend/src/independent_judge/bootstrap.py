@@ -7,6 +7,8 @@ from independent_judge.infrastructure.sqlite_repository import SqliteComparisonR
 from independent_judge.infrastructure.text_extractors import LocalTextExtractor
 from independent_judge.application.prepare_scope import ScopeService
 from independent_judge.infrastructure.scope_repository import SqliteScopeRepository
+from independent_judge.application.editorial_review import EditorialService
+from independent_judge.infrastructure.editorial_repository import SqliteEditorialRepository
 
 
 def data_directory(data_dir: Path | None = None) -> Path:
@@ -21,3 +23,8 @@ def build_intake(data_dir: Path | None = None) -> IntakeService:
 def build_scope(data_dir: Path | None = None) -> ScopeService:
     directory = data_directory(data_dir)
     return ScopeService(SqliteComparisonRepository(directory), SqliteScopeRepository(directory))
+
+
+def build_editorial(data_dir: Path | None = None) -> EditorialService:
+    directory=data_directory(data_dir)
+    return EditorialService(SqliteScopeRepository(directory),SqliteEditorialRepository(directory))
