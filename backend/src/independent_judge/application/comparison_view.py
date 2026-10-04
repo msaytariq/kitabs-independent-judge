@@ -4,6 +4,7 @@ from independent_judge.ports import ScopeRepository
 from independent_judge.domain.errors import InputError
 from independent_judge.domain.comparison_summary import summarize_comparison
 from independent_judge.domain.apparatus_evidence import apparatus_evidence
+from independent_judge.domain.source_review import source_review
 
 
 def _view(record: dict) -> dict:
@@ -15,6 +16,7 @@ def _view(record: dict) -> dict:
         'apparatus', 'references', 'matched_example_id')} | {
         'summary': summary,
         'generated_apparatus': apparatus_evidence(record.get('capability_evidence'), record['scope']),
+        'source_review': source_review(record),
         'run': {'id': run['id'], 'status': run['status'],
                 'model': ', '.join(manifest.get('actual_models', [])),
                 'code_sha': manifest.get('code_sha'),
@@ -34,7 +36,8 @@ class ComparisonViewService:
 
     def examples(self) -> list[dict]:
         return [{'id': r['id'], 'title': r['title'], 'description': r.get('description', ''),
-                 'has_report': bool(r.get('run'))} for r in self.catalog.records()]
+                 'has_report': bool(r.get('run')), 'has_source_review': bool(r.get('source_review'))}
+                for r in self.catalog.records()]
 
     def example(self, example_id: str) -> dict:
         record = self.catalog.get(example_id)
@@ -53,6 +56,6 @@ class ComparisonViewService:
                 if saved.get('run') and all(scope[key] == saved['scope'][key] for key in (
                         'texts', 'hashes', 'profile', 'source_language', 'target_language')):
                     record = saved | {'id': scope_id, 'scope': scope, 'matched_example_id': saved['id'],
-                                      'capability_evidence': None}
+                                      'capability_evidence': None, 'source_review': None}
                     break
         return _view(record)

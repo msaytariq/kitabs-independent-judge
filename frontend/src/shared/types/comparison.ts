@@ -1,7 +1,9 @@
+import type {SourceReviewData} from './sourceReview';
+
 export type Role = 'source' | 'a' | 'b';
 export type Side = 'a' | 'b';
 export type Reference = {kind: 'example' | 'scope'; id: string};
-export type Example = {id: string; title: string; description: string; has_report: boolean};
+export type Example = {id: string; title: string; description: string; has_report: boolean; has_source_review?:boolean};
 export type Inputs = Record<Role, string> & {source_language: string; target_language: string};
 export type Material = {text: string; sha256: string; filename: string; warnings: string[]};
 export type Draft = {id: string; materials: Record<Role, Material>; source_language: string; target_language: string};
@@ -20,6 +22,7 @@ export type GeneratedApparatusEvidence = {artifact_sha256:string;label_ru:string
   quality_status:'not_adjudicated'; groups:{id:string;title_ru:string;purpose_ru:string;count:number;
     examples:{text:string;start:number;end:number;sha256:string}[]}[]};
 export type ComparisonView = {id: string; title: string; description: string; scope: Scope;
+  source_review: SourceReviewData | null;
   generated_apparatus: GeneratedApparatusEvidence | null;
   provenance: Record<string, string> | null;
   boundary_review: {note_ru: string; start_ru?: string; end_ru?: string;

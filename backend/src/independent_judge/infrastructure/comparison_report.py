@@ -1,6 +1,7 @@
 """Self-contained Russian HTML export of the same comparison projection."""
 from html import escape
 from independent_judge.infrastructure.apparatus_report import apparatus_html
+from independent_judge.infrastructure.source_review_report import source_review_html
 
 LABELS = {'K': 'Критические', 'T': 'Терминология', 'A': 'Научный аппарат', 'S': 'Стиль', '?': 'Категория спорная'}
 
@@ -54,6 +55,7 @@ def comparison_html(view: dict) -> str:
     @media print{{body{{margin:0}}details{{display:block}}}}</style>
     <h1>Независимый судья</h1><h2>{e(view['title'])}</h2><p>{e(view.get('description') or '')}</p>
     {apparatus_html(view.get('generated_apparatus'))}
+    {source_review_html(view.get('source_review'))}
     <p>{'Сохранённая машинная оценка. Новый запуск не выполнялся.' if summary['measured'] else 'Завершённой ИИ-оценки нет.'}</p>
     <p>Необходимых правок: <b>не установлено</b>. Экспертная проверка не завершена.</p>
     <p>Оригинал: {summary['source_chars']} знаков, {summary['source_pages']} условной страницы по 1800 знаков.</p>

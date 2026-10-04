@@ -5,6 +5,8 @@ import {OwnMaterials} from './OwnMaterials';
 import {Materials} from './Materials';
 import {ComparisonResult} from './ComparisonResult';
 import {GeneratedApparatus} from './GeneratedApparatus';
+import {SourceReview} from './SourceReview';
+import {reportUrl} from '../../shared/api/comparison';
 import './comparison.css';
 
 export function ComparisonScreen() {
@@ -28,7 +30,7 @@ export function ComparisonScreen() {
       <label>Выберите пример<select disabled={work.busy||!work.examples.length} value={work.reference?.kind==='example'?work.reference.id:''}
         onChange={e=>{setShownId('');void work.open({kind:'example',id:e.target.value});}}>
         {!work.examples.length&&<option>Примеры ещё не подготовлены</option>}
-        {work.examples.map(e=><option value={e.id} key={e.id}>{e.title}{e.has_report?' · есть результат':' · без оценки'}</option>)}
+        {work.examples.map(e=><option value={e.id} key={e.id}>{e.title}{e.has_report?' · есть результат':e.has_source_review?' · разбор по источникам':' · без оценки'}</option>)}
       </select></label>
       {visible&&<><p>{view.description}</p><p className="muted">A: {view.provenance?.a}.<br/>B: {view.provenance?.b}.</p>
       <button className="primary" disabled={work.busy} onClick={()=>setShownId(view.id)}>{view.run?'Показать сравнение':'Показать состояние проверки'}</button>
@@ -37,6 +39,7 @@ export function ComparisonScreen() {
     {mode==='own'&&(!visible||work.draft)&&<OwnMaterials draft={work.draft} busy={work.busy} intake={work.intake} prepare={work.prepare} clearDraft={work.clearDraft}/>}
     {mode==='own'&&visible&&!work.draft&&<button disabled={work.busy} onClick={work.clearDraft}>Загрузить другие материалы</button>}
     {visible&&!work.busy&&<>
+      {view.source_review&&work.reference&&<SourceReview review={view.source_review} reportHref={reportUrl(work.reference)}/>}
       {view.generated_apparatus&&<GeneratedApparatus evidence={view.generated_apparatus}/>}
       {view.boundary_review&&<details className="panel boundary"><summary>Границы примера проверены · паспорт версии 2</summary>
         <p>{view.boundary_review.note_ru}</p><p>Начало: {view.boundary_review.start_ru}</p><p>Конец: {view.boundary_review.end_ru}</p>
