@@ -2,6 +2,7 @@
 from html import escape
 from independent_judge.infrastructure.apparatus_report import apparatus_html
 from independent_judge.infrastructure.source_review_report import source_review_html
+from independent_judge.infrastructure.effort_report import effort_html
 
 LABELS = {'K': 'Критические', 'T': 'Терминология', 'A': 'Научный аппарат', 'S': 'Стиль', '?': 'Категория спорная'}
 
@@ -55,6 +56,7 @@ def comparison_html(view: dict) -> str:
     @media print{{body{{margin:0}}details{{display:block}}}}</style>
     <h1>Независимый судья</h1><h2>{e(view['title'])}</h2><p>{e(view.get('description') or '')}</p>
     {apparatus_html(view.get('generated_apparatus'))}
+    {effort_html(view['effort'])}
     {source_review_html(view.get('source_review'))}
     <p>{'Сохранённая машинная оценка. Новый запуск не выполнялся.' if summary['measured'] else 'Завершённой ИИ-оценки нет.'}</p>
     <p>Необходимых правок: <b>не установлено</b>. Экспертная проверка не завершена.</p>

@@ -5,6 +5,7 @@ from independent_judge.domain.errors import InputError
 from independent_judge.domain.comparison_summary import summarize_comparison
 from independent_judge.domain.apparatus_evidence import apparatus_evidence
 from independent_judge.domain.source_review import source_review
+from independent_judge.domain.effort_forecast import forecast_effort
 
 
 def _view(record: dict) -> dict:
@@ -15,6 +16,7 @@ def _view(record: dict) -> dict:
         'id', 'title', 'description', 'scope', 'provenance', 'boundary_review',
         'apparatus', 'references', 'matched_example_id')} | {
         'summary': summary,
+        'effort': forecast_effort(summary),
         'generated_apparatus': apparatus_evidence(record.get('capability_evidence'), record['scope']),
         'source_review': source_review(record),
         'run': {'id': run['id'], 'status': run['status'],
