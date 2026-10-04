@@ -5,8 +5,19 @@ from pathlib import Path
 from independent_judge.application.intake import IntakeService
 from independent_judge.infrastructure.sqlite_repository import SqliteComparisonRepository
 from independent_judge.infrastructure.text_extractors import LocalTextExtractor
+from independent_judge.application.prepare_scope import ScopeService
+from independent_judge.infrastructure.scope_repository import SqliteScopeRepository
+
+
+def data_directory(data_dir: Path | None = None) -> Path:
+    directory = Path(data_dir) if data_dir is not None else Path(os.environ.get("JUDGE_DATA_DIR", ".judge-data"))
+    return directory.resolve()
 
 
 def build_intake(data_dir: Path | None = None) -> IntakeService:
-    directory = Path(data_dir) if data_dir is not None else Path(os.environ.get("JUDGE_DATA_DIR", ".judge-data"))
-    return IntakeService(LocalTextExtractor(), SqliteComparisonRepository(directory.resolve()))
+    return IntakeService(LocalTextExtractor(), SqliteComparisonRepository(data_directory(data_dir)))
+
+
+def build_scope(data_dir: Path | None = None) -> ScopeService:
+    directory = data_directory(data_dir)
+    return ScopeService(SqliteComparisonRepository(directory), SqliteScopeRepository(directory))
