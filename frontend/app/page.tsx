@@ -1,4 +1,4 @@
-import { ComparisonScreen } from "../src/features/comparison/ComparisonScreen";
+import { JudgeScreen } from "../src/features/comparison/JudgeScreen";
 export default function Page() {
-  return <ComparisonScreen />;
+  return <JudgeScreen />;
 }

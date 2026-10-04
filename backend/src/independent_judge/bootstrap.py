@@ -33,6 +33,6 @@ def build_editorial(data_dir: Path | None = None) -> EditorialService:
     return EditorialService(SqliteScopeRepository(directory),SqliteEditorialRepository(directory))
 
 
-def build_comparison_view(data_dir: Path | None = None) -> ComparisonViewService:
+def build_comparison_view(data_dir: Path | None = None, jobs=None) -> ComparisonViewService:
     directory = data_directory(data_dir)
-    return ComparisonViewService(FileComparisonCatalog(directory), SqliteScopeRepository(directory), comparison_html)
+    return ComparisonViewService(FileComparisonCatalog(directory), SqliteScopeRepository(directory), comparison_html, jobs)

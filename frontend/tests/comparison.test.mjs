@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { referenceFromHash, countLabel } from '../src/features/comparison/helpers.mjs';
+import { referenceFromHash, countLabel, initialMode } from '../src/features/comparison/helpers.mjs';
 import { fullRanges } from '../src/shared/utils/textRanges.mjs';
 
 test('whole-input selections use Unicode code points and preserve hashes', () => {
@@ -18,4 +18,9 @@ test('missing assessment never displays as zero errors', () => {
   assert.equal(countLabel(null), 'не оценено');
   assert.equal(countLabel(0), '0');
   assert.equal(countLabel(4), '4');
+});
+test('reload preserves example tab while a fresh visit starts with uploads',()=>{
+  assert.equal(initialMode('#example=h-01-v2'),'example');
+  assert.equal(initialMode('#scope=abc123'),'own');
+  assert.equal(initialMode(''),'own');
 });

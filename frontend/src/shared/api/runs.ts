@@ -1,0 +1,12 @@
+import type {Reference} from '../types/comparison';
+import type {HadithResult,RunState} from '../types/options';
+async function request<T>(path:string,method='GET'):Promise<T> {
+  const response=await fetch(path,{method,cache:'no-store'});
+  const data=await response.json();
+  if(!response.ok) throw new Error(data.error?.message||'Локальный сервер недоступен.');
+  return data;
+}
+export const capabilities=()=>request<{live_enabled:boolean}>('/api/runtime');
+export const startRun=(id:string)=>request<RunState>(`/api/scopes/${encodeURIComponent(id)}/run`,'POST');
+export const runStatus=(id:string)=>request<RunState>(`/api/scopes/${encodeURIComponent(id)}/run`);
+export const checkReferences=(ref:Reference)=>request<HadithResult>(`/api/${ref.kind==='example'?'examples':'scopes'}/${encodeURIComponent(ref.id)}/references`,'POST');

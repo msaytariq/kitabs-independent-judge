@@ -6,6 +6,7 @@ from independent_judge.domain.comparison_summary import summarize_comparison
 from independent_judge.domain.apparatus_evidence import apparatus_evidence
 from independent_judge.domain.source_review import source_review
 from independent_judge.domain.effort_forecast import forecast_effort
+from independent_judge.application.local_evaluation import reference_key
 
 
 def _view(record: dict) -> dict:
@@ -17,6 +18,7 @@ def _view(record: dict) -> dict:
         'apparatus', 'references', 'matched_example_id')} | {
         'summary': summary,
         'effort': forecast_effort(summary),
+        'hadith': record.get('hadith'),
         'generated_apparatus': apparatus_evidence(record.get('capability_evidence'), record['scope']),
         'source_review': source_review(record),
         'run': {'id': run['id'], 'status': run['status'],
@@ -30,8 +32,14 @@ def _view(record: dict) -> dict:
 
 
 class ComparisonViewService:
-    def __init__(self, catalog: ComparisonCatalog, scopes: ScopeRepository, renderer: ComparisonRenderer):
+    def __init__(self, catalog: ComparisonCatalog, scopes: ScopeRepository, renderer: ComparisonRenderer, jobs=None):
         self.catalog, self.scopes, self.renderer = catalog, scopes, renderer
+        self.jobs = jobs
+
+    def project(self, record):
+        if self.jobs:
+            record = record | {'hadith': self.jobs.reference(reference_key(record['scope']))}
+        return _view(record)
 
     def report(self, kind: str, identifier: str) -> str:
         return self.renderer(self.example(identifier) if kind == 'example' else self.scope(identifier))
@@ -44,7 +52,7 @@ class ComparisonViewService:
     def example(self, example_id: str) -> dict:
         record = self.catalog.get(example_id)
         if record is None: raise InputError('example_not_found', 'Пример не найден.')
-        return _view(record)
+        return self.project(record)
 
     def scope(self, scope_id: str) -> dict:
         scope = self.scopes.get(scope_id)
@@ -53,6 +61,9 @@ class ComparisonViewService:
                   'description': 'Оригинал и два перевода сохранены локально.',
                   'provenance': {'a': 'Перевод A', 'b': 'Перевод B'},
                   'apparatus': {'a': [], 'b': []}, 'run': None}
+        job = self.jobs.get(scope_id) if self.jobs else None
+        if job and job['report']:
+            return self.project(record | {'run': job['report']})
         if scope['status'] == 'ready':
             for saved in self.catalog.records():
                 if saved.get('run') and all(scope[key] == saved['scope'][key] for key in (
@@ -60,4 +71,4 @@ class ComparisonViewService:
                     record = saved | {'id': scope_id, 'scope': scope, 'matched_example_id': saved['id'],
                                       'capability_evidence': None, 'source_review': None}
                     break
-        return _view(record)
+        return self.project(record)

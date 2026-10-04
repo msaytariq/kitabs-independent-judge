@@ -6,7 +6,7 @@ import {inputWarning} from '../../shared/i18n/intake';
 type Props = {draft:Draft|null;busy:boolean;intake:(inputs:Inputs,files:Record<Role,File>|null)=>Promise<void>;
   prepare:(profile:string)=>Promise<void>; clearDraft:()=>void};
 export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
-  const [mode,setMode] = useState('text'), [profile,setProfile] = useState('general');
+  const [mode,setMode] = useState('files'), [profile,setProfile] = useState('islamic-scholarly');
   const [confirmed,setConfirmed] = useState(false);
   const [inputs,setInputs] = useState<Inputs>({source:'',a:'',b:'',source_language:'ar',target_language:'en'});
   const [files,setFiles] = useState<Partial<Record<Role,File>>>({});
@@ -19,7 +19,7 @@ export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
       <label className="check"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Я сверил начало и конец всех трёх фрагментов.</label>
       <div className="actions"><button className="primary" disabled={busy||!confirmed} onClick={()=>void prepare(profile)}>Сохранить сравнение</button>
       <button disabled={busy} onClick={()=>{clearDraft();setConfirmed(false);}}>Изменить материалы</button></div>
-      <p className="muted">Если для этих текстов уже есть сохранённый результат, он откроется. Новый платный ИИ-запуск на стенде выключен.</p>
+      <p className="muted">После подтверждения можно запустить сравнение. Уже сохранённые оценки повторно не оплачиваются.</p>
     </section></>;
   return <section className="panel own-materials">
     <h2>Добавьте один оригинал и два перевода</h2>
@@ -36,10 +36,10 @@ export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
         {mode==='text'?<textarea required rows={7} dir="auto" value={inputs[role]} onChange={e=>setInputs({...inputs,[role]:e.target.value})}/>
         :<input type="file" required accept=".txt,.md,.docx,.pdf" onChange={e=>setFiles({...files,[role]:e.target.files?.[0]})}/>}
       </label>)}</div>
-      <label>Дополнительные проверки<select value={profile} onChange={e=>setProfile(e.target.value)}>
+      <details><summary>Профиль проверки</summary><label>Профиль<select value={profile} onChange={e=>setProfile(e.target.value)}>
         <option value="general">Общее качество текста</option><option value="islamic-scholarly">Исламская литература: цитаты, ссылки и научный аппарат</option>
-      </select></label>
-      <p className="muted">Файлы: TXT, MD, DOCX или PDF с текстовым слоем, до 20 МБ каждый. Автоматического OCR и новых платных ИИ-вызовов нет.</p>
+      </select></label></details>
+      <p className="muted">TXT, MD, DOCX или PDF с текстовым слоем · до 20 МБ каждый · без OCR</p>
       {localError&&<p role="alert">{localError}</p>}
       <button className="primary" disabled={busy}>Проверить материалы</button>
     </form>

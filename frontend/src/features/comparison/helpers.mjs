@@ -5,3 +5,4 @@ export function referenceFromHash(hash) {
   return null;
 }
 export function countLabel(value) { return value == null ? 'не оценено' : String(value); }
+export function initialMode(hash) { return referenceFromHash(hash)?.kind === 'example' ? 'example' : 'own'; }

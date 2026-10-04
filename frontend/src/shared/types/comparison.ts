@@ -1,4 +1,5 @@
 import type {SourceReviewData} from './sourceReview';
+import type {Effort,HadithResult} from './options';
 
 export type Role = 'source' | 'a' | 'b';
 export type Side = 'a' | 'b';
@@ -22,6 +23,7 @@ export type GeneratedApparatusEvidence = {artifact_sha256:string;label_ru:string
   quality_status:'not_adjudicated'; groups:{id:string;title_ru:string;purpose_ru:string;count:number;
     examples:{text:string;start:number;end:number;sha256:string}[]}[]};
 export type ComparisonView = {id: string; title: string; description: string; scope: Scope;
+  effort:Effort;hadith:HadithResult|null;
   source_review: SourceReviewData | null;
   generated_apparatus: GeneratedApparatusEvidence | null;
   provenance: Record<string, string> | null;

@@ -19,6 +19,10 @@
 .comparison-screen .score-number{font:64px/1.1 Georgia,serif;margin-top:20px;color:var(--ink)}
 .comparison-screen .score-label{font-size:20px;margin:0 0 16px}
 .comparison-screen .necessary{border-top:1px solid var(--line);padding-top:15px;margin:16px 0 0;color:var(--muted);font-size:14px}
+.comparison-screen .forecast-value{font:42px/1.2 Georgia,serif;color:var(--green);margin:18px 0}
+.comparison-screen .comparison-action{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.comparison-screen .comparison-action>div{flex:1;min-width:220px}
+.comparison-screen .comparison-action .notice{flex-basis:100%}
 .comparison-screen .notice{border-left:3px solid #b59457;background:#faf3e5;color:#624d23;padding:12px 16px;font-size:14px}
 .comparison-screen .finding{border-top:1px solid var(--line);margin-top:22px;padding-top:16px}
 .comparison-screen .finding h3{margin:0}

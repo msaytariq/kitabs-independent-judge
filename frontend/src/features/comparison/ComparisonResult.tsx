@@ -3,6 +3,10 @@ import {reportUrl} from '../../shared/api/comparison';
 import {countLabel} from './helpers.mjs';
 import {Findings} from './Findings';
 import {Apparatus} from './Apparatus';
+import {EffortSummary} from './EffortSummary';
+import {HadithSummary} from './HadithSummary';
+import {GeneratedApparatus} from './GeneratedApparatus';
+import {SourceReview} from './SourceReview';
 
 export function ComparisonResult({view,reference}:{view:ComparisonView;reference:Reference}) {
   const result = view.summary;
@@ -10,20 +14,19 @@ export function ComparisonResult({view,reference}:{view:ComparisonView;reference
     <div className="result-heading"><h2>{result.measured?'Результат сравнения':'Материалы готовы'}</h2>
       <a className="button" href={reportUrl(reference)} target="_blank" rel="noreferrer">Открыть отчёт</a></div>
     {!result.measured?<section className="panel"><h3>Количество правок пока неизвестно</h3>
-      <p>Для этих материалов нет завершённой ИИ-оценки. Они сохранены локально; новый платный запуск сейчас выключен.</p>
-      <p className="muted">Готовый пример «Вступление: сохранённый пилот» показывает полный сценарий по уже полученному результату.</p>
+      <p>Для этих материалов нет завершённой ИИ-оценки. Количество правок и прогноз не рассчитаны.</p>
     </section>:<>
-      <p className="saved-caption">Сохранённый пилот · новый ИИ-запуск не выполнялся</p>
+      <p className="saved-caption">Автоматическая оценка · конкретные замечания доступны ниже</p>
       <div className="versions">{(['a','b'] as const).map(side=>{
         const s = result.sides[side];
         return <section className="panel score-card" key={side}>
           <span className="eyebrow">Перевод {side.toUpperCase()}</span>
-          <div className="score-number">{countLabel(s.candidates)}</div><p className="score-label">находки модели</p>
+          <div className="score-number">{countLabel(s.candidates)}</div><p className="score-label">кандидатов на исправление</p>
           <p>Ожидают проверки: {(s.candidates||0)-s.disputed} · Спорные: {s.disputed}</p>
-          <p className="necessary">Необходимых правок: <b>не установлено</b></p>
         </section>;
       })}</div>
-      <section className="panel"><h3>Типы замечаний</h3><div className="table-scroll"><table>
+      <div className="versions"><EffortSummary effort={view.effort}/><HadithSummary result={view.hadith}/></div>
+      <details className="panel"><summary>Типы замечаний</summary><div className="table-scroll"><table>
         <thead><tr><th>Кандидаты на исправление текста</th><th>A</th><th>B</th></tr></thead>
         <tbody>{[['K','Критические'],['T','Терминология'],['S','Стиль']].map(([code,label])=><tr key={code}>
           <th scope="row">{label}</th>{(['a','b'] as const).map(s=><td key={s}>{countLabel(result.sides[s].by_code?.[code])}</td>)}
@@ -31,10 +34,14 @@ export function ComparisonResult({view,reference}:{view:ComparisonView;reference
         <p className="muted">Включая спорные замечания. Повторные ответы модели не суммируются. Научный аппарат показан отдельно.</p>
         <p className="notice">Экспертная проверка не завершена. Эти числа не доказывают превосходство одного перевода и не измеряют экономию времени.</p>
         {(['a','b'] as const).some(s=>result.sides[s].unlocated>0||result.sides[s].classification_conflicts>0)&&<p className="notice">Есть замечания без однозначной цитаты или категории. Они отмечены в списке и не включены в соответствующие категории.</p>}
-      </section>
-      <Findings key={view.id} findings={result.findings}/>
+      </details>
+      <details className="panel"><summary>Посмотреть конкретные правки и обоснования</summary><Findings key={view.id} findings={result.findings}/></details>
     </>}
-    <Apparatus view={view}/>
+    {!result.measured&&<HadithSummary result={view.hadith}/>}
+    {view.source_review&&<details className="panel"><summary>Сохранённый разбор по источникам</summary>
+      <SourceReview review={view.source_review} reportHref={reportUrl(reference)}/></details>}
+    <details className="panel"><summary>Научный аппарат</summary><Apparatus view={view}/>
+      {view.generated_apparatus&&<GeneratedApparatus evidence={view.generated_apparatus}/>}</details>
     <details className="panel"><summary>Методика и границы результата</summary>
       <p>Один оригинал, два перевода. Три отдельных прохода по каждой стороне → согласование находок → повторная проверка критических замечаний → перекрёстная проверка → проверка полноты.</p>
       <p>Оригинал: {result.source_chars} знаков, {result.source_pages} условной страницы. Одна страница — 1800 знаков оригинала; знаменатель одинаков для A и B.</p>
