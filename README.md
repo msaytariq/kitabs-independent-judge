@@ -3,6 +3,12 @@
 Compare two translations or edited versions against their source, using the same
 assessment rules for both. Materials may come from KITABS.AI or external sources.
 
+The product goal is to compare the expert-editor work needed to reach the same
+publication standard. Model findings estimate remaining tasks; actual editing
+sessions must establish time savings. Human work performed inside Kitabs belongs
+in the total. Editorial session tracking is planned, not yet implemented; see
+[editorial-effort methodology](docs/editor-effort-methodology-2026-10-04.txt).
+
 **Current milestone — 4 October 2026:** standalone intake, confirmed text ranges,
 and an operator-only evaluation pilot with Claude Sonnet 5.5 through Vercel AI
 Gateway. Three blind passes per translation, critical appeals, cross-checks and
