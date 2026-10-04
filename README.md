@@ -1,71 +1,58 @@
-# Independent Judge
+# Независимый судья / Independent Judge
 
-Compare two translations or edited versions against their source, using the same
-assessment rules for both. Materials may come from KITABS.AI or external sources.
+Оригинал + два перевода одного фрагмента → сравнение → количество и типы
+кандидатов на исправление, цитаты, обоснования и научный аппарат.
 
-The product goal is to compare the expert-editor work needed to reach the same
-publication standard. Model findings estimate remaining tasks; actual editing
-sessions must establish time savings. Human work performed inside Kitabs belongs
-in the total. The local workbench records editor-controlled work intervals; see
-[editorial-effort methodology](docs/editor-effort-methodology-2026-10-04.txt).
+Основной сценарий на русском: **Готовый пример** или **Свои материалы**.
+Оценивается количество оставшихся необходимых правок. Сохранённые машинные
+находки и спорные замечания отделены от подтверждённых человеком исправлений.
+Подтверждённое число правок в нынешнем пилоте **не установлено**.
 
-**Current milestone — 4 October 2026:** standalone intake, confirmed text ranges,
-and an operator-only evaluation pilot with Claude Sonnet 5.5 through Vercel AI
-Gateway, plus a local editorial workbench. Three blind passes per translation, critical appeals, cross-checks and
-shared source-unit coverage produce an immutable report and cost receipts.
-The workbench records text versions, anchored tasks, human decisions, editing and
-verification sessions, prior work and explicit acceptance. JSON evidence export is
-available. Judge findings are not yet imported into workbench tasks automatically.
-Hosted jury access, authentication, PDF export and the public demo remain pending.
+Генерация научного аппарата показана как самостоятельная возможность Kitabs:
+в сохранённом результате — 25 примечаний к хадисам, 19 справочных записей о
+персоналиях и 13 словарных статей, с проверяемыми примерами. Эти записи
+демонстрируют уже выполненную платформой работу; точность содержания и
+необходимые дополнения оцениваются отдельно.
 
-## Local setup
+Таймер и ручное создание заданий не входят в основной сценарий. Старый
+редакторский экран, его API и данные сохранены по `/editorial`.
+[Предыдущий README](docs/readme-editorial-history-2026-10-04.md) — история этапа.
 
-Python 3.12 or newer is required. Run from this repository's root:
+## Локальный запуск
+
+Из корня этого отдельного репозитория, Python 3.12+:
 
 ```sh
 python3.12 -m venv .venv
 .venv/bin/python -m pip install -r backend/requirements.lock.txt
 .venv/bin/python -m pip install --no-build-isolation --no-deps -e backend
-JUDGE_DATA_DIR="$PWD/.judge-data" .venv/bin/python -m uvicorn independent_judge.api.app:create_app --factory --host 127.0.0.1 --port 8765
+JUDGE_DATA_DIR="$PWD/.judge-data/editorial-stand-2026-10-04" .venv/bin/python -m uvicorn independent_judge.api.app:create_app --factory --host 127.0.0.1 --port 8766
 ```
 
-Open `http://127.0.0.1:8765/docs` for the interactive upload API.
-`GET /health` reports `stage: editorial-workbench` and `live_enabled: false`.
-Bind only to loopback: this milestone has no session authorization and must not
-be exposed on a public host. Use a new data directory, never a platform database.
-Environment variables are read from the process; `.env.example` is a reference,
-not an automatically loaded configuration file.
-
-### Browser workbench
-
-In a second terminal, with Node.js 22 or newer:
+В другом терминале, Node.js 22+:
 
 ```sh
 cd frontend
 npm ci --ignore-scripts
-NEXT_TELEMETRY_DISABLED=1 npm run build
+NEXT_TELEMETRY_DISABLED=1 JUDGE_API_ORIGIN=http://127.0.0.1:8766 npm run build
 NEXT_TELEMETRY_DISABLED=1 npm start
 ```
 
-Open `http://127.0.0.1:3005`. Enter an editor label, paste three corresponding
-passages and confirm that their source coverage matches. Alternatively, enter a
-confirmed scope ID. `JUDGE_API_ORIGIN` can select another loopback backend port;
-set it **during build** as Next.js records rewrites in the build output.
+Откройте <http://127.0.0.1:3005>. `JUDGE_API_ORIGIN` задаётся при сборке.
+`GET /health`: `stage: comparison`, `live_enabled: false`.
 
-Read the [operator checklist](docs/editorial-operator-checklist.md) before collecting
-evidence. Start the timer before reading, researching or editing; pause for breaks
-and stop when finished. Closing the tab does not stop a timer. Actor labels and
-publication acceptance are self-declared; this is not authenticated jury access.
+Новый экран не делает LLM-запросов. Он открывает сохранённые результаты и
+принимает TXT, MD, DOCX, текстовый PDF либо вставленный текст. После предпросмотра
+нужно подтвердить совпадение смысловых границ. Автоматической обрезки нет.
+Если сохранённый результат точно совпадает по трём текстам, языкам и профилю,
+он переиспользуется. Иначе выводится «количество правок пока неизвестно».
+Для возвращения к загруженным материалам сохраните адрес страницы с `#scope=`.
 
-Previous human work defaults to unknown. Total time savings remain unavailable
-until both versions are accepted, prior time is known and every session is stopped.
-The table separates recorded intervals from declared earlier work. Editing a saved
-text invalidates its acceptance and requires earlier task decisions to be checked
-again. Originals and decisions remain in the evidence export.
-
-The UI accepts pasted passages. File upload and manual ranges remain available
-through the intake API. Footnotes extracted from uploaded documents are preserved;
-separate external reference packets are not automatically attached to this screen.
+Реальный корпус и отчёты находятся в приватном `JUDGE_DATA_DIR/comparison-catalog`,
+исключённом из Git. В чистом клоне каталог пуст: материалы не публикуются вместе
+с кодом. Русская инструкция и паспорт: [comparison-guide-ru.md](docs/comparison-guide-ru.md).
+Стенд слушает только loopback. Публичный доступ жюри, аутентификация, лицензии
+корпуса и конкурсный релиз пока не подготовлены.
 
 ## Try three documents
 

@@ -1,12 +1,12 @@
 import "./styles.css";
 export const metadata = {
-  title: "Independent Judge | Editorial Workbench",
+  title: "Независимый судья — сравнение переводов",
   description:
-    "Measure expert-editor work against a shared publication standard.",
+    "Оригинал и два перевода: правки, обоснования и научный аппарат.",
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ru">
       <body>{children}</body>
     </html>
   );

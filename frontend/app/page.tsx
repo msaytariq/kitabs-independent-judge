@@ -1,4 +1,4 @@
-import { EditorialWorkbench } from "../src/features/editorial/EditorialWorkbench";
+import { ComparisonScreen } from "../src/features/comparison/ComparisonScreen";
 export default function Page() {
-  return <EditorialWorkbench />;
+  return <ComparisonScreen />;
 }
