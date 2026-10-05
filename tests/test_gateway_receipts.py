@@ -64,3 +64,17 @@ def test_reconciliation_is_append_only_and_enforced_on_future_admission(tmp_path
         assert db.execute('SELECT actual FROM calls').fetchone()[0]==16166
     with pytest.raises(EvaluationError):ledger.reserve('r','next',Decimal('.9838'))
     with pytest.raises(EvaluationError):ledger.reconcile('r','call',Decimal('.015'),'a'*64)
+
+
+def test_read_timeout_covers_a_maximum_length_answer():
+    seen = {}
+    from pathlib import Path
+    from independent_judge.operator_config import load_judge_config
+    config = load_judge_config(Path(__file__).resolve().parents[1] / 'config/judge-kimi-k3.json')
+    assert config.max_tokens == 32000
+    def handler(request):
+        seen.update(request.extensions['timeout'])
+        return httpx.Response(200, json=receipt() | {'model': config.model})
+    GatewayJudge('key', transport=httpx.MockTransport(handler)).complete(assessment_prompt(sample(), 'a'), config)
+    assert seen['read'] >= 32000 / 25
+    assert seen['connect'] == 20

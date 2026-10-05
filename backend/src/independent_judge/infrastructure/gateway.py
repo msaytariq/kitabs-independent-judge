@@ -5,6 +5,13 @@ from independent_judge.infrastructure.gateway_usage import reported_cost
 from independent_judge.domain.budget import reservation
 
 ENDPOINT='https://ai-gateway.vercel.sh/v1/chat/completions'
+# A non-streamed answer arrives only when generation ends. Allow a slow
+# provider (25 tokens per second) to write the whole permitted answer.
+MIN_OUTPUT_TOKENS_PER_SECOND=25
+
+
+def read_timeout(config) -> float:
+    return max(300.0, config.max_tokens/MIN_OUTPUT_TOKENS_PER_SECOND)
 
 
 def payload(prompt, config):
@@ -27,7 +34,7 @@ class GatewayJudge:
     def complete(self, prompt, config) -> LlmResult:
         body=payload(prompt,config)
         try:
-            with httpx.Client(transport=self._transport,timeout=httpx.Timeout(300,connect=20),follow_redirects=False) as client:
+            with httpx.Client(transport=self._transport,timeout=httpx.Timeout(read_timeout(config),connect=20),follow_redirects=False) as client:
                 response=client.post(ENDPOINT,json=body,headers={'Authorization':'Bearer '+self._key})
         except httpx.HTTPError as exc:
             raise EvaluationError('gateway_transport','Gateway transport failed; reservation remains held.') from None
