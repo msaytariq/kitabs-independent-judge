@@ -23,7 +23,7 @@ export type GeneratedApparatusEvidence = {artifact_sha256:string;label_ru:string
   quality_status:'not_adjudicated'; groups:{id:string;title_ru:string;purpose_ru:string;count:number;
     examples:{text:string;start:number;end:number;sha256:string}[]}[]};
 export type ComparisonView = {id: string; title: string; description: string; scope: Scope;
-  ratings:Ratings;
+  ratings:Ratings;decision_effort:DecisionEffort;
   effort:Effort;hadith:HadithResult|null;
   source_review: SourceReviewData | null;
   generated_apparatus: GeneratedApparatusEvidence | null;
@@ -43,3 +43,9 @@ export type SideRating = {accuracy:number|null;terminology:number|null;readabili
   inventory:Record<string,number>;excluded:number;finding_ids:string[]};
 export type Ratings = {version:string;kind:string;sides:Record<Side,SideRating>;
   winner:Side|'tie'|null;weights:{accuracy:number;apparatus:number}};
+
+export type DecisionSide = {prior_decisions:number|null;accepted:number|null;rejected:number|null;
+  prior_estimated_seconds:number|null;remaining_candidates:number|null;remaining_estimated_seconds:number|null;
+  total_estimated_seconds:number|null;measured_seconds:number|null};
+export type DecisionEffort = {version:string;seconds_per_decision:number;kind:'estimate';
+  sides:Record<Side,DecisionSide>;remaining_reduction_percent:number|null};
