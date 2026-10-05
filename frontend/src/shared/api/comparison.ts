@@ -1,4 +1,4 @@
-import type {ComparisonView, Draft, Example, Inputs, Reference, Scope, Role} from '../types/comparison';
+import type {ComparisonView, Draft, Example, Inputs, Reference, Scope, Role, InputMethod} from '../types/comparison';
 import {fullRanges} from '../utils/textRanges.mjs';
 import {intakeErrors} from '../i18n/intake';
 async function request<T>(path: string, body?: unknown): Promise<T> {
@@ -26,3 +26,13 @@ export const uploadInputs = (files:Record<Role,File>, source:string, target:stri
 };
 export const prepareComparison = (draft:Draft, profile:string) => request<Scope & {id:string}>(
   `/api/comparisons/${draft.id}/scopes`, {ranges:fullRanges(draft.materials),profile,confirmed:true});
+
+export const mixedInputs = (inputs:Inputs, files:Partial<Record<Role,File>>, methods:Record<Role,InputMethod>) => {
+  const form=new FormData();
+  for(const role of ['source','a','b'] as const){
+    form.append(role+'_kind',methods[role]); form.append(role+'_value',inputs[role]);
+    if(methods[role]==='file'&&files[role])form.append(role,files[role]!);
+  }
+  form.append('source_language',inputs.source_language);form.append('target_language',inputs.target_language);
+  return request<Draft>('/api/comparisons/mixed',form);
+};

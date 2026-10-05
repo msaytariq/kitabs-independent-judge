@@ -1,12 +1,10 @@
+"use client";
 import type {Role} from '../../shared/types/comparison';
-const names = {source:'Оригинал',a:'Перевод A',b:'Перевод B'};
+import {useJudgeLocale} from './JudgeLocale';
 export function Materials({texts,open=false}:{texts:Record<Role,string>;open?:boolean}) {
-  return <details className="panel materials" open={open}>
-    <summary>Оригинал и два перевода — целиком</summary>
-    <p className="muted">Развернутые тексты показаны полностью, без скрытой внутренней прокрутки.</p>
+  const {t}=useJudgeLocale();
+  return <details className="panel materials" open={open}><summary>{t('Full source and translations','Оригинал и переводы целиком')}</summary>
     <div className="material-grid">{(['source','a','b'] as const).map(role=><section key={role}>
-      <h3>{names[role]}</h3><pre dir="auto">{texts[role]}</pre>
-      <p className="text-end">Конец {role==='source'?'оригинала':`перевода ${role.toUpperCase()}`}</p>
-    </section>)}</div>
-  </details>;
+      <h3>{role==='source'?t('Source','Оригинал'):t('Text ','Перевод ')+role.toUpperCase()}</h3><pre dir="auto">{texts[role]}</pre>
+      <p className="text-end">{t('End of text','Конец текста')}</p></section>)}</div></details>;
 }

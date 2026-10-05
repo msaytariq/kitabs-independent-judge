@@ -1,7 +1,7 @@
 "use client";
 import {useEffect, useRef, useState} from 'react';
-import {listExamples, loadComparison, pasteInputs, uploadInputs, prepareComparison} from '../../shared/api/comparison';
-import type {ComparisonView, Draft, Example, Inputs, Reference, Role} from '../../shared/types/comparison';
+import {mixedInputs, listExamples, loadComparison, pasteInputs, uploadInputs, prepareComparison} from '../../shared/api/comparison';
+import type {ComparisonView, Draft, Example, Inputs, Reference, Role, InputMethod} from '../../shared/types/comparison';
 import {referenceFromHash} from './helpers.mjs';
 
 export function useComparison() {
@@ -34,8 +34,8 @@ export function useComparison() {
     }).catch(()=>{if(active) setError('Не удалось загрузить примеры с локального сервера.');});
     return ()=>{active=false;};
   },[]);
-  async function intake(inputs:Inputs, files:Record<Role,File>|null) {
-    const next = await attempt(()=>files ? uploadInputs(files,inputs.source_language,inputs.target_language) : pasteInputs(inputs));
+  async function intake(inputs:Inputs, files:Partial<Record<Role,File>>|null, methods?:Record<Role,InputMethod>) {
+    const next = await attempt(()=>methods ? mixedInputs(inputs,files||{},methods) : files ? uploadInputs(files as Record<Role,File>,inputs.source_language,inputs.target_language) : pasteInputs(inputs));
     if (next) {setDraft(next); setView(null);setReference(null);}
   }
   async function prepare(profile:string) {

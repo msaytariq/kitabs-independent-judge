@@ -1,12 +1,12 @@
 import "./styles.css";
 export const metadata = {
-  title: "Независимый судья — сравнение переводов",
+  title: "Independent Judge — Translation Comparison",
   description:
-    "Оригинал и два перевода: правки, обоснования и научный аппарат.",
+    "One source, two translations: quality indices, evidence and apparatus.",
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru">
+    <html lang="en">
       <body>{children}</body>
     </html>
   );

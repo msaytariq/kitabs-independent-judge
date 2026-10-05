@@ -1,47 +1,41 @@
 "use client";
 import {useState} from 'react';
-import type {Draft,Inputs,Role} from '../../shared/types/comparison';
+import type {Draft,Inputs,Role,InputMethod} from '../../shared/types/comparison';
 import {Materials} from './Materials';
+import {MaterialInput} from './MaterialInput';
+import {useJudgeLocale} from './JudgeLocale';
 import {inputWarning} from '../../shared/i18n/intake';
-type Props = {draft:Draft|null;busy:boolean;intake:(inputs:Inputs,files:Record<Role,File>|null)=>Promise<void>;
-  prepare:(profile:string)=>Promise<void>; clearDraft:()=>void};
+type Props = {draft:Draft|null;busy:boolean;intake:(inputs:Inputs,files:Partial<Record<Role,File>>|null,methods?:Record<Role,InputMethod>)=>Promise<void>;
+  prepare:(profile:string)=>Promise<void>;clearDraft:()=>void};
 export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
-  const [mode,setMode] = useState('files'), [profile,setProfile] = useState('islamic-scholarly');
-  const [confirmed,setConfirmed] = useState(false);
-  const [inputs,setInputs] = useState<Inputs>({source:'',a:'',b:'',source_language:'ar',target_language:'en'});
-  const [files,setFiles] = useState<Partial<Record<Role,File>>>({});
-  const [localError,setLocalError] = useState('');
-  if(draft) return <>
-    <Materials open texts={{source:draft.materials.source.text,a:draft.materials.a.text,b:draft.materials.b.text}}/>
-    <section className="panel">
-      <h2>Проверьте границы</h2><p>Все три фрагмента должны начинаться и заканчиваться на одном смысловом месте. Различия внутри перевода сохраняются для проверки.</p>
-      {Object.entries(draft.materials).map(([role,m])=>m.warnings.length>0 && <p className="notice" key={role}>При чтении файла {m.filename} получены предупреждения: {m.warnings.map(inputWarning).join('; ')}</p>)}
-      <label className="check"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>Я сверил начало и конец всех трёх фрагментов.</label>
-      <div className="actions"><button className="primary" disabled={busy||!confirmed} onClick={()=>void prepare(profile)}>Сохранить сравнение</button>
-      <button disabled={busy} onClick={()=>{clearDraft();setConfirmed(false);}}>Изменить материалы</button></div>
-      <p className="muted">После подтверждения можно запустить сравнение. Уже сохранённые оценки повторно не оплачиваются.</p>
+  const {t,locale}=useJudgeLocale();
+  const [profile,setProfile]=useState('islamic-scholarly'),[confirmed,setConfirmed]=useState(false);
+  const [methods,setMethods]=useState<Record<Role,InputMethod>>({source:'file',a:'file',b:'file'});
+  const [inputs,setInputs]=useState<Inputs>({source:'',a:'',b:'',source_language:'ar',target_language:'en'});
+  const [files,setFiles]=useState<Partial<Record<Role,File>>>({});
+  const [localError,setLocalError]=useState('');
+  if(draft)return <><Materials open texts={{source:draft.materials.source.text,a:draft.materials.a.text,b:draft.materials.b.text}}/>
+    <section className="panel"><h2>{t('Confirm the source boundaries','Подтвердите границы')}</h2>
+      <p>{t('All three passages must start and end at the same source locations. Keep internal translation differences for the judge.','Все три фрагмента должны начинаться и заканчиваться на одном смысловом месте. Различия внутри переводов сохраняются для судьи.')}</p>
+      {Object.values(draft.materials).map(m=>m.warnings.length>0&&<p className="notice" key={m.filename}>{m.filename}: {m.warnings.map(w=>locale==='ru'?inputWarning(w):w).join('; ')}</p>)}
+      <label className="check"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>{t('I checked the start and end of all three passages.','Я сверил начало и конец всех трёх фрагментов.')}</label>
+      <div className="actions"><button className="primary" disabled={busy||!confirmed} onClick={()=>void prepare(profile)}>{t('Save comparison','Сохранить сравнение')}</button>
+        <button disabled={busy} onClick={()=>{clearDraft();setConfirmed(false);}}>{t('Change inputs','Изменить материалы')}</button></div>
     </section></>;
-  return <section className="panel own-materials">
-    <h2>Добавьте один оригинал и два перевода</h2>
-    <p>Подойдут тексты любых авторов и систем. Загрузите соответствующие фрагменты, до 18 000 знаков оригинала.</p>
-    <div className="tabs"><button disabled={busy} aria-pressed={mode==='text'} className={mode==='text'?'selected':''} onClick={()=>setMode('text')}>Вставить текст</button><button disabled={busy} aria-pressed={mode==='files'} className={mode==='files'?'selected':''} onClick={()=>setMode('files')}>Загрузить файлы</button></div>
+  return <section className="panel own-materials"><h2>{t('One source. Two translations.','Один оригинал. Два перевода.')}</h2>
+    <p>{t('Up to 10 physical PDF pages and 18,000 source characters. Text and DOCX use 1,800-character page units. Nothing is truncated.','До 10 физических страниц PDF и 18 000 знаков оригинала. Для текста и DOCX — условные страницы по 1800 знаков. Ничего не обрезается.')}</p>
     <form onSubmit={e=>{e.preventDefault();setLocalError('');setConfirmed(false);
-      if(mode==='files'&&(!files.source||!files.a||!files.b)){setLocalError('Выберите все три файла.');return;}
-      void intake(inputs,mode==='files'?files as Record<Role,File>:null);}}>
-      <div className="row"><label>Язык оригинала (код)<input required value={inputs.source_language} onChange={e=>setInputs({...inputs,source_language:e.target.value})}/></label>
-      <label>Язык переводов (код)<input required value={inputs.target_language} onChange={e=>setInputs({...inputs,target_language:e.target.value})}/></label></div>
-      <p className="muted">ar — арабский, ru — русский, en — английский.</p>
-      <div className="material-grid">{(['source','a','b'] as const).map(role=><label key={role}>
-        {role==='source'?'Оригинал':`Перевод ${role.toUpperCase()}`}
-        {mode==='text'?<textarea required rows={7} dir="auto" value={inputs[role]} onChange={e=>setInputs({...inputs,[role]:e.target.value})}/>
-        :<input type="file" required accept=".txt,.md,.docx,.pdf" onChange={e=>setFiles({...files,[role]:e.target.files?.[0]})}/>}
-      </label>)}</div>
-      <details><summary>Профиль проверки</summary><label>Профиль<select value={profile} onChange={e=>setProfile(e.target.value)}>
-        <option value="general">Общее качество текста</option><option value="islamic-scholarly">Исламская литература: цитаты, ссылки и научный аппарат</option>
-      </select></label></details>
-      <p className="muted">TXT, MD, DOCX или PDF с текстовым слоем · до 20 МБ каждый · без OCR</p>
-      {localError&&<p role="alert">{localError}</p>}
-      <button className="primary" disabled={busy}>Проверить материалы</button>
-    </form>
-  </section>;
+      if((['source','a','b'] as const).some(r=>methods[r]==='file'&&!files[r])){setLocalError(t('Choose a file for each file input.','Выберите файл для каждого файлового поля.'));return;}
+      void intake(inputs,files,methods);}}>
+      <div className="material-grid">{(['source','a','b'] as const).map(role=><MaterialInput key={role} role={role} busy={busy}
+        method={methods[role]} value={inputs[role]} setMethod={v=>setMethods({...methods,[role]:v})}
+        setValue={v=>setInputs({...inputs,[role]:v})} setFile={v=>setFiles({...files,[role]:v})}/>)}</div>
+      <details><summary>{t('Languages and review profile','Языки и профиль проверки')}</summary><div className="row">
+        <label>{t('Source language','Язык оригинала')}<input required value={inputs.source_language} onChange={e=>setInputs({...inputs,source_language:e.target.value})}/></label>
+        <label>{t('Translation language','Язык переводов')}<input required value={inputs.target_language} onChange={e=>setInputs({...inputs,target_language:e.target.value})}/></label></div>
+        <label>{t('Review profile','Профиль')}<select value={profile} onChange={e=>setProfile(e.target.value)}>
+          <option value="general">{t('General','Общий')}</option><option value="islamic-scholarly">{t('Islamic scholarly texts','Исламская научная литература')}</option></select></label></details>
+      <p className="muted">{t('TXT, MD, DOCX, HTML or selectable-text PDF · 20 MiB each · no OCR','TXT, MD, DOCX, HTML или PDF с текстовым слоем · по 20 МиБ · без OCR')}</p>
+      {localError&&<p role="alert">{localError}</p>}<button className="primary" disabled={busy}>{t('Check materials','Проверить материалы')}</button>
+    </form></section>;
 }

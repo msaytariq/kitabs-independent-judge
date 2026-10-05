@@ -42,3 +42,14 @@
 @media(max-width:800px){.comparison-screen .apparatus-capabilities{grid-template-columns:1fr}}
 @media(max-width:800px){.comparison-screen .material-grid,.comparison-screen .quote-grid{grid-template-columns:1fr}.comparison-screen .action-caption{display:block;margin-left:0}.comparison-screen h1{font-size:40px}}
 @media(max-width:480px){.comparison-screen .brand{font-size:17px}.comparison-screen .brand small{font-size:8px;letter-spacing:1px}.comparison-screen h1{font-size:34px}.comparison-screen .main-tabs button{padding:10px 14px;font-size:14px}.comparison-screen .score-number{font-size:52px}}
+
+.comparison-screen .language-switch{margin:0;flex-shrink:0}
+.comparison-screen .language-switch button{padding:6px 10px}
+.comparison-screen .material-input{min-width:0}
+.comparison-screen .kitabs-action{margin:16px 0;font-size:14px}
+.comparison-screen .quality-table caption{text-align:left;color:var(--muted);padding:0 0 16px}
+.comparison-screen .quality-table .total-row{font-size:24px;background:#edf4ee}
+.comparison-screen .quality-table td{font-variant-numeric:tabular-nums}
+.comparison-screen .conclusion{font-size:20px}
+.comparison-screen code{overflow-wrap:anywhere}
+@media(max-width:480px){.comparison-screen .quality-table .total-row{font-size:19px}.comparison-screen table{font-size:13px}.comparison-screen th,.comparison-screen td{padding:10px 6px}}

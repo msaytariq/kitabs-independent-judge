@@ -1,6 +1,7 @@
 import type {SourceReviewData} from './sourceReview';
 import type {Effort,HadithResult} from './options';
 
+export type InputMethod = 'file'|'text'|'url';
 export type Role = 'source' | 'a' | 'b';
 export type Side = 'a' | 'b';
 export type Reference = {kind: 'example' | 'scope'; id: string};
