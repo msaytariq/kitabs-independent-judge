@@ -84,3 +84,11 @@ def test_view_gives_points_remaining_work_and_summary_for_a_rubric_run():
 def test_view_without_a_finished_rubric_has_no_points():
     view = _view(record())
     assert view['jury'] is None and view['effort_reduction'] is None and view['jury_summary'] is None
+
+
+def test_view_gives_the_case_study_of_a_rubric_run():
+    from test_rubric_report import rubric_record
+    study = _view(rubric_record())['case_study']
+    assert [d['id'] for d in study['a']] == ['e1'] and study['a'][0]['criterion'] == 'accuracy'
+    assert study['kitabs_corrections'] == []
+    assert _view(record())['case_study'] is None

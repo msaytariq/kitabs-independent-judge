@@ -1,6 +1,6 @@
 import type {SourceReviewData} from './sourceReview';
 import type {Effort,ReferenceResult} from './options';
-import type {RubricResult,ProcessingEffort,ReferenceCoverage,JuryTable,EffortReduction,JurySummary} from './rubric';
+import type {RubricResult,ProcessingEffort,ReferenceCoverage,JuryTable,EffortReduction,JurySummary,CaseStudy} from './rubric';
 
 export type InputMethod = 'file'|'text'|'url';
 export type Role = 'source' | 'a' | 'b';
@@ -27,7 +27,7 @@ export type GeneratedApparatusEvidence = {artifact_sha256:string;label_ru:string
 export type ComparisonView = {id: string; title: string; description: string; scope: Scope;
   demonstration?:boolean;ratings:Ratings;decision_effort:DecisionEffort;
   rubric?:RubricResult|null;rubric_protocol?:boolean;reference_coverage?:ReferenceCoverage|null;processing_effort?:ProcessingEffort;
-  jury?:JuryTable|null;effort_reduction?:EffortReduction|null;jury_summary?:JurySummary|null;
+  jury?:JuryTable|null;effort_reduction?:EffortReduction|null;jury_summary?:JurySummary|null;case_study?:CaseStudy|null;
   effort:Effort;hadith:ReferenceResult|null;
   source_review: SourceReviewData | null;
   generated_apparatus: GeneratedApparatusEvidence | null;

@@ -45,6 +45,25 @@ def _effort_html(effort: dict | None) -> str:
             '5 секунд на принятие одной правки, которую Kitabs уже применил.</p></section>')
 
 
+def _case_html(study: dict | None) -> str:
+    if not study:
+        return ''
+    e = lambda text: escape(str(text))
+    body = ''
+    for side in ('a', 'b'):
+        if not study[side]:
+            body += f'<p>В {side.upper()} ошибок с цитатами нет.</p>'
+        for d in study[side]:
+            body += (f'<article><h3>Перевод {side.upper()} · {CRITERIA.get(d["criterion"], e(d["criterion"])).lower()}</h3>'
+                     f'<p>Оригинал</p><blockquote dir="auto">{e(d["source_quote"])}</blockquote>'
+                     f'<p>Перевод</p><blockquote dir="auto">{e(d["translation_quote"])}</blockquote>'
+                     f'<p>{e(d["explanation_ru"])}</p></article>')
+    if study['kitabs_corrections']:
+        body += '<h3>Что исправил аудит Kitabs на пути к B</h3>' + ''.join(
+            f'<p><del>{e(c["before"])}</del></p><p><ins>{e(c["after"])}</ins></p>' for c in study['kitabs_corrections'])
+    return f'<section><h2>Что поймал судья</h2>{body}</section>'
+
+
 def rubric_html(view: dict) -> str:
     rubric, jury = view.get('rubric'), view.get('jury')
     if not rubric or not jury:
@@ -70,7 +89,7 @@ def rubric_html(view: dict) -> str:
     <p>Ошибки с цитатами: A — {defects['a']}; B — {defects['b']}.</p>
     <p>{LEGEND}</p>
     <p>ИИ-судья выставляет уровни 1–5 по одинаковым критериям для A и B: 1 = 0, 2 = 25, 3 = 50, 4 = 75, 5 = 100 баллов.
-    Строки аятов и хадисов — доля цитат оригинала, найденных в переводе. Итог — среднее всех строк.</p></section>''' + _effort_html(view.get('effort_reduction'))
+    Строки аятов и хадисов — доля цитат оригинала, найденных в переводе. Итог — среднее всех строк.</p></section>''' + _case_html(view.get('case_study')) + _effort_html(view.get('effort_reduction'))
 
 
 def processing_html(effort: dict) -> str:

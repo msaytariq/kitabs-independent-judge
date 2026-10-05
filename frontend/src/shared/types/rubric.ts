@@ -14,3 +14,5 @@ export type JuryTable={version:string;rows:JuryRow[];totals:Record<'a'|'b',numbe
 export type EffortSide={edits:number;defects:number;missing_quotations:number;review_minutes:number;minutes:number};
 export type EffortReduction={version:string;minutes_per_edit:number;reduction_percent:number|null;a:EffortSide;b:EffortSide};
 export type JurySummary={en:string[];ru:string[]};
+export type CaughtDefect={id:string;criterion:string;source_quote:string;translation_quote:string;explanation_en:string;explanation_ru:string};
+export type CaseStudy={a:CaughtDefect[];b:CaughtDefect[];kitabs_corrections:{stage:string;before:string;after:string}[]};

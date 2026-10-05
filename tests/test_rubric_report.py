@@ -111,3 +111,10 @@ def test_html_export_names_a_when_a_needs_less_editing():
     side = lambda minutes: {'edits': 1, 'defects': 1, 'missing_quotations': 0, 'review_minutes': 0, 'minutes': minutes}
     html = _effort_html({'a': side(3), 'b': side(8), 'reduction_percent': -167, 'minutes_per_edit': 3})
     assert 'A требует меньше редактуры: 3 против 8 минут' in html and '-167' not in html
+
+
+def test_html_export_shows_what_the_judge_caught():
+    html = comparison_html(_view(rubric_record()))
+    assert 'Что поймал судья' in html
+    assert 'Перевод A · точность' in html and '<blockquote dir="auto">One claim.</blockquote>' in html
+    assert 'Перевод B · точность' in html  # The fixture gives B the same quoted error.

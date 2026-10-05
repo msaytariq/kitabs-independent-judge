@@ -86,3 +86,16 @@ test('source references show found counts, wrong labels and collections in both 
   assert.ok(en.includes('Quran verses: 5 of 5 found') && en.includes('Hadith: 20 of 20 found'));
   assert.ok(show('ReferenceEvidence',{result:null}).includes('Сверка источников ещё не выполнена'));
 });
+test('case study shows caught errors and Kitabs corrections in both locales',()=>{
+  const defect={id:'x',criterion:'accuracy',source_quote:'قال للملك',translation_quote:'The king said',explanation_en:'The speaker is reversed.',explanation_ru:'Говорящий перепутан.'};
+  const study={a:[defect],b:[],kitabs_corrections:[{stage:'audit',before:'come and be with us',after:'come to us'}]};
+  const ru=show('CaseStudy',{study});
+  assert.ok(ru.includes('Что поймал судья') && ru.includes('Перевод A · точность'));
+  assert.ok(ru.includes('قال للملك') && ru.includes('The king said') && ru.includes('Говорящий перепутан.'));
+  assert.ok(ru.includes('В B ошибок с цитатами нет.'));
+  assert.ok(ru.includes('<del>come and be with us</del>') && ru.includes('<ins>come to us</ins>'));
+  const en=show('CaseStudy',{study},'en');
+  assert.ok(en.includes('What the judge caught') && en.includes('Translation A · accuracy') && en.includes('The speaker is reversed.'));
+  assert.ok(en.includes('B has no errors with quotations.') && en.includes('Kitabs audit corrected on the way to B'));
+  assert.equal(show('CaseStudy',{study:null},'en'),'');
+});
