@@ -27,13 +27,37 @@ class BudgetLedger:
     def connect(self):
         return sqlite3.connect(self.path,timeout=15)
 
+    def amend_policy(self, *, expected_total: Decimal, expected_per_run: Decimal,
+                     total: Decimal, per_run: Decimal, authorization: str):
+        """Explicit operator action; never invoked by service startup or a request."""
+        new_total, new_run = micros(total), micros(per_run)
+        if not 0 < new_run <= new_total or not authorization.strip():
+            raise EvaluationError('invalid_budget', 'Positive limits and authorization required.')
+        with closing(self.connect()) as db, db:
+            db.execute('BEGIN IMMEDIATE')
+            old = tuple(db.execute('SELECT total,per_run FROM policy WHERE id=1').fetchone())
+            if old != (micros(expected_total), micros(expected_per_run)):
+                raise EvaluationError('budget_policy_mismatch', 'Budget policy changed; inspect before amendment.')
+            usage = db.execute('''SELECT c.run_id,SUM(COALESCE(r.actual,c.actual,c.reserved))
+                FROM calls c LEFT JOIN reconciliations r USING(run_id,call_id) GROUP BY c.run_id''').fetchall()
+            if sum(value for _, value in usage) > new_total or any(value > new_run for _, value in usage):
+                raise EvaluationError('invalid_budget', 'New limits cannot erase existing commitments.')
+            db.execute('''CREATE TABLE IF NOT EXISTS policy_amendments
+                (created_at TEXT, old_total INTEGER, old_per_run INTEGER,
+                 total INTEGER, per_run INTEGER, authorization TEXT)''')
+            db.execute("INSERT INTO policy_amendments VALUES(datetime('now'),?,?,?,?,?)",
+                       (*old, new_total, new_run, authorization))
+            db.execute('UPDATE policy SET total=?,per_run=? WHERE id=1', (new_total, new_run))
+        self.total, self.per_run = new_total, new_run
+
     def reserve(self, run_id: str, call_id: str, estimate: Decimal):
         value=micros(estimate)
         if not value or not run_id or not call_id:
             raise EvaluationError('invalid_budget','Positive reservation and stable identifiers required.')
         with closing(self.connect()) as db, db:
             db.execute('BEGIN IMMEDIATE')
-            if db.execute('SELECT halted FROM policy').fetchone()[0]:
+            total_limit, run_limit, halted = db.execute('SELECT total,per_run,halted FROM policy').fetchone()
+            if halted:
                 raise EvaluationError('budget_halted','Usage exceeded its reservation; review required.')
             if db.execute('SELECT 1 FROM calls WHERE run_id=? AND call_id=?',(run_id,call_id)).fetchone():
                 raise EvaluationError('duplicate_call','This call was already admitted; automatic retries are disabled.')
@@ -41,7 +65,7 @@ class BudgetLedger:
                        FROM calls c LEFT JOIN reconciliations r USING(run_id,call_id)'''
             total=db.execute(usage).fetchone()[0]
             run=db.execute(usage+' WHERE c.run_id=?',(run_id,)).fetchone()[0]
-            if total+value>self.total or run+value>self.per_run:
+            if total+value>total_limit or run+value>run_limit:
                 raise EvaluationError('budget_exceeded','The next call would exceed the total or per-run limit.')
             db.execute('INSERT INTO calls VALUES(?,?,?,NULL)',(run_id,call_id,value))
 
@@ -81,9 +105,10 @@ class BudgetLedger:
     def summary(self, run_id: str | None = None) -> dict:
         where=' WHERE c.run_id=?' if run_id else ''; args=(run_id,) if run_id else ()
         with closing(self.connect()) as db:
+            total_limit, run_limit = db.execute('SELECT total,per_run FROM policy').fetchone()
             rows=db.execute('''SELECT c.reserved,COALESCE(r.actual,c.actual)
                 FROM calls c LEFT JOIN reconciliations r USING(run_id,call_id)'''+where,args).fetchall()
         return {'reported_usd':usd(sum(a or 0 for _,a in rows)),
                 'unresolved_reserved_usd':usd(sum(r for r,a in rows if a is None)),
                 'committed_usd':usd(sum(r if a is None else a for r,a in rows)),
-                'calls':len(rows),'total_limit_usd':usd(self.total),'per_run_limit_usd':usd(self.per_run)}
+                'calls':len(rows),'total_limit_usd':usd(total_limit),'per_run_limit_usd':usd(run_limit)}
