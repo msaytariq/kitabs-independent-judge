@@ -1,0 +1,68 @@
+import httpx
+import pytest
+from independent_judge.domain.errors import InputError
+from independent_judge.domain.scope import text_hash
+
+
+def test_external_workflow_has_stable_identity_and_never_starts_a_paid_job():
+    from independent_judge.application.pipeline_b import handoff
+    a = handoff('source', 'autopilot', 'https://app.kitabs.ai')
+    assert a == handoff('source', 'autopilot', 'https://app.kitabs.ai')
+    assert a['state'] == 'external_workflow'
+    assert a['workspace_url'] == 'https://app.kitabs.ai/workspace'
+    assert a['job_started'] is False
+    assert handoff('source','manual','https://app.kitabs.ai')['mode'] == 'manual'
+    with pytest.raises(InputError): handoff('source','unknown','https://app.kitabs.ai')
+
+
+def packets(status='completed'):
+    return {
+      '/api/pipeline/jobs/j': {'job': {'id':'j','documentId':'d','status':status}},
+      '/api/pipeline/jobs/j/assembly': {'jobId':'j','artifacts':[
+        {'id':'s','jobId':'j','kind':'source_text','payload':{'text':'source'}},
+        {'id':'c','jobId':'j','kind':'chunks','payload':{'chunks':[{'id':'c1'}]}},
+        {'id':'p','jobId':'j','kind':'proofread_chunk','hash':'p-hash','payload':{}},
+        {'id':'b','jobId':'j','kind':'assembled_document','hash':'assembly-hash',
+         'payload':{'jobId':'j','body':'Translation B.','inputSources':[
+             {'chunkId':'c1','artifactId':'p','artifactHash':'p-hash','sourceKind':'artifact'}]}}]},
+    }
+
+
+def adapter(data, token='test-token'):
+    from independent_judge.infrastructure.kitabs_pipeline import KitabsPipeline
+    def handle(request):
+        assert request.method == 'GET'
+        assert request.headers['authorization'] == 'Bearer test-token'
+        return httpx.Response(200,json=data[request.url.path])
+    return KitabsPipeline('https://platform.example/api', token, transport=httpx.MockTransport(handle))
+
+
+def test_completed_artifact_requires_exact_source_and_preserves_hashes():
+    result = adapter(packets()).completed('j', text_hash('source'))
+    assert result['text'] == 'Translation B.'
+    assert result['sha256'] == text_hash(result['text'])
+    assert result['platform_artifact_hash'] == 'assembly-hash'
+    assert result['human_work'] is None
+    with pytest.raises(InputError) as error: adapter(packets()).completed('j',text_hash('different'))
+    assert error.value.code == 'pipeline_source_mismatch'
+
+
+@pytest.mark.parametrize('status', ['running','paused','waiting_review','failed','cancelled'])
+def test_unfinished_or_failed_job_never_produces_b(status):
+    with pytest.raises(InputError): adapter(packets(status)).completed('j',text_hash('source'))
+
+
+def test_absent_authorization_fails_before_network_access():
+    with pytest.raises(InputError) as error: adapter(packets(), token='').completed('j',text_hash('source'))
+    assert error.value.code == 'pipeline_auth_required'
+
+
+def test_partial_or_stale_assembly_is_rejected_and_reconnect_is_read_only():
+    data = packets()
+    port = adapter(data)
+    assert port.completed('j',text_hash('source')) == port.completed('j',text_hash('source'))
+    data['/api/pipeline/jobs/j/assembly']['artifacts'][1]['payload']['chunks'].append({'id':'c2'})
+    with pytest.raises(InputError): adapter(data).completed('j',text_hash('source'))
+    data = packets()
+    data['/api/pipeline/jobs/j/assembly']['artifacts'][-1]['payload']['inputSources'][0]['artifactHash'] = 'stale'
+    with pytest.raises(InputError): adapter(data).completed('j',text_hash('source'))
