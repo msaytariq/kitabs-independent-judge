@@ -21,7 +21,7 @@ class FakeJudge:
             result={'decisions':[{'index':i,'verdict':'keep','code':'K','why':'Reversal.'} for i,_ in enumerate(data['candidates'])]}
         elif prompt.version=='cross-check-v1':
             result={'decisions':[{'index':i,'verdict':'absent','finding':None,'why':'Correct translation.'} for i,_ in enumerate(data['candidates'])]}
-        elif prompt.version=='inventory-v1':
+        elif prompt.version=='inventory-v2':
             result={'units':[{'id':0,'source_excerpt':'الصدق فضيلة','meaning':'Truth is a virtue.'}]}
         else:
             result={'units':[{'id':0,'status':'conveyed' if data['translation']=='Truth is a virtue.' else 'partial',
