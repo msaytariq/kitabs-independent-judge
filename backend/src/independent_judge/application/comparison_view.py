@@ -53,8 +53,9 @@ class ComparisonViewService:
         self.jobs = jobs
 
     def project(self, record):
-        if self.jobs:
-            record = record | {'hadith': self.jobs.reference(reference_key(record['scope']))}
+        newer = self.jobs.reference(reference_key(record['scope'])) if self.jobs else None
+        if newer or 'hadith' not in record:
+            record = record | {'hadith': newer}
         return _view(record)
 
     def report(self, kind: str, identifier: str) -> str:

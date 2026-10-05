@@ -60,3 +60,14 @@ def test_cached_saved_run_without_current_job_does_not_import_its_time():
     view = ComparisonViewService(Catalog(), Scopes(), renderer=str).scope('scope-1')
     assert view['processing_effort']['sides']['b']['total_seconds'] is None
     assert view['processing_effort']['sides']['b']['job_id'] is None
+
+
+def test_saved_reference_check_is_kept_when_no_newer_check_exists():
+    from independent_judge.application.comparison_view import ComparisonViewService
+    saved = record() | {'hadith': {'status': 'checked', 'quran': {'found': 1}}}
+
+    class Jobs:
+        def reference(self, key): return None
+
+    service = ComparisonViewService(None, None, renderer=str, jobs=Jobs())
+    assert service.project(saved)['hadith']['status'] == 'checked'
