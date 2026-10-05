@@ -12,7 +12,7 @@ from independent_judge.domain.processing_effort import processing_effort
 from independent_judge.domain.rubric_result import VERSION as RUBRIC_VERSION
 from independent_judge.domain.reference_coverage import coverage_counts
 from independent_judge.domain.case_study import case_study
-from independent_judge.domain.jury_points import effort_reduction, jury_summary, jury_table
+from independent_judge.domain.jury_points import effort_reduction, jury_summary, jury_table, second_opinion
 from independent_judge.application.local_evaluation import reference_key
 
 
@@ -42,6 +42,7 @@ def _view(record: dict) -> dict:
         'effort_reduction': effort_reduction(rubric, coverage, processing),
         'jury_summary': jury_summary(jury),
         'case_study': case_study(rubric, processing),
+        'second_judge': second_opinion(rubric, ', '.join(manifest.get('actual_models', [])), record.get('second_judge')),
         'structural': run.get('structural') if run else None,
         'hadith': record.get('hadith'),
         'generated_apparatus': apparatus_evidence(record.get('capability_evidence'), record['scope']),

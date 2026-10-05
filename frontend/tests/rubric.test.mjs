@@ -99,3 +99,15 @@ test('case study shows caught errors and Kitabs corrections in both locales',()=
   assert.ok(en.includes('B has no errors with quotations.') && en.includes('Kitabs audit corrected on the way to B'));
   assert.equal(show('CaseStudy',{study:null},'en'),'');
 });
+test('second judge shows both judges, both totals and the agreement',()=>{
+  const judge={key:'accuracy',first:{a:25,b:75},second:{a:75,b:100}};
+  const opinion={first:{model:'google/gemini-3.8-flash',totals:{a:33,b:71},winner:'b'},
+    second:{model:'spacexai/grok-4.1-fast-reasoning',totals:{a:75,b:96},winner:'b',run_id:'r'},rows:[judge],agree:true};
+  const en=show('SecondJudge',{opinion},'en');
+  assert.ok(en.includes('Second judge') && en.includes('google/gemini-3.8-flash') && en.includes('spacexai/grok-4.1-fast-reasoning'));
+  assert.ok(en.includes('Same winner: B') && en.includes('>96<') && en.includes('>33<'));
+  assert.ok(en.includes('without vendor or model names'));
+  const ru=show('SecondJudge',{opinion:{...opinion,agree:false,second:{...opinion.second,winner:'a'}}});
+  assert.ok(ru.includes('Второй судья') && ru.includes('Победители разные: B и A'));
+  assert.equal(show('SecondJudge',{opinion:null},'en'),'');
+});

@@ -80,3 +80,23 @@ def test_equal_totals_read_naturally_in_russian():
     summary = jury_summary(jury_table(rubric({'accuracy': (4, 4)}), None))
     assert summary['ru'][0] == 'Переводы равны: итог 75 из 100 у каждого.'
     assert summary['en'][0] == 'The translations are equal: 75 points each.'
+
+
+def test_second_opinion_compares_criteria_of_two_judges_and_names_agreement():
+    from independent_judge.domain.jury_points import second_opinion
+    first = rubric({'accuracy': (2, 4), 'completeness': (3, 5)})
+    second = {'model': 'spacexai/grok-4.1-fast-reasoning', 'run_id': 'r2',
+              'rubric': rubric({'accuracy': (4, 5), 'completeness': (3, 4)})}
+    result = second_opinion(first, 'google/gemini-3.8-flash', second)
+    assert result['first'] == {'model': 'google/gemini-3.8-flash', 'totals': {'a': 38, 'b': 88}, 'winner': 'b'}
+    assert result['second'] == {'model': 'spacexai/grok-4.1-fast-reasoning', 'totals': {'a': 63, 'b': 88},
+                                'winner': 'b', 'run_id': 'r2'}
+    assert result['rows'][0] == {'key': 'accuracy', 'first': {'a': 25, 'b': 75}, 'second': {'a': 75, 'b': 100}}
+    assert result['agree'] is True
+    other = second | {'rubric': rubric({'accuracy': (5, 2), 'completeness': (5, 2)})}
+    assert second_opinion(first, 'g', other)['agree'] is False
+    assert second_opinion(first, 'g', None) is None and second_opinion(None, 'g', second) is None
+
+
+def test_half_points_round_up():
+    assert jury_table(rubric({'accuracy': (4, 4), 'completeness': (3, 3)}), None)['totals'] == {'a': 63, 'b': 63}

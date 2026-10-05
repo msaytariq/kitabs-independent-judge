@@ -92,3 +92,15 @@ def test_view_gives_the_case_study_of_a_rubric_run():
     assert [d['id'] for d in study['a']] == ['e1'] and study['a'][0]['criterion'] == 'accuracy'
     assert study['kitabs_corrections'] == []
     assert _view(record())['case_study'] is None
+
+
+def test_view_compares_the_second_judge_on_the_same_criteria():
+    from test_rubric_report import rubric_record
+    data = rubric_record()
+    data['run']['manifest']['actual_models'] = ['google/gemini-3.8-flash']
+    second = {'model': 'spacexai/grok-4.1-fast-reasoning', 'run_id': 'second', 'rubric': data['run']['rubric']}
+    view = _view(data | {'second_judge': second})
+    assert view['second_judge']['agree'] is True
+    assert view['second_judge']['first']['model'] == 'google/gemini-3.8-flash'
+    assert view['second_judge']['second']['totals'] == {'a': 38, 'b': 75}
+    assert _view(data)['second_judge'] is None

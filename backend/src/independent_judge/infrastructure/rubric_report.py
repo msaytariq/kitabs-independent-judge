@@ -64,6 +64,24 @@ def _case_html(study: dict | None) -> str:
     return f'<section><h2>Что поймал судья</h2>{body}</section>'
 
 
+def _second_html(opinion: dict | None) -> str:
+    if not opinion:
+        return ''
+    first, second = opinion['first'], opinion['second']
+    rows = ''.join(f'<tr><th>{CRITERIA.get(r["key"], escape(r["key"]))}</th>' + ''.join(
+        f'<td>{r[j][s] if r[j][s] is not None else "—"}</td>' for j in ('first', 'second') for s in ('a', 'b')) + '</tr>'
+        for r in opinion['rows'])
+    totals = ''.join(f'<td><b>{t["totals"][s]}</b></td>' for t in (first, second) for s in ('a', 'b'))
+    name = lambda w: {'a': 'A', 'b': 'B', 'tie': 'ничья'}.get(w, '—')
+    verdict = (f'Победитель совпал: {name(first["winner"])}' if opinion['agree']
+               else f'Победители разные: {name(first["winner"])} и {name(second["winner"])}')
+    return (f'<section><h2>Второй судья</h2><table><tr><th>Критерий</th><th colspan="2">{escape(first["model"])}</th>'
+            f'<th colspan="2">{escape(second["model"])}</th></tr><tr><th></th><th>A</th><th>B</th><th>A</th><th>B</th></tr>'
+            f'{rows}<tr><th>Итог по критериям</th>{totals}</tr></table><p><b>{verdict}</b></p>'
+            '<p>Оба судьи получили тексты без имён вендоров и моделей. Семья второго судьи не участвовала в переводах '
+            'и в первой оценке. Строки аятов и хадисов основаны на проверенных цитатах и не повторяются.</p></section>')
+
+
 def rubric_html(view: dict) -> str:
     rubric, jury = view.get('rubric'), view.get('jury')
     if not rubric or not jury:
@@ -89,7 +107,7 @@ def rubric_html(view: dict) -> str:
     <p>Ошибки с цитатами: A — {defects['a']}; B — {defects['b']}.</p>
     <p>{LEGEND}</p>
     <p>ИИ-судья выставляет уровни 1–5 по одинаковым критериям для A и B: 1 = 0, 2 = 25, 3 = 50, 4 = 75, 5 = 100 баллов.
-    Строки аятов и хадисов — доля цитат оригинала, найденных в переводе. Итог — среднее всех строк.</p></section>''' + _case_html(view.get('case_study')) + _effort_html(view.get('effort_reduction'))
+    Строки аятов и хадисов — доля цитат оригинала, найденных в переводе. Итог — среднее всех строк.</p></section>''' + _case_html(view.get('case_study')) + _second_html(view.get('second_judge')) + _effort_html(view.get('effort_reduction'))
 
 
 def processing_html(effort: dict) -> str:

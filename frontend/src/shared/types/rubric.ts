@@ -16,3 +16,6 @@ export type EffortReduction={version:string;minutes_per_edit:number;reduction_pe
 export type JurySummary={en:string[];ru:string[]};
 export type CaughtDefect={id:string;criterion:string;source_quote:string;translation_quote:string;explanation_en:string;explanation_ru:string};
 export type CaseStudy={a:CaughtDefect[];b:CaughtDefect[];kitabs_corrections:{stage:string;before:string;after:string}[]};
+export type JudgeTotals={model:string;totals:Record<'a'|'b',number|null>;winner:'a'|'b'|'tie'|null;run_id?:string|null};
+export type SecondOpinion={first:JudgeTotals;second:JudgeTotals;agree:boolean;
+  rows:{key:string;first:Record<'a'|'b',number|null>;second:Record<'a'|'b',number|null>}[]};

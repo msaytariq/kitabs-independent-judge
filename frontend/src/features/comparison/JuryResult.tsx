@@ -4,6 +4,7 @@ import {useJudgeLocale} from './JudgeLocale';
 import {RubricTable} from './RubricTable';
 import {EffortReduction} from './EffortReduction';
 import {CaseStudy} from './CaseStudy';
+import {SecondJudge} from './SecondJudge';
 import {ProcessingTime} from './ProcessingTime';
 import {ReferenceEvidence} from './ReferenceEvidence';
 import {Findings} from './Findings';
@@ -13,6 +14,7 @@ export function JuryResult({view}:{view:ComparisonView}) {
     {view.demonstration&&<p className="notice">{t('Synthetic test example; no live model.','Учебный пример; без живой модели.')}</p>}
     {view.rubric&&view.jury?<RubricTable result={view.rubric} jury={view.jury} summary={view.jury_summary}/>:<section className="panel"><h2>{view.rubric_protocol?t('The assessment did not finish.','Оценка не завершена.'):view.run?t('Saved result of an earlier method','Сохранённый результат прежней методики'):t('Start the comparison to get grades.','Запустите сравнение, чтобы получить оценки.')}</h2></section>}
     <CaseStudy study={view.case_study}/>
+    <SecondJudge opinion={view.second_judge}/>
     <EffortReduction effort={view.effort_reduction}/>
     <ProcessingTime effort={view.processing_effort}/>
     {!view.rubric&&!view.rubric_protocol&&<details className="panel"><summary>{t('Evidence and explanations','Доказательства и пояснения')}</summary>

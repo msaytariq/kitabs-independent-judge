@@ -3,6 +3,7 @@
 The judge grades levels 1-5; each level has a written definition (paired_rubric.RUBRIC).
 Points only rename the levels: 1 -> 0, 2 -> 25, 3 -> 50, 4 -> 75, 5 -> 100.
 """
+import math
 from independent_judge.domain.paired_rubric import RUBRIC
 
 VERSION = 'points-v1'
@@ -19,12 +20,17 @@ LABELS = {
 }
 
 
+def _round(value: float) -> int:
+    """Round half up, as a reader expects: 62.5 -> 63 (Python's round gives 62)."""
+    return math.floor(value + 0.5)
+
+
 def points(level: int | None) -> int | None:
     return None if level is None else (level - 1) * 25
 
 
 def _percent(found: int, total: int) -> int:
-    return round(100 * found / total)
+    return _round(100 * found / total)
 
 
 def jury_table(rubric: dict | None, coverage: dict | None) -> dict | None:
@@ -45,7 +51,7 @@ def jury_table(rubric: dict | None, coverage: dict | None) -> dict | None:
                          'found': {'a': counts['a'], 'b': counts['b']}, 'total': counts['total']})
     # The total compares like with like: only rows with a value for both sides.
     both = [r for r in rows if r['a'] is not None and r['b'] is not None]
-    totals = {s: round(sum(r[s] for r in both) / len(both)) if both else None for s in ('a', 'b')}
+    totals = {s: _round(sum(r[s] for r in both) / len(both)) if both else None for s in ('a', 'b')}
     winner = None
     if both:
         winner = 'tie' if totals['a'] == totals['b'] else 'a' if totals['a'] > totals['b'] else 'b'
@@ -62,12 +68,12 @@ def effort_reduction(rubric: dict | None, coverage: dict | None, processing: dic
         missing = sum(c['total'] - c[side] for c in (coverage or {}).values() if c and c['total'])
         measured = ((processing or {}).get('sides') or {}).get(side) or {}
         review_seconds = measured.get('simulated_seconds') or 0
-        review = round(review_seconds / 60)
+        review = _round(review_seconds / 60)
         edits = defects + missing
         sides[side] = {'edits': edits, 'defects': defects, 'missing_quotations': missing,
-                       'review_minutes': review, 'minutes': round(edits * MINUTES_PER_EDIT + review_seconds / 60)}
+                       'review_minutes': review, 'minutes': _round(edits * MINUTES_PER_EDIT + review_seconds / 60)}
     a, b = sides['a']['minutes'], sides['b']['minutes']
-    return sides | {'reduction_percent': round(100 * (1 - b / a)) if a else None,
+    return sides | {'reduction_percent': _round(100 * (1 - b / a)) if a else None,
                     'minutes_per_edit': MINUTES_PER_EDIT, 'version': EFFORT_VERSION}
 
 
@@ -101,3 +107,18 @@ def jury_summary(table: dict | None) -> dict | None:
             lines.append(('Equal in: ' if lang == 'en' else 'Одинаково: ') + ', '.join(label[k] for k, _ in equal) + '.')
         text[lang] = lines
     return text
+
+
+def second_opinion(rubric: dict | None, model: str, second: dict | None) -> dict | None:
+    """Two judges of different families on the same criteria; quotation counts are not repeated."""
+    if not rubric or not second or not second.get('rubric'):
+        return None
+    tables = {'first': jury_table(rubric, None), 'second': jury_table(second['rubric'], None)}
+    second_rows = {r['key']: r for r in tables['second']['rows']}
+    rows = [{'key': r['key'], 'first': {'a': r['a'], 'b': r['b']},
+             'second': {'a': second_rows[r['key']]['a'], 'b': second_rows[r['key']]['b']}}
+            for r in tables['first']['rows'] if r['key'] in second_rows]
+    summary = lambda table: {'totals': table['totals'], 'winner': table['winner']}
+    return {'first': {'model': model} | summary(tables['first']),
+            'second': {'model': second['model']} | summary(tables['second']) | {'run_id': second.get('run_id')},
+            'rows': rows, 'agree': tables['first']['winner'] == tables['second']['winner']}

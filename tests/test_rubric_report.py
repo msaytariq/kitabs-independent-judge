@@ -118,3 +118,12 @@ def test_html_export_shows_what_the_judge_caught():
     assert 'Что поймал судья' in html
     assert 'Перевод A · точность' in html and '<blockquote dir="auto">One claim.</blockquote>' in html
     assert 'Перевод B · точность' in html  # The fixture gives B the same quoted error.
+
+
+def test_html_export_shows_the_second_judge():
+    data = rubric_record()
+    data['run']['manifest']['actual_models'] = ['google/gemini-3.8-flash']
+    data['second_judge'] = {'model': 'spacexai/grok-4.1-fast-reasoning', 'run_id': 'second', 'rubric': data['run']['rubric']}
+    html = comparison_html(_view(data))
+    assert 'Второй судья' in html and 'spacexai/grok-4.1-fast-reasoning' in html
+    assert 'Победитель совпал: B' in html
