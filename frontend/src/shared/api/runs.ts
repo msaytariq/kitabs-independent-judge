@@ -1,8 +1,9 @@
 import {currentError} from '../i18n/intake';
 import type {Reference} from '../types/comparison';
 import type {ReferenceResult,RunState} from '../types/options';
+import {apiUrl} from './base';
 async function request<T>(path:string,method='GET'):Promise<T> {
-  const response=await fetch(path,{method,cache:'no-store'});
+  const response=await fetch(apiUrl(path),{method,cache:'no-store'});
   const data=await response.json();
   if(!response.ok) throw new Error(currentError(data.error?.code||'network',data.error?.message));
   return data;

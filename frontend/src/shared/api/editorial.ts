@@ -1,6 +1,7 @@
 import type { Inputs, Review } from "../types/editorial";
+import {apiUrl} from './base';
 async function json<T>(path: string, body?: unknown): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(apiUrl(path), {
     method: body === undefined ? "GET" : "POST",
     headers: body === undefined ? {} : { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -52,4 +53,4 @@ export async function scopeFromTexts(inputs: Inputs) {
   });
 }
 export const exportUrl = (id: string) =>
-  `/api/editorial/${encodeURIComponent(id)}/export`;
+  apiUrl(`/api/editorial/${encodeURIComponent(id)}/export`);

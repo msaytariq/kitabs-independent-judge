@@ -1,9 +1,10 @@
 import type {ComparisonView, Draft, Example, Inputs, Reference, Scope, Role, InputMethod} from '../types/comparison';
 import {fullRanges} from '../utils/textRanges.mjs';
 import {currentError} from '../i18n/intake';
+import {apiUrl} from './base';
 async function request<T>(path: string, body?: unknown): Promise<T> {
   const form = body instanceof FormData;
-  const response = await fetch(path, {method: body === undefined ? 'GET' : 'POST', cache:'no-store',
+  const response = await fetch(apiUrl(path), {method: body === undefined ? 'GET' : 'POST', cache:'no-store',
     headers: body === undefined || form ? {} : {'Content-Type':'application/json'},
     body: body === undefined ? undefined : form ? body : JSON.stringify(body)});
   let data;
@@ -15,8 +16,8 @@ async function request<T>(path: string, body?: unknown): Promise<T> {
 export const listExamples = () => request<Example[]>('/api/examples');
 export const loadComparison = (ref:Reference) => request<ComparisonView>(ref.kind === 'example'
   ? `/api/examples/${encodeURIComponent(ref.id)}` : `/api/scopes/${encodeURIComponent(ref.id)}/comparison`);
-export const reportUrl = (ref:Reference) => ref.kind === 'example'
-  ? `/api/examples/${encodeURIComponent(ref.id)}/report.html` : `/api/scopes/${encodeURIComponent(ref.id)}/report.html`;
+export const reportUrl = (ref:Reference) => apiUrl(ref.kind === 'example'
+  ? `/api/examples/${encodeURIComponent(ref.id)}/report.html` : `/api/scopes/${encodeURIComponent(ref.id)}/report.html`);
 export const pasteInputs = (inputs:Inputs) => request<Draft>('/api/comparisons/text', inputs);
 export const uploadInputs = (files:Record<Role,File>, source:string, target:string) => {
   const form = new FormData();

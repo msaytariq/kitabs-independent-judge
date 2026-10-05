@@ -1,9 +1,10 @@
 import type {InputMethod} from '../types/comparison';
+import {apiUrl} from './base';
 export type PipelineState={id:string;status:string;source:string;source_sha256:string;job_id:string|null;error:string|null;
   result:{text:string;sha256:string;source_sha256:string}|null};
 export type PipelineSource={method:InputMethod;value:string;file?:File;source_language:string;target_language:string};
 async function request<T>(path:string, body?:FormData):Promise<T>{
-  const response=await fetch(path,{method:body?'POST':'GET',body,cache:'no-store'});
+  const response=await fetch(apiUrl(path),{method:body?'POST':'GET',body,cache:'no-store'});
   const data=await response.json();
   if(!response.ok)throw new Error(data.error?.code||'pipeline_unavailable');
   return data;
