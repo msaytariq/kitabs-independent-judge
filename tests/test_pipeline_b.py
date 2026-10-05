@@ -21,10 +21,12 @@ def packets(status='completed'):
       '/api/pipeline/jobs/j/assembly': {'jobId':'j','artifacts':[
         {'id':'s','jobId':'j','kind':'source_text','payload':{'text':'source'}},
         {'id':'c','jobId':'j','kind':'chunks','payload':{'chunks':[{'id':'c1'}]}},
-        {'id':'p','jobId':'j','kind':'proofread_chunk','hash':'p-hash','payload':{}},
+        {'id':'p','jobId':'j','kind':'proofread_chunk','stageId':'proofreader',
+         'chunkId':'c1','hash':'p-hash','payload':{'chunkId':'c1'}},
         {'id':'b','jobId':'j','kind':'assembled_document','hash':'assembly-hash',
          'payload':{'jobId':'j','body':'Translation B.','inputSources':[
-             {'chunkId':'c1','artifactId':'p','artifactHash':'p-hash','sourceKind':'artifact'}]}}]},
+             {'chunkId':'c1','stageId':'proofreader','artifactId':'p',
+              'artifactHash':'p-hash','sourceKind':'generated'}]}}]},
     }
 
 
@@ -65,4 +67,22 @@ def test_partial_or_stale_assembly_is_rejected_and_reconnect_is_read_only():
     with pytest.raises(InputError): adapter(data).completed('j',text_hash('source'))
     data = packets()
     data['/api/pipeline/jobs/j/assembly']['artifacts'][-1]['payload']['inputSources'][0]['artifactHash'] = 'stale'
+    with pytest.raises(InputError): adapter(data).completed('j',text_hash('source'))
+
+
+@pytest.mark.parametrize('target,updates', [
+    ('input', {'artifactId':'missing','artifactHash':None}),
+    ('input', {'artifactId':'p','artifactHash':''}),
+    ('input', {'stageId':'editor'}),
+    ('input', {'sourceKind':'human_revision','revisionId':'r1'}),
+    ('artifact', {'chunkId':'other'}),
+    ('artifact', {'stageId':'editor'}),
+    ('artifact', {'kind':'source_text'}),
+    ('artifact', {'payload':{'chunkId':'other'}}),
+])
+def test_unproven_assembly_artifact_ownership_is_rejected(target, updates):
+    data = packets()
+    artifacts = data['/api/pipeline/jobs/j/assembly']['artifacts']
+    item = artifacts[2] if target == 'artifact' else artifacts[-1]['payload']['inputSources'][0]
+    item.update(updates)
     with pytest.raises(InputError): adapter(data).completed('j',text_hash('source'))

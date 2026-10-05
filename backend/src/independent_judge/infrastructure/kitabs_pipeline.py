@@ -63,13 +63,33 @@ def _result(response, job_id, source_sha256):
     expected = {c['id'] for c in groups['chunks'][0]['payload']['chunks']}
     inputs = payload.get('inputSources', [])
     actual = {entry['chunkId'] for entry in inputs}
-    known = {a['id']: a.get('hash') for a in artifacts if a['jobId'] == job_id}
+    job_artifacts = [a for a in artifacts if a['jobId'] == job_id]
+    known = {a['id']: a for a in job_artifacts}
     if (not expected or actual != expected or len(inputs) != len(expected)
+            or len(known) != len(job_artifacts)
             or payload['jobId'] != job_id or not payload['body'].strip()
-            or any(known.get(s['artifactId']) != s['artifactHash'] for s in inputs)
+            or any(not _verified_input(s, known) for s in inputs)
             or not assembly.get('hash')):
         raise InputError('pipeline_incomplete_assembly', 'The assembly is partial or references stale artifacts.')
     return {'job_id': job_id, 'text': payload['body'], 'sha256': text_hash(payload['body']),
             'source_sha256': source_sha256, 'platform_artifact_id': assembly['id'],
             'platform_artifact_hash': assembly['hash'], 'human_work': None,
             'mode': 'unverified', 'state': 'completed'}
+
+
+def _verified_input(source: dict, known: dict) -> bool:
+    """Only generated inputs can be proved by this artifact-only endpoint."""
+    if any(not isinstance(source.get(key), str) or not source[key].strip()
+           for key in ('artifactId', 'artifactHash', 'chunkId', 'stageId')):
+        return False
+    artifact = known.get(source['artifactId'])
+    kinds = {'translator': 'translated_chunk', 'editor': 'edited_chunk',
+             'proofreader': 'proofread_chunk'}
+    return bool(artifact and source.get('sourceKind') == 'generated'
+                and not source.get('revisionId') and not source.get('revisionNumber')
+                and source['stageId'] in kinds
+                and artifact.get('kind') == kinds[source['stageId']]
+                and artifact.get('stageId') == source['stageId']
+                and artifact.get('chunkId') == source['chunkId']
+                and artifact.get('payload', {}).get('chunkId') == source['chunkId']
+                and artifact.get('hash') == source['artifactHash'])

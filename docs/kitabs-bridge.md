@@ -41,6 +41,9 @@ It verifies exact extracted-source SHA-256, complete chunk membership and input
 artifact references. It records the opaque platform artifact hash and independently
 hashes the returned text. These are different hashes. A changed source, partial
 assembly or missing evidence blocks import. Reconnecting repeats GET only.
+Each input must reference a unique known artifact with a nonempty hash and matching
+chunk, stage and generated-text kind. Human-revision inputs are rejected because
+the assembly endpoint alone cannot prove their revision contents; use file import.
 
 ## Limits for a seamless public bridge
 
