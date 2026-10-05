@@ -111,3 +111,12 @@ test('second judge shows both judges, both totals and the agreement',()=>{
   assert.ok(ru.includes('Второй судья') && ru.includes('Победители разные: B и A'));
   assert.equal(show('SecondJudge',{opinion:null},'en'),'');
 });
+test('Kitabs launch shows the remaining launches and the exhausted limit',()=>{
+  const {JudgeLocale}=require('../src/features/comparison/JudgeLocale.tsx');
+  const {LaunchesLeft}=require('../src/features/comparison/KitabsAction.tsx');
+  const view=(props,locale)=>render(React.createElement(JudgeLocale,{initial:locale},React.createElement(LaunchesLeft,props)));
+  assert.ok(view({remaining:7},'en').includes('7 of the demonstration launches remain'));
+  assert.ok(view({remaining:7},'ru').includes('Осталось запусков для демонстрации: 7'));
+  assert.ok(view({remaining:0},'en').includes('All demonstration launches are used'));
+  assert.equal(view({remaining:null},'en'),'');
+});

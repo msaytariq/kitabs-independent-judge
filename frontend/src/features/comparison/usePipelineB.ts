@@ -4,12 +4,12 @@ import {pipelineCapabilities,pipelineStatus,startPipeline} from '../../shared/ap
 import type {PipelineState,PipelineSource} from '../../shared/api/pipeline';
 const STORAGE='judge-pipeline-request';
 export function usePipelineB(onReady:(job:PipelineState)=>void){
-  const [enabled,setEnabled]=useState(false),[job,setJob]=useState<PipelineState|null>(null);
+  const [enabled,setEnabled]=useState(false),[remaining,setRemaining]=useState<number|null>(null),[job,setJob]=useState<PipelineState|null>(null);
   const [requestId,setRequestId]=useState<string|null>(null),[starting,setStarting]=useState(false),[error,setError]=useState('');
   const callback=useRef(onReady);callback.current=onReady;
   const busyRef=useRef(false),delivered=useRef<string|null>(null);
   useEffect(()=>{let active=true;setRequestId(localStorage.getItem(STORAGE));
-    void pipelineCapabilities().then(r=>{if(active)setEnabled(r.enabled);}).catch(()=>{});
+    void pipelineCapabilities().then(r=>{if(active){setEnabled(r.enabled);setRemaining(r.remaining??null);}}).catch(()=>{});
     return()=>{active=false;};},[]);
   useEffect(()=>{if(!requestId)return;let active=true;
     async function poll(){try{const next=await pipelineStatus(requestId!);if(active){setJob(next);setError('');}}
@@ -26,5 +26,5 @@ export function usePipelineB(onReady:(job:PipelineState)=>void){
     finally{busyRef.current=false;setStarting(false);}}
   function clear(){setRequestId(null);setJob(null);setError('');delivered.current=null;localStorage.removeItem(STORAGE);}
   const running=starting||!!job&&['queued','uploading','creating','running'].includes(job.status);
-  return {enabled,job,requestId,running,error,start,clear};
+  return {enabled,remaining,job,requestId,running,error,start,clear};
 }

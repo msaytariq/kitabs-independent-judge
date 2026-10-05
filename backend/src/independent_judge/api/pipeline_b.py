@@ -12,7 +12,7 @@ def build_pipeline_router(service, retriever):
 
     @router.get('/capabilities')
     def capabilities():
-        return {'enabled': service.platform is not None}
+        return {'enabled': service.platform is not None, 'remaining': service.remaining()}
 
     @router.post('', status_code=202)
     async def submit(request_id: Annotated[str, Form()], source_kind: Annotated[str, Form()],

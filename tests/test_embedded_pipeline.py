@@ -119,3 +119,35 @@ def test_http_pipeline_result_is_bound_to_saved_scope(tmp_path):
         with pytest.raises(InputError): submit(s, source='x' * 18001)
         assert port.creates == port.starts == 0
     finally: s.close()
+
+
+def test_launch_limit_stops_new_paid_jobs_but_keeps_existing_requests(tmp_path):
+    from independent_judge.infrastructure.text_extractors import LocalTextExtractor
+    from independent_judge.application.pipeline_b import PipelineBService
+    from independent_judge.infrastructure.pipeline_jobs import PipelineJobs
+    port = Platform()
+    s = PipelineBService(PipelineJobs(tmp_path), port, LocalTextExtractor(), max_requests=2)
+    try:
+        assert s.remaining() == 2
+        submit(s, 'one'); wait(s, 'one')
+        submit(s, 'two', 'نص آخر'); wait(s, 'two')
+        assert s.remaining() == 0
+        with pytest.raises(InputError) as refused:
+            submit(s, 'three', 'نص ثالث')
+        assert refused.value.code == 'pipeline_limit_reached'
+        assert submit(s, 'one')['status'] == 'completed'  # A known request is read, never launched again.
+        assert port.starts == 2
+    finally: s.close()
+    assert PipelineBService(PipelineJobs(tmp_path), None, LocalTextExtractor()).remaining() is None
+
+
+def test_capabilities_report_the_remaining_launches(tmp_path):
+    from fastapi.testclient import TestClient
+    from independent_judge.api.pipeline_b import build_pipeline_router
+    from fastapi import FastAPI
+    from independent_judge.infrastructure.text_extractors import LocalTextExtractor
+    from independent_judge.application.pipeline_b import PipelineBService
+    from independent_judge.infrastructure.pipeline_jobs import PipelineJobs
+    app = FastAPI()
+    app.include_router(build_pipeline_router(PipelineBService(PipelineJobs(tmp_path), Platform(), LocalTextExtractor(), max_requests=10), None))
+    assert TestClient(app).get('/api/pipeline-b/capabilities').json() == {'enabled': True, 'remaining': 10}

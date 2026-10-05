@@ -26,9 +26,15 @@ def completed_b(reader: PipelineResultReader, job_id: str, source_sha256: str) -
 
 
 class PipelineBService:
-    def __init__(self, jobs, platform: PipelinePort | None, extractor):
+    def __init__(self, jobs, platform: PipelinePort | None, extractor, max_requests: int | None = None):
         self.jobs, self.platform, self.extractor = jobs, platform, extractor
+        self.max_requests = max_requests
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='pipeline-b')
+
+    def remaining(self):
+        if not self.platform or self.max_requests is None:
+            return None
+        return max(0, self.max_requests - self.jobs.count())
 
     def close(self):
         self.executor.shutdown(wait=True)
@@ -52,7 +58,7 @@ class PipelineBService:
                                'content_base64': base64.b64encode(upload.content).decode()},
                   'warnings': list(extracted.warnings), 'status': 'queued', 'job_id': None,
                   'document_id': None, 'result': None, 'error': None}
-        saved, inserted = self.jobs.claim(request_id, packet)
+        saved, inserted = self.jobs.claim(request_id, packet, self.max_requests)
         if inserted:
             self.executor.submit(self._execute, saved)
         return self._public(saved)

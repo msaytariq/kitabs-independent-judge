@@ -8,7 +8,7 @@ async function request<T>(path:string, body?:FormData):Promise<T>{
   if(!response.ok)throw new Error(data.error?.code||'pipeline_unavailable');
   return data;
 }
-export const pipelineCapabilities=()=>request<{enabled:boolean}>('/api/pipeline-b/capabilities');
+export const pipelineCapabilities=()=>request<{enabled:boolean;remaining?:number|null}>('/api/pipeline-b/capabilities');
 export const pipelineStatus=(id:string)=>request<PipelineState>('/api/pipeline-b/'+encodeURIComponent(id));
 export function startPipeline(id:string, source:PipelineSource){
   const form=new FormData();form.append('request_id',id);form.append('source_kind',source.method);

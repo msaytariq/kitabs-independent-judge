@@ -12,7 +12,11 @@ class PipelineJobs:
         with closing(sqlite3.connect(self.path)) as db, db:
             db.execute('CREATE TABLE IF NOT EXISTS pipeline_jobs (id TEXT PRIMARY KEY, packet TEXT NOT NULL)')
 
-    def claim(self, request_id, packet):
+    def count(self):
+        with closing(sqlite3.connect(self.path)) as db:
+            return db.execute('SELECT COUNT(*) FROM pipeline_jobs').fetchone()[0]
+
+    def claim(self, request_id, packet, limit=None):
         with closing(sqlite3.connect(self.path)) as db, db:
             db.execute('BEGIN IMMEDIATE')
             row = db.execute('SELECT packet FROM pipeline_jobs WHERE id=?', (request_id,)).fetchone()
@@ -21,6 +25,9 @@ class PipelineJobs:
                 if any(old[k] != packet[k] for k in ('source_sha256', 'source_language', 'target_language')):
                     raise InputError('pipeline_source_mismatch', 'This launch ID belongs to different material.')
                 return old, False
+            # The count and the insert share one transaction: two visitors cannot both take the last launch.
+            if limit is not None and db.execute('SELECT COUNT(*) FROM pipeline_jobs').fetchone()[0] >= limit:
+                raise InputError('pipeline_limit_reached', 'All Kitabs launches for this demonstration are used.')
             db.execute('INSERT INTO pipeline_jobs VALUES(?,?)', (request_id, json.dumps(packet)))
         return packet, True
 

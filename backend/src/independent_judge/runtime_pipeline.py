@@ -7,7 +7,7 @@ from independent_judge.infrastructure.text_extractors import LocalTextExtractor
 
 
 def configured_pipeline(directory):
-    port = None
+    port, limit = None, None
     if os.environ.get('JUDGE_PIPELINE_ENABLED') == '1':
         # This flag attests that the separately running test platform uses the
         # shared per-request budget transport. Judge cannot enforce its billing.
@@ -15,4 +15,6 @@ def configured_pipeline(directory):
             raise ValueError('Enable the shared budget guard in the target before enabling pipeline requests.')
         port = KitabsPipeline(os.environ['JUDGE_PIPELINE_API_ORIGIN'], os.environ['JUDGE_PIPELINE_TOKEN'],
                               allow_loopback=os.environ.get('JUDGE_PIPELINE_ALLOW_LOOPBACK') == '1')
-    return PipelineBService(PipelineJobs(directory), port, LocalTextExtractor())
+        # Each launch is paid from the operator account; the limit bounds a public demonstration.
+        limit = int(os.environ.get('JUDGE_PIPELINE_MAX_REQUESTS', '10'))
+    return PipelineBService(PipelineJobs(directory), port, LocalTextExtractor(), limit)
