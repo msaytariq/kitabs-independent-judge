@@ -27,6 +27,9 @@ def run_paired(scope, config, judge, budget, repository, *, run_id, code_sha,
     manifest = {'identity': identity(scope, config, code_sha, template_hashes), 'code_sha': code_sha,
                 'scope': asdict(scope), 'config': asdict(config), 'prompt_templates': template_hashes,
                 'protocol_version': VERSION, 'scoring_version': VERSION,
+                'effective_parameters': {'max_tokens': config.max_tokens, 'reasoning_effort': config.reasoning_effort,
+                    'requested_temperature': config.temperature, 'temperature_sent': False,
+                    'temperature_note': 'Unsupported by catalog' if config.temperature is not None else 'Not requested'},
                 'translator_independence': {s: independence(config.model, vendors.get(s)) for s in ('a', 'b')},
                 'started_at': datetime.now(timezone.utc).isoformat()}
     repository.begin(run_id, manifest)

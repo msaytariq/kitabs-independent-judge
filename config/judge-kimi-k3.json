@@ -1,0 +1,11 @@
+{
+  "model": "moonshotai/kimi-k3",
+  "provider": "moonshotai",
+  "max_tokens": 32000,
+  "temperature": 0,
+  "reasoning_effort": "none",
+  "input_usd_per_million": "3",
+  "output_usd_per_million": "15",
+  "reserve_input_usd_per_million": "3.75",
+  "price_version": "vercel-moonshot-2026-10-05"
+}

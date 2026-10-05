@@ -30,6 +30,7 @@ class JudgeConfig:
     # Cache writes may exceed the uncached input price; reserve conservatively.
     reserve_input_usd_per_million: str = '2.5'
     price_version: str = 'vercel-anthropic-2026-10-04'
+    temperature: float | None = None
 
 
 @dataclass(frozen=True)

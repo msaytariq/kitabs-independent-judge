@@ -10,7 +10,7 @@ from independent_judge.domain.reviewed_models import validate_config
 def load_judge_config(path: Path) -> JudgeConfig:
     settings = json.loads(path.read_text(encoding='utf-8'))
     expected = {field.name for field in fields(JudgeConfig)}
-    if not isinstance(settings, dict) or set(settings) != expected:
+    if not isinstance(settings, dict) or set(settings) not in (expected, expected - {'temperature'}):
         raise ValueError('Specify all judge configuration fields explicitly')
     config = JudgeConfig(**settings)
     validate_config(config)
