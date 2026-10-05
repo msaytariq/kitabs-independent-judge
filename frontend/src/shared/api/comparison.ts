@@ -25,7 +25,7 @@ export const uploadInputs = (files:Record<Role,File>, source:string, target:stri
   return request<Draft>('/api/comparisons',form);
 };
 export const prepareComparison = (draft:Draft, profile:string) => request<Scope & {id:string}>(
-  `/api/comparisons/${draft.id}/scopes`, {ranges:fullRanges(draft.materials),profile,confirmed:true});
+  `/api/comparisons/${draft.id}/scopes`, {ranges:fullRanges(draft.materials),profile,confirmed:true,pipeline_request_id:draft.pipeline_request_id});
 
 export const mixedInputs = (inputs:Inputs, files:Partial<Record<Role,File>>, methods:Record<Role,InputMethod>) => {
   const form=new FormData();

@@ -5,7 +5,8 @@ import {Materials} from './Materials';
 import {MaterialInput} from './MaterialInput';
 import {useJudgeLocale} from './JudgeLocale';
 import {inputWarning} from '../../shared/i18n/intake';
-type Props = {draft:Draft|null;busy:boolean;intake:(inputs:Inputs,files:Partial<Record<Role,File>>|null,methods?:Record<Role,InputMethod>)=>Promise<void>;
+import {KitabsAction} from './KitabsAction';
+type Props = {draft:Draft|null;busy:boolean;intake:(inputs:Inputs,files:Partial<Record<Role,File>>|null,methods?:Record<Role,InputMethod>,pipelineRequestId?:string)=>Promise<void>;
   prepare:(profile:string)=>Promise<void>;clearDraft:()=>void};
 export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
   const {t,locale}=useJudgeLocale();
@@ -14,6 +15,7 @@ export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
   const [inputs,setInputs]=useState<Inputs>({source:'',a:'',b:'',source_language:'ar',target_language:'en'});
   const [files,setFiles]=useState<Partial<Record<Role,File>>>({});
   const [localError,setLocalError]=useState('');
+  const [pipelineRequestId,setPipelineRequestId]=useState<string>();
   if(draft)return <><Materials open texts={{source:draft.materials.source.text,a:draft.materials.a.text,b:draft.materials.b.text}}/>
     <section className="panel"><h2>{t('Confirm the source boundaries','Подтвердите границы')}</h2>
       <p>{t('All three passages must start and end at the same source locations. Keep internal translation differences for the judge.','Все три фрагмента должны начинаться и заканчиваться на одном смысловом месте. Различия внутри переводов сохраняются для судьи.')}</p>
@@ -26,10 +28,13 @@ export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
     <p>{t('Up to 10 physical PDF pages and 18,000 source characters. Text and DOCX use 1,800-character page units. Nothing is truncated.','До 10 физических страниц PDF и 18 000 знаков оригинала. Для текста и DOCX — условные страницы по 1800 знаков. Ничего не обрезается.')}</p>
     <form onSubmit={e=>{e.preventDefault();setLocalError('');setConfirmed(false);
       if((['source','a','b'] as const).some(r=>methods[r]==='file'&&!files[r])){setLocalError(t('Choose a file for each file input.','Выберите файл для каждого файлового поля.'));return;}
-      void intake(inputs,files,methods);}}>
+      void intake(inputs,files,methods,pipelineRequestId);}}>
       <div className="material-grid">{(['source','a','b'] as const).map(role=><MaterialInput key={role} role={role} busy={busy}
         method={methods[role]} value={inputs[role]} setMethod={v=>setMethods({...methods,[role]:v})}
         setValue={v=>setInputs({...inputs,[role]:v})} setFile={v=>setFiles({...files,[role]:v})}/>)}</div>
+      <KitabsAction busy={busy} source={{method:methods.source,value:inputs.source,file:files.source,source_language:inputs.source_language,target_language:inputs.target_language}}
+        onReady={job=>{if(job.result){setInputs(current=>({...current,source:job.source,b:job.result!.text}));
+          setMethods(current=>({...current,source:'text',b:'text'}));setPipelineRequestId(job.id);}}}/>
       <details><summary>{t('Languages and review profile','Языки и профиль проверки')}</summary><div className="row">
         <label>{t('Source language','Язык оригинала')}<input required value={inputs.source_language} onChange={e=>setInputs({...inputs,source_language:e.target.value})}/></label>
         <label>{t('Translation language','Язык переводов')}<input required value={inputs.target_language} onChange={e=>setInputs({...inputs,target_language:e.target.value})}/></label></div>

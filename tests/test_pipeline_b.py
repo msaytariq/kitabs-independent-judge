@@ -86,3 +86,30 @@ def test_unproven_assembly_artifact_ownership_is_rejected(target, updates):
     item = artifacts[2] if target == 'artifact' else artifacts[-1]['payload']['inputSources'][0]
     item.update(updates)
     with pytest.raises(InputError): adapter(data).completed('j',text_hash('source'))
+
+
+def test_embedded_adapter_uses_platform_upload_and_autopilot_stream():
+    import json
+    import base64
+    from independent_judge.infrastructure.kitabs_pipeline import KitabsPipeline
+    calls = []
+    def handle(request):
+        calls.append((request.method, request.url.path))
+        assert request.headers['authorization'] == 'Bearer test-only'
+        if request.url.path == '/api/documents':
+            data = json.loads(request.content)
+            assert base64.b64decode(data['file']['dataBase64']).decode() == 'الأصل'
+            assert (data['sourceLang'], data['targetLang']) == ('ar', 'en')
+            return httpx.Response(201, json={'document': {'id': 'doc'}})
+        if request.url.path == '/api/pipeline/jobs':
+            assert json.loads(request.content) == {'documentId': 'doc'}
+            return httpx.Response(201, json={'job': {'id': 'job'}})
+        if request.url.path.endswith('start-stream'):
+            assert request.url.params['step'] == 'false'
+            return httpx.Response(200, text='event: job_completed\ndata: {}\n\n')
+        return httpx.Response(200, json={'job': {'id': 'job', 'status': 'completed'}})
+    port = KitabsPipeline('https://platform.example/api', 'test-only', transport=httpx.MockTransport(handle))
+    assert port.create(port.upload('الأصل', 'ar', 'en')) == 'job'
+    port.start('job')
+    assert port.status('job')['status'] == 'completed'
+    assert len(calls) == 4

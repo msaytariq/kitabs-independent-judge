@@ -22,9 +22,12 @@ from independent_judge.api.local_runs import build_run_router
 from independent_judge.infrastructure.sunnah_source import SunnahSource
 
 
-def create_app(data_dir: Path | None = None, *, evaluation=None, retriever=None) -> FastAPI:
+def create_app(data_dir: Path | None = None, *, evaluation=None, retriever=None, pipeline=None) -> FastAPI:
     from independent_judge.runtime_evaluation import configured_evaluation
     directory = data_directory(data_dir)
+    from independent_judge.runtime_pipeline import configured_pipeline
+    from independent_judge.api.pipeline_b import build_pipeline_router
+    pipeline = pipeline or configured_pipeline(directory)
     jobs = LocalJobs(directory)
     runner = LocalEvaluation(SqliteScopeRepository(directory), jobs, HadithLibrary(directory),
                              evaluation or configured_evaluation(directory),
@@ -35,7 +38,9 @@ def create_app(data_dir: Path | None = None, *, evaluation=None, retriever=None)
     async def lifespan(app):
         runner.start()
         try: yield
-        finally: runner.close()
+        finally:
+            runner.close()
+            pipeline.close()
 
     app = FastAPI(title="Independent Judge", version="0.1.0",
                   lifespan=lifespan, description="Local translation comparisons. Live calls require explicit operator configuration.")
@@ -48,7 +53,10 @@ def create_app(data_dir: Path | None = None, *, evaluation=None, retriever=None)
     intake = build_intake(data_dir)
     app.include_router(build_mixed_router(MixedIntake(intake, retriever or UrlRetriever())))
     app.include_router(build_router(intake))
-    app.include_router(build_scope_router(build_scope(data_dir)))
+    scopes = build_scope(data_dir)
+    scopes.pipeline_jobs = pipeline.jobs
+    app.include_router(build_scope_router(scopes))
+    app.include_router(build_pipeline_router(pipeline, retriever or UrlRetriever()))
     app.state.editorial=build_editorial(data_dir)
     app.include_router(build_editorial_router(app.state.editorial))
     app.include_router(build_comparison_router(view))

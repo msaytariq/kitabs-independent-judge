@@ -1,4 +1,5 @@
-"""Read the existing authenticated KITABS contract; never start paid work here."""
+"""Authenticated platform API. Launch only through a durable application claim."""
+import base64
 import re
 from urllib.parse import urlsplit
 import httpx
@@ -7,11 +8,67 @@ from independent_judge.domain.scope import text_hash
 
 
 class KitabsPipeline:
-    def __init__(self, api_origin: str, token: str, *, transport=None):
+    def __init__(self, api_origin: str, token: str, *, transport=None, allow_loopback=False):
         parsed = urlsplit(api_origin)
-        if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.query or parsed.fragment:
+        local = allow_loopback and parsed.scheme == 'http' and parsed.hostname in ('localhost', '127.0.0.1', '::1')
+        if (parsed.scheme != 'https' and not local) or not parsed.hostname or parsed.username or parsed.query or parsed.fragment:
             raise ValueError('Explicit HTTPS API origin is required.')
         self.origin, self.token, self.transport = api_origin.rstrip('/'), token, transport
+
+    def _client(self):
+        if not self.token:
+            raise InputError('pipeline_auth_required', 'Pipeline authorization is required.')
+        return httpx.Client(base_url=self.origin + '/', transport=self.transport, timeout=300,
+                            follow_redirects=False, trust_env=False,
+                            headers={'Authorization': 'Bearer ' + self.token})
+
+    def _post(self, path, data):
+        try:
+            with self._client() as client:
+                response = client.post(path, json=data)
+                response.raise_for_status()
+                if len(response.content) > 20 * 1024 * 1024:
+                    raise ValueError('Response too large')
+                return response.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            raise InputError('pipeline_unavailable', 'Platform response is uncertain. Do not replay this request.') from None
+
+    def upload(self, source, source_language, target_language):
+        response = self._post('documents', {'title': 'Judge comparison', 'sourceFormat': 'txt',
+            'sourceLang': source_language, 'targetLang': target_language, 'isScannedPdf': False,
+            'file': {'fileName': 'judge-source.txt', 'contentType': 'text/plain',
+                     'dataBase64': base64.b64encode(source.encode()).decode()}})
+        return response['document']['id']
+
+    def create(self, document_id):
+        return self._post('pipeline/jobs', {'documentId': document_id})['job']['id']
+
+    def status(self, job_id):
+        self._valid_id(job_id)
+        try:
+            with self._client() as client:
+                job = self._get(client, f'pipeline/jobs/{job_id}')['job']
+            if job['id'] != job_id:
+                raise InputError('pipeline_job_mismatch', 'Platform returned another job.')
+            return job
+        except (httpx.HTTPError, ValueError, KeyError, TypeError):
+            raise InputError('pipeline_unavailable', 'Cannot read platform status.') from None
+
+    def start(self, job_id):
+        self._valid_id(job_id)
+        try:
+            with self._client() as client:
+                with client.stream('POST', f'pipeline/jobs/{job_id}/start-stream', params={'step': 'false'}) as response:
+                    response.raise_for_status()
+                    for _ in response.iter_lines():
+                        pass  # Platform owns the background producer; UI observes this service.
+        except httpx.HTTPError:
+            raise InputError('pipeline_unavailable', 'Autopilot response is uncertain; check the known job status.') from None
+
+    @staticmethod
+    def _valid_id(job_id):
+        if not re.fullmatch(r'[A-Za-z0-9_-]{1,100}', job_id):
+            raise InputError('invalid_job_id', 'Invalid pipeline job identifier.')
 
     def completed(self, job_id: str, source_sha256: str) -> dict:
         if not self.token:
@@ -74,7 +131,9 @@ def _result(response, job_id, source_sha256):
     return {'job_id': job_id, 'text': payload['body'], 'sha256': text_hash(payload['body']),
             'source_sha256': source_sha256, 'platform_artifact_id': assembly['id'],
             'platform_artifact_hash': assembly['hash'], 'human_work': None,
-            'mode': 'unverified', 'state': 'completed'}
+            'mode': 'unverified', 'state': 'completed',
+            'processing': response.get('processingMeasurements'),
+            'assembly_inputs': inputs, 'chunk_count': len(expected)}
 
 
 def _verified_input(source: dict, known: dict) -> bool:

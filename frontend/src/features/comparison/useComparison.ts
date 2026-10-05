@@ -35,9 +35,9 @@ export function useComparison() {
     }).catch(()=>{if(active) setError(currentError('network'));});
     return ()=>{active=false;};
   },[]);
-  async function intake(inputs:Inputs, files:Partial<Record<Role,File>>|null, methods?:Record<Role,InputMethod>) {
+  async function intake(inputs:Inputs, files:Partial<Record<Role,File>>|null, methods?:Record<Role,InputMethod>,pipelineRequestId?:string) {
     const next = await attempt(()=>methods ? mixedInputs(inputs,files||{},methods) : files ? uploadInputs(files as Record<Role,File>,inputs.source_language,inputs.target_language) : pasteInputs(inputs));
-    if (next) {setDraft(next); setView(null);setReference(null);}
+    if (next) {setDraft({...next,pipeline_request_id:pipelineRequestId}); setView(null);setReference(null);}
   }
   async function prepare(profile:string) {
     if (!draft) return;

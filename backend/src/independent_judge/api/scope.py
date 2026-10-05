@@ -24,6 +24,7 @@ class ScopeRequest(BaseModel):
     ranges: RangesRequest
     profile: str = 'general'
     confirmed: StrictBool = False
+    pipeline_request_id: str | None = None
 
 
 def build_scope_router(service: ScopeService) -> APIRouter:
@@ -32,7 +33,7 @@ def build_scope_router(service: ScopeService) -> APIRouter:
     @router.post('/api/comparisons/{comparison_id}/scopes', status_code=201)
     def prepare(comparison_id: str, request: ScopeRequest):
         return service.create(comparison_id, {k: TextRange(**v) for k, v in request.ranges.model_dump().items()},
-                              request.profile, request.confirmed)
+                              request.profile, request.confirmed, pipeline_request_id=request.pipeline_request_id)
 
     @router.get('/api/scopes/{scope_id}')
     def preview(scope_id: str):

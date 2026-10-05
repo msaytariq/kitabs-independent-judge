@@ -1,7 +1,6 @@
 "use client";
 import type {Role,InputMethod} from '../../shared/types/comparison';
 import {useJudgeLocale} from './JudgeLocale';
-import {KitabsAction} from './KitabsAction';
 type Props={role:Role;method:InputMethod;value:string;busy:boolean;setMethod:(v:InputMethod)=>void;
   setValue:(v:string)=>void;setFile:(file:File|undefined)=>void};
 export function MaterialInput({role,method,value,busy,setMethod,setValue,setFile}:Props){const {t}=useJudgeLocale();
@@ -14,6 +13,6 @@ export function MaterialInput({role,method,value,busy,setMethod,setValue,setFile
       {method==='file'?<input type="file" required disabled={busy} accept=".txt,.md,.docx,.pdf,.html" onChange={e=>setFile(e.target.files?.[0])}/>
       :method==='url'?<input type="url" required disabled={busy} placeholder="https://…" value={value} onChange={e=>setValue(e.target.value)}/>
       :<textarea required disabled={busy} rows={7} dir="auto" value={value} onChange={e=>setValue(e.target.value)}/>}
-    </label>{role==='b'&&<KitabsAction/>}
+    </label>
   </section>;
 }

@@ -9,7 +9,7 @@ export type Reference = {kind: 'example' | 'scope'; id: string};
 export type Example = {id: string; title: string; description: string; has_report: boolean; has_source_review?:boolean};
 export type Inputs = Record<Role, string> & {source_language: string; target_language: string};
 export type Material = {text: string; sha256: string; filename: string; warnings: string[]};
-export type Draft = {id: string; materials: Record<Role, Material>; source_language: string; target_language: string};
+export type Draft = {id: string; materials: Record<Role, Material>; source_language: string; target_language: string;pipeline_request_id?:string};
 export type Scope = {id?: string; texts: Record<Role, string>; hashes: Record<Role, string>;
   ranges: Record<Role, {start: number; end: number; text_sha256: string}>;
   status: string; profile: string; source_language: string; target_language: string};
