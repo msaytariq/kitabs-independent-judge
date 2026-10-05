@@ -85,3 +85,20 @@ def test_apparatus_is_structure_only_and_unattached_markers_add_no_notes():
     result = rating(data)['sides']['b']
     assert result['apparatus_correctness'] is None
     assert result['apparatus_basis'] == 'structure_only_relevance_unverified'
+
+
+@pytest.mark.parametrize('text', [
+    'Claim[fn:1][en:1]\n[Footnotes]\n[fn:1] Citation\n[Endnotes]\n[en:1] Comment',
+    'Claim[^1][^2]\n[^1]: Citation\n[^2]: Comment',
+    'Claim\n## Hadith Notes\n1. Citation\n2. Comment',
+])
+def test_equivalent_note_formats_have_equal_inventory_and_score(text):
+    from independent_judge.domain.apparatus_inventory import inventory, structural_score
+    items = inventory(text)
+    assert items['notes'] == 2
+    assert structural_score(items, source_notes=2) == 50
+
+
+def test_docx_orphan_markers_do_not_count_as_note_definitions():
+    from independent_judge.domain.apparatus_inventory import inventory
+    assert inventory('Claim[fn:1][en:2]\n[fn:3]\n[en:4]')['notes'] == 0

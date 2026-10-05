@@ -1,11 +1,11 @@
 """English structural inventory v1. Presence is not relevance or correctness."""
 import re
 
-NOTE = re.compile(r'^\s*\[\^?(\d+)\]\s*:?\s+\S', re.M)
+NOTE = re.compile(r'^[ \t]*\[(\^?\d+|(?:fn|en):\d+)\][ \t]*:?[ \t]+\S', re.M)
 ENTRY = re.compile(r'^\s*(?:[-*•]|\d+[.)])\s+\S')
 GLOSSARY = re.compile(r'^\s*(?:[-*•]\s+)?[^:\n—]{1,80}\s*[:—]\s*\S')
 HEADINGS = {'notes': 'notes', 'footnotes': 'notes', 'endnotes': 'notes',
-            'general notes': 'notes', 'glossary': 'glossary',
+            'general notes': 'notes', 'hadith notes': 'notes', 'glossary': 'glossary',
             'persons': 'persons', 'narrators': 'persons', 'narrator notes': 'persons',
             'report notes': 'persons', 'biographical notes': 'persons'}
 
