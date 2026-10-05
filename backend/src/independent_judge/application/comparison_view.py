@@ -81,7 +81,9 @@ class ComparisonViewService:
             for saved in self.catalog.records():
                 if saved.get('run') and all(scope[key] == saved['scope'][key] for key in (
                         'texts', 'hashes', 'profile', 'source_language', 'target_language')):
+                    # Reuse only the saved judge evidence; execution time belongs to this scope's own job.
                     record = saved | {'id': scope_id, 'scope': scope, 'matched_example_id': saved['id'],
+                                      'processing': scope.get('processing'),
                                       'capability_evidence': None, 'source_review': None}
                     break
         return self.project(record)
