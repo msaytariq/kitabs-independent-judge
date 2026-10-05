@@ -1,0 +1,10 @@
+{
+  "model": "spacexai/grok-4.1-fast-reasoning",
+  "provider": "vertex",
+  "max_tokens": 8192,
+  "reasoning_effort": "low",
+  "input_usd_per_million": "0.2",
+  "output_usd_per_million": "0.5",
+  "reserve_input_usd_per_million": "0.22",
+  "price_version": "vercel-spacexai-2026-10-06"
+}

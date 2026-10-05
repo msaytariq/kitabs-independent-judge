@@ -12,6 +12,9 @@ _PROFILES = {
         ('2', '10', '2.5', 'vercel-anthropic-2026-10-04'), ('medium',)),
     ('google/gemini-3.8-flash', 'google'): (
         ('0.75', '3.75', '0.825', 'vercel-google-2026-10-05'), ('low', 'high')),
+    # Second judge: xAI family, served by Vertex; https://ai-gateway.vercel.sh/v1/models, checked 2026-10-06.
+    ('spacexai/grok-4.1-fast-reasoning', 'vertex'): (
+        ('0.2', '0.5', '0.22', 'vercel-spacexai-2026-10-06'), ('low',)),
 }
 
 
