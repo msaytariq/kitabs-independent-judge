@@ -12,6 +12,7 @@ from independent_judge.domain.scope import PreparedComparison
 from independent_judge.domain.evaluation import EvaluationError
 from independent_judge.operator_config import load_judge_config
 from independent_judge.domain.judge_prompt import assessment_prompt
+from independent_judge.domain.paired_rubric import paired_prompt
 from independent_judge.domain.budget import reservation
 from independent_judge.application.judge_runner import run_comparison
 from independent_judge.infrastructure.budget_repository import BudgetLedger
@@ -43,6 +44,8 @@ def main():
     parser.add_argument('--reuse-run',help='Reuse exact priced receipts from a finalized local run.')
     parser.add_argument('--translator-a-vendor')
     parser.add_argument('--translator-b-vendor')
+    parser.add_argument('--protocol',default='blind-3pass-exact-consensus-v1',
+        choices=['blind-3pass-exact-consensus-v1','paired-rubric-v1'])
     args=parser.parse_args()
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}",args.run_id):
         raise EvaluationError("invalid_run_id","Run ID must contain 1-80 letters, digits, underscores or hyphens.")
@@ -50,10 +53,16 @@ def main():
     stored=build_scope(directory).get(args.scope_id)
     scope=PreparedComparison(**{f.name:stored[f.name] for f in fields(PreparedComparison)})
     config=load_judge_config(args.config)
-    preflight={'scope_id':args.scope_id,'status':scope.status,'model':config.model,
-               'characters':{k:len(v) for k,v in scope.texts.items()},
-               'initial_six_call_reservation_usd':str(sum(reservation(assessment_prompt(scope,s),config)*3 for s in ('a','b'))),
-               'note':'Critical review, cross-check and coverage add calls; every call is admitted separately.'}
+    preflight={'scope_id':args.scope_id,'status':scope.status,'model':config.model,'protocol':args.protocol,
+               'characters':{k:len(v) for k,v in scope.texts.items()}}
+    if args.protocol=='paired-rubric-v1':
+        # Two ordered passes plus at most one targeted dispute pass, each admitted separately.
+        per_call=max(reservation(paired_prompt(scope,o),config) for o in (('a','b'),('b','a')))
+        preflight|={'maximum_calls':3,'per_call_reservation_usd':str(per_call),
+                    'maximum_reservation_usd':str(per_call*3)}
+    else:
+        preflight|={'initial_six_call_reservation_usd':str(sum(reservation(assessment_prompt(scope,s),config)*3 for s in ('a','b'))),
+                    'note':'Critical review, cross-check and coverage add calls; every call is admitted separately.'}
     print(json.dumps(preflight),flush=True)
     if not args.live: return
     sha=code_checkpoint(Path.cwd())
@@ -69,7 +78,7 @@ def main():
     def progress(call_id,state,cost):
         print(json.dumps({'call':call_id,'state':state,'budget':cost}),flush=True)
     report=run_comparison(scope,config,judge,budget,RunRepository(directory),run_id=args.run_id,code_sha=sha,on_progress=progress,
-        translator_vendors={'a':args.translator_a_vendor,'b':args.translator_b_vendor})
+        translator_vendors={'a':args.translator_a_vendor,'b':args.translator_b_vendor},protocol=args.protocol)
     path=directory/(args.run_id+'.json')
     # IDs accepted from an operator must not become arbitrary filesystem paths.
     if path.parent.resolve()!=directory.resolve():
