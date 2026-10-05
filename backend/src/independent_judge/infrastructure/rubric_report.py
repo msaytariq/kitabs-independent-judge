@@ -33,7 +33,13 @@ def _effort_html(effort: dict | None) -> str:
             ('Принятие правок Kitabs, минуты', 'review_minutes'), ('Время редактора, минуты', 'minutes')]
     body = ''.join(f'<tr><th>{label}</th><td>{effort["a"][key]}</td><td>{effort["b"][key]}</td></tr>' for label, key in rows)
     percent = effort['reduction_percent']
-    verdict = f'<p><b>Экономия времени с B: {percent}%</b></p>' if percent is not None else ''
+    a, b = effort['a']['minutes'], effort['b']['minutes']
+    if a > b and percent is not None:
+        verdict = f'<p><b>Экономия времени с B: {percent}%</b></p>'
+    elif a < b:
+        verdict = f'<p><b>A требует меньше редактуры: {a} против {b} минут</b></p>'
+    else:
+        verdict = '<p><b>Время редактуры одинаково</b></p>'
     return (f'<section><h2>Редактура до публикации</h2><table><tr><th>Показатель</th><th>A</th><th>B</th></tr>{body}</table>'
             f'{verdict}<p>Допущение: {effort["minutes_per_edit"]} минуты на одну правку редактора; '
             '5 секунд на принятие одной правки, которую Kitabs уже применил.</p></section>')

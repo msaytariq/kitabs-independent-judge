@@ -74,3 +74,9 @@ def test_summary_names_where_each_translation_is_better():
     assert summary['ru'][0] == 'Перевод B лучше: 85 против 55 баллов.'
     assert summary['ru'][1] == 'B лучше в: точность (+25), полнота (+75), аяты Корана (+75).'
     assert jury_summary(None) is None
+
+
+def test_equal_totals_read_naturally_in_russian():
+    summary = jury_summary(jury_table(rubric({'accuracy': (4, 4)}), None))
+    assert summary['ru'][0] == 'Переводы равны: итог 75 из 100 у каждого.'
+    assert summary['en'][0] == 'The translations are equal: 75 points each.'

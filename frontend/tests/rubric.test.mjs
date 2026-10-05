@@ -46,8 +46,13 @@ test('remaining editing work shows edits, minutes, saving and the assumption',()
   const en=show('EffortReduction',{effort},'en');
   assert.ok(en.includes('Editing to publication') && en.includes('B saves 81% of the editing time'));
   assert.ok(en.includes('3 minutes for one edit'));
-  const none=show('EffortReduction',{effort:{...effort,reduction_percent:null}},'en');
-  assert.ok(!none.includes('saves'));
+  const none=show('EffortReduction',{effort:{...effort,reduction_percent:null,a:{...effort.a,minutes:0}}},'en');
+  assert.ok(!none.includes('saves') && none.includes('A needs less editing time: 0 against 5 minutes'));
+  const worse={...effort,reduction_percent:-167,a:{...effort.a,minutes:3},b:{...effort.b,minutes:8}};
+  assert.ok(show('EffortReduction',{effort:worse},'en').includes('A needs less editing time: 3 against 8 minutes'));
+  assert.ok(show('EffortReduction',{effort:worse}).includes('A требует меньше редактуры: 3 против 8 минут'));
+  for(const locale of ['en','ru']) assert.ok(!show('EffortReduction',{effort:worse},locale).includes('-167'));
+  assert.ok(show('EffortReduction',{effort:{...effort,reduction_percent:0,a:{...effort.a,minutes:5}}},'en').includes('The editing time is equal'));
   assert.equal(show('EffortReduction',{effort:null},'en'),'');
 });
 test('unknown chat time and applied edits are separate in both locales',()=>{

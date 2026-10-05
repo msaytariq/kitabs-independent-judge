@@ -104,3 +104,10 @@ def test_table_rows_count_verses_and_hadith_in_each_translation():
     assert '<tr><th>Аяты Корана в переводе</th><td><b>0</b><br>0 из 2</td><td><b>100</b><br>2 из 2</td></tr>' in html
     assert '<tr><th>Хадисы в переводе</th><td><b>100</b><br>1 из 1</td><td><b>100</b><br>1 из 1</td></tr>' in html
     assert view['jury']['totals'] == {'a': 44, 'b': 88}  # A: 25, 50, 0, 100; B: 75, 75, 100, 100
+
+
+def test_html_export_names_a_when_a_needs_less_editing():
+    from independent_judge.infrastructure.rubric_report import _effort_html
+    side = lambda minutes: {'edits': 1, 'defects': 1, 'missing_quotations': 0, 'review_minutes': 0, 'minutes': minutes}
+    html = _effort_html({'a': side(3), 'b': side(8), 'reduction_percent': -167, 'minutes_per_edit': 3})
+    assert 'A требует меньше редактуры: 3 против 8 минут' in html and '-167' not in html

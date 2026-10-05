@@ -88,7 +88,7 @@ def jury_summary(table: dict | None) -> dict | None:
         listed = lambda items: ', '.join(f'{label[k]} (+{gap})' for k, gap in items)
         if table['winner'] == 'tie':
             lines = [f'The translations are equal: {totals["a"]} points each.' if lang == 'en'
-                     else f'Переводы равны: по {totals["a"]} баллов.']
+                     else f'Переводы равны: итог {totals["a"]} из 100 у каждого.']
         else:
             win, lose = table['winner'], 'a' if table['winner'] == 'b' else 'b'
             lines = [f'Translation {win.upper()} is better: {totals[win]} against {totals[lose]} points.' if lang == 'en'

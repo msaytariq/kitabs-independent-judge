@@ -9,12 +9,14 @@ export function EffortReduction({effort}:{effort?:Effort|null}) {
     [t('of them, missing verses and hadith','из них пропущенные аяты и хадисы'),'missing_quotations'],
     [t('Acceptance of Kitabs edits, minutes','Принятие правок Kitabs, минуты'),'review_minutes'],
     [t('Editor time, minutes','Время редактора, минуты'),'minutes']];
-  const percent=effort.reduction_percent;
+  const percent=effort.reduction_percent,a=effort.a.minutes,b=effort.b.minutes;
   return <section className="panel"><h2>{t('Editing to publication','Редактура до публикации')}</h2>
     <table><thead><tr><th>{t('Measure','Показатель')}</th><th>A</th><th>B</th></tr></thead><tbody>
       {rows.map(([label,key])=><tr key={key}><th scope="row">{label}</th><td>{effort.a[key]}</td><td>{effort.b[key]}</td></tr>)}
     </tbody></table>
-    {percent!==null&&<p><strong>{t(`B saves ${percent}% of the editing time`,`Экономия времени с B: ${percent}%`)}</strong></p>}
+    <p><strong>{a>b&&percent!==null?t(`B saves ${percent}% of the editing time`,`Экономия времени с B: ${percent}%`)
+      :a<b?t(`A needs less editing time: ${a} against ${b} minutes`,`A требует меньше редактуры: ${a} против ${b} минут`)
+      :t('The editing time is equal','Время редактуры одинаково')}</strong></p>
     <p className="muted">{t(`Assumption: ${effort.minutes_per_edit} minutes for one edit by an editor; 5 seconds to accept one edit that Kitabs has already applied.`,
       `Допущение: ${effort.minutes_per_edit} минуты на одну правку редактора; 5 секунд на принятие одной правки, которую Kitabs уже применил.`)}</p>
   </section>;
