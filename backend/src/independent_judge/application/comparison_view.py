@@ -19,6 +19,7 @@ def _view(record: dict) -> dict:
         'id', 'title', 'description', 'scope', 'provenance', 'boundary_review',
         'apparatus', 'references', 'matched_example_id')} | {
         'summary': summary,
+        'demonstration': record.get('demonstration') is True,
         'effort': forecast_effort(summary),
         'ratings': comparison_ratings(record, summary),
         'decision_effort': decision_effort(record, summary),

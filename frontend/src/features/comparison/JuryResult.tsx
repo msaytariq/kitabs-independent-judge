@@ -7,6 +7,7 @@ import {Findings} from './Findings';
 export function JuryResult({view}:{view:ComparisonView}) {
   const {t}=useJudgeLocale();
   return <div className="comparison-result">
+    {view.demonstration&&<p className="notice">{t('Synthetic demonstration · fixed test responses, no live model. These scores do not evaluate a real book or vendor.','Учебный пример · фиксированные тестовые ответы, без живой модели. Эти баллы не оценивают реальную книгу или производителя.')}</p>}
     <QualityTable ratings={view.ratings} effort={view.decision_effort}/>
     <DecisionSummary effort={view.decision_effort}/>
     <details className="panel"><summary>{t('Evidence and explanations','Доказательства и пояснения')}</summary>
