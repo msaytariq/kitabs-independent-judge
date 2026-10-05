@@ -6,28 +6,27 @@ QUOTE = 'لا يؤمن أحدكم حتى يحب لأخيه ما يحب لنفس�
 
 
 def test_quote_detection_and_matching_preserve_negation_and_source_coordinates():
-    from independent_judge.domain.hadith_matching import match_hadiths
+    from independent_judge.domain.hadith_matching import HadithIndex
+    from independent_judge.domain.reference_detection import detect_references
     text = f'قال رسول الله ﷺ: «{QUOTE}».'
-    records = [{'id': 'bukhari:13', 'text': QUOTE, 'url': 'https://example.org/13'}]
-    result = match_hadiths(text, records)
-    assert len(result) == 1
-    item = result[0]
-    assert text[item['start']:item['end']] == QUOTE
-    assert item['status'] == 'exact'
-    changed = match_hadiths(text.replace('لا ', ''), records)[0]
+    found = detect_references(text)
+    assert len(found) == 1 and text[found[0]['start']:found[0]['end']] == QUOTE
+    index = HadithIndex([{'id': 'bukhari:13', 'text': QUOTE, 'url': 'https://example.org/13'}])
+    assert index.match(QUOTE)['status'] == 'exact'
+    changed = index.match(QUOTE.replace('لا ', ''))
     assert changed['status'] == 'review'
     assert changed['candidates'][0]['id'] == 'bukhari:13'
 
 
 def test_diacritics_are_normalized_but_partial_and_ambiguous_matches_stay_explicit():
-    from independent_judge.domain.hadith_matching import match_hadiths
-    records = [{'id': 'one', 'text': QUOTE}]
-    assert match_hadiths(f'«لَا يؤمن أحدكم حتى يحب لأخيه ما يحب لنفسه»', records)[0]['status'] == 'normalized'
-    assert match_hadiths('«حتى يحب لأخيه ما يحب لنفسه»', records)[0]['status'] == 'fragment'
-    records.append({'id': 'two', 'text': QUOTE})
-    assert match_hadiths(f'«{QUOTE}»', records)[0]['status'] == 'ambiguous'
-    assert match_hadiths('«من جد وجد ومن زرع حصد»', records)[0]['status'] == 'not_found'
-    assert match_hadiths('﴿قل هو الله أحد﴾', records) == []
+    from independent_judge.domain.hadith_matching import HadithIndex
+    from independent_judge.domain.reference_detection import detect_references
+    one = HadithIndex([{'id': 'one', 'text': QUOTE}])
+    assert one.match('لَا يؤمن أحدكم حتى يحب لأخيه ما يحب لنفسه')['status'] == 'normalized'
+    assert one.match('حتى يحب لأخيه ما يحب لنفسه')['status'] == 'fragment'
+    assert HadithIndex([{'id': 'one', 'text': QUOTE}, {'id': 'two', 'text': QUOTE}]).match(QUOTE)['status'] == 'ambiguous'
+    assert one.match('من جد وجد ومن زرع حصد')['status'] == 'not_found'
+    assert [r['kind'] for r in detect_references('﴿قل هو الله أحد﴾')] == ['quran']
 
 
 def test_adapter_fetches_fixed_editions_without_sending_private_text_and_caches(tmp_path):
@@ -60,13 +59,15 @@ def test_adapter_rejects_invalid_records_without_writing_success_cache(tmp_path,
 
 
 def test_library_outage_is_not_a_negative_hadith_verdict(tmp_path):
-    from independent_judge.application.hadith_verification import verify_hadiths
+    from independent_judge.application.reference_verification import verify_references
     from independent_judge.infrastructure.hadith_library import HadithLibrary
     library = HadithLibrary(tmp_path, collections=('bukhari',), transport=httpx.MockTransport(
         lambda request: httpx.Response(503)))
-    result = verify_hadiths({'source': f'«{QUOTE}»', 'a': 'Translation A', 'b': 'Translation B'}, library)
+    class Quran:
+        def verses(self): return [{'chapter': 1, 'verse': 1, 'text': 'بسم الله الرحمن الرحيم'}]
+    result = verify_references({'source': f'«{QUOTE}»', 'a': 'Translation A', 'b': 'Translation B'}, Quran(), library)
     assert result['status'] == 'unavailable'
-    assert result['verified_count'] is None
+    assert result['hadith'] is None
     assert result['translation_accuracy'] == 'not_assessed'
 
 
@@ -80,10 +81,9 @@ def test_fractional_edition_ids_and_empty_records_are_reported_not_renumbered(tm
     assert rows[0]['id'] == 'bukhari:402.2'
     assert rows[0]['url'].endswith('/402.2.json')
     assert rows[0]['omitted_empty_records'] == 1
-def test_parenthesized_arabic_citations_are_candidates_but_quran_brackets_are_not():
-    from independent_judge.domain.hadith_matching import quotations
-    source = f'وقال صلى الله عليه وسلم ({QUOTE}) ثم قال ﴿قل هو الله أحد﴾'
-    detected = quotations(source)
-    assert len(detected) == 1
-    assert detected[0]['quote'] == QUOTE
+def test_parenthesized_arabic_citations_are_candidates_and_quran_brackets_are_quran():
+    from independent_judge.domain.reference_detection import detect_references
+    source = f'وقال صلى الله عليه وسلم ({QUOTE}) ثم قال ﴿قل هو الله أحد﴾ ((رواه مسلم والترمذي وقال حديث حسن))'
+    detected = detect_references(source)
+    assert [(r['kind'], r['quote']) for r in detected] == [('quoted', QUOTE), ('quran', 'قل هو الله أحد')]
     assert source[detected[0]['start']:detected[0]['end']] == QUOTE

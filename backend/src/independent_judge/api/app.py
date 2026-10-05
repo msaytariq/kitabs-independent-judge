@@ -17,6 +17,7 @@ from independent_judge.bootstrap import data_directory
 from independent_judge.application.local_evaluation import LocalEvaluation
 from independent_judge.infrastructure.local_jobs import LocalJobs
 from independent_judge.infrastructure.hadith_library import HadithLibrary
+from independent_judge.infrastructure.quran_library import QuranLibrary
 from independent_judge.infrastructure.scope_repository import SqliteScopeRepository
 from independent_judge.api.local_runs import build_run_router
 from independent_judge.infrastructure.sunnah_source import SunnahSource
@@ -31,7 +32,8 @@ def create_app(data_dir: Path | None = None, *, evaluation=None, retriever=None,
     jobs = LocalJobs(directory)
     runner = LocalEvaluation(SqliteScopeRepository(directory), jobs, HadithLibrary(directory),
                              evaluation or configured_evaluation(directory),
-                             SunnahSource(os.environ['SUNNAH_API_KEY']) if os.environ.get('SUNNAH_API_KEY') else None)
+                             SunnahSource(os.environ['SUNNAH_API_KEY']) if os.environ.get('SUNNAH_API_KEY') else None,
+                             QuranLibrary(directory))
     view = build_comparison_view(directory, jobs)
 
     @asynccontextmanager

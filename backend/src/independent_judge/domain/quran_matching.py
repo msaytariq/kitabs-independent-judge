@@ -1,0 +1,78 @@
+"""Locate a quotation in the Quran text and compare a source label such as (البقرة : 155)."""
+from bisect import bisect_right
+import re
+from independent_judge.domain.arabic_text import folded
+
+SURAHS = ('الفاتحة البقرة آل_عمران النساء المائدة الأنعام الأعراف الأنفال التوبة يونس هود يوسف الرعد إبراهيم '
+          'الحجر النحل الإسراء الكهف مريم طه الأنبياء الحج المؤمنون النور الفرقان الشعراء النمل القصص العنكبوت '
+          'الروم لقمان السجدة الأحزاب سبأ فاطر يس الصافات ص الزمر غافر فصلت الشورى الزخرف الدخان الجاثية '
+          'الأحقاف محمد الفتح الحجرات ق الذاريات الطور النجم القمر الرحمن الواقعة الحديد المجادلة الحشر '
+          'الممتحنة الصف الجمعة المنافقون التغابن الطلاق التحريم الملك القلم الحاقة المعارج نوح الجن المزمل '
+          'المدثر القيامة الإنسان المرسلات النبأ النازعات عبس التكوير الانفطار المطففين الانشقاق البروج الطارق '
+          'الأعلى الغاشية الفجر البلد الشمس الليل الضحى الشرح التين العلق القدر البينة الزلزلة العاديات القارعة '
+          'التكاثر العصر الهمزة الفيل قريش الماعون الكوثر الكافرون النصر المسد الإخلاص الفلق الناس').split(' ')
+SURAHS = [name.replace('_', ' ') for name in SURAHS]
+_BY_NAME = {folded(name): number for number, name in enumerate(SURAHS, 1)}
+LABEL = re.compile(r'[﴾}»"”]?\s*\(\(?\s*([^():\d]{1,30}?)\s*:\s*(\d{1,3})\s*\)\)?')
+MIN_WORDS = 3
+
+
+class QuranIndex:
+    def __init__(self, verses: list[dict]):
+        parts, self.starts, self.refs, offset = [], [], [], 0
+        for verse in verses:
+            text = folded(verse['text'])
+            if not text:
+                continue
+            self.starts.append(offset)
+            self.refs.append(verse)
+            parts.append(text)
+            offset += len(text) + 1
+        self.text = ' ' + ' '.join(parts) + ' '
+        words = self.text.split()
+        self.trigrams = {' '.join(words[i:i + 3]) for i in range(len(words) - 2)}
+
+    def _verse_at(self, position: int) -> dict:
+        return self.refs[max(0, bisect_right(self.starts, position - 1) - 1)]
+
+    def locate(self, quote: str, *, anchored: bool = False) -> dict | None:
+        """Longest contiguous run of the quotation found in the Quran (at least three words)."""
+        words = folded(quote).split()
+        best = None
+        starts = range(min(2, len(words))) if anchored else range(len(words))
+        for i in starts:
+            j = i
+            while j + 3 <= len(words) and ' '.join(words[j:j + 3]) in self.trigrams:
+                j += 1
+            for end in range(j + 2, i + MIN_WORDS - 1, -1):
+                at = self.text.find(' ' + ' '.join(words[i:end]) + ' ')
+                if at >= 0:
+                    if not best or end - i > best[1] - best[0]:
+                        best = (i, end, at)
+                    break
+        if not best:
+            return None
+        i, end, at = best
+        first, last = self._verse_at(at + 1), self._verse_at(at + len(' '.join(words[i:end])))
+        ayah = f"{first['chapter']}:{first['verse']}"
+        if last is not first:
+            ayah += f"-{last['verse']}" if last['chapter'] == first['chapter'] else f"–{last['chapter']}:{last['verse']}"
+        return {'ayah': ayah, 'surah': first['chapter'], 'surah_name': SURAHS[first['chapter'] - 1],
+                'matched_words': end - i, 'quote_words': len(words), 'first_word': i,
+                'verse_text': first['text'] if last is first else None}
+
+
+def label_check(source: str, end: int, located: dict | None) -> dict:
+    """Compare an explicit (Surah : ayah) label that follows the quotation."""
+    match = LABEL.match(source, end)
+    if not match:
+        return {'label': None, 'label_status': 'no_label'}
+    name, number = match.group(1).strip(), int(match.group(2))
+    label = f'{name} : {number}'
+    surah = _BY_NAME.get(folded(name))
+    if not located or surah is None:
+        return {'label': label, 'label_status': 'label_unchecked'}
+    chapter, verses = located['ayah'].split(':', 1)[0], located['ayah'].split(':', 1)[1]
+    first = int(re.split(r'[-–]', verses)[0])
+    same = surah == int(chapter) and number == first
+    return {'label': label, 'label_status': 'label_matches' if same else 'label_differs'}

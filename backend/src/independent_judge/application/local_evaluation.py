@@ -3,7 +3,12 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, fields
 import json
 from independent_judge.application.judge_runner import run_comparison
-from independent_judge.application.hadith_verification import verify_hadiths
+from threading import Lock
+from independent_judge.application.reference_verification import verify_references
+from independent_judge.application.sunnah_verification import verify_official
+from independent_judge.domain.hadith_matching import HadithIndex
+from independent_judge.domain.quran_matching import QuranIndex
+from independent_judge.reference_ports import LibraryUnavailable
 from independent_judge.domain.errors import InputError
 from independent_judge.domain.evaluation import JudgeConfig, EvaluationError
 from independent_judge.domain.scope import PreparedComparison, text_hash
@@ -26,9 +31,10 @@ def reference_key(scope: dict) -> str:
 
 
 class LocalEvaluation:
-    def __init__(self, scopes, jobs, library, runtime: EvaluationRuntime | None, official=None):
+    def __init__(self, scopes, jobs, library, runtime: EvaluationRuntime | None, official=None, quran=None):
         self.scopes, self.jobs, self.library, self.runtime = scopes, jobs, library, runtime
-        self.official = official
+        self.official, self.quran = official, quran
+        self.index_lock, self.indexes = Lock(), None
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='local-judge')
 
     def start(self):
@@ -38,8 +44,23 @@ class LocalEvaluation:
         self.executor.shutdown(wait=True)
         self.jobs.close()
 
+    def _reference_indexes(self):
+        # Built once per process: about 35,000 hadith records and 6,236 verses.
+        if self.library is None or self.quran is None:
+            raise LibraryUnavailable('Reference libraries are not configured')
+        with self.index_lock:
+            if self.indexes is None:
+                self.indexes = (QuranIndex(self.quran.verses()), HadithIndex(self.library.records()))
+            return self.indexes
+
     def references(self, scope: dict) -> dict:
-        result = verify_hadiths(scope['texts'], self.library, self.official)
+        try:
+            quran, hadith = self._reference_indexes()
+        except LibraryUnavailable:
+            quran = hadith = None
+        result = verify_references(scope['texts'], self.quran, self.library, quran_index=quran, hadith_index=hadith)
+        if result['status'] == 'checked':
+            result['official'] = verify_official(result['hadith']['items'], self.official)
         self.jobs.save_reference(reference_key(scope), result)
         return result
 

@@ -8,3 +8,7 @@ class LibraryUnavailable(RuntimeError):
 
 class HadithLibraryPort(Protocol):
     def records(self) -> list[dict]: ...
+
+
+class QuranLibraryPort(Protocol):
+    def verses(self) -> list[dict]: ...
