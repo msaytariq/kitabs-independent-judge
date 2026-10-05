@@ -71,3 +71,28 @@ def test_request_limit_counts_actual_bytes_without_content_length(tmp_path):
                                headers={"Content-Type": "application/json"})
     assert response.status_code == 413
     assert response.json()["error"]["code"] == "request_too_large"
+
+
+def test_pdf_with_reversed_arabic_ligatures_is_rejected_not_passed_on(tmp_path, monkeypatch):
+    from independent_judge.infrastructure.formats import pdf as pdf_format
+    assert pdf_format.damaged_arabic_order('الباب األول في ذكر هللا')
+    assert not pdf_format.damaged_arabic_order('الباب الأول في ذكر الله إلى الآخرة')
+    with pymupdf.open() as document:
+        document.new_page().insert_text((72, 72), "Text page")
+        content = document.tobytes()
+    monkeypatch.setattr(pdf_format, '_page_text', lambda page: 'الباب األول في ذكر هللا تعالى')
+    with TestClient(create_app(tmp_path)) as client:
+        response = upload(client, {"source": ("damaged.pdf", content, "application/pdf")})
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "pdf_arabic_order_damaged"
+
+
+def test_pdf_arabic_presentation_forms_become_ordinary_letters(tmp_path, monkeypatch):
+    from independent_judge.infrastructure.formats import pdf as pdf_format
+    with pymupdf.open() as document:
+        document.new_page().insert_text((72, 72), "Text page")
+        content = document.tobytes()
+    monkeypatch.setattr(pdf_format, '_page_text', lambda page: 'ﺣدﯾث ﺗﺣﻔﺔ اﻟﻣؤﻣن ﻟﻶﺧرة ﷲ ﷺ x²')
+    text = pdf_format.extract_pdf(content).text
+    # Unicode compatibility mapping; the farsi-yeh glyph of the PDF stays U+06CC.
+    assert text == 'حد\u06ccث تحفة المؤمن للآخرة الله ﷺ x²'
