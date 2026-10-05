@@ -176,3 +176,18 @@ def test_targeted_dispute_pass_keeps_original_instability_visible(tmp_path):
     assert result['paired']['criteria'][0]['a']['status'] == 'unstable'
     assert result['adjudication']['status'] == 'completed'
     assert len(result['adjudication']['result']['criteria']) == 1
+
+
+def test_instability_reason_is_recorded():
+    changed = response(('b', 'a'))
+    changed['criteria'][0]['b']['score'] = 4
+    assert reconcile(parse(response()), parse(changed, ('b', 'a')))['criteria'][0]['a']['instability'] == 'score_changed'
+    unlocated = response(('b', 'a'))
+    unlocated['criteria'][0]['b']['evidence'][0]['translation_quote'] = 'not in text'
+    row = reconcile(parse(response()), parse(unlocated, ('b', 'a')))['criteria'][0]['a']
+    assert row['instability'] == 'evidence_not_located' and row['pass_scores'] == [2, 2]
+    conflict = response(('b', 'a'))
+    conflict['criteria'][0]['b']['evidence'][0].update(kind='strength')
+    assert reconcile(parse(response()), parse(conflict, ('b', 'a')))['criteria'][0]['a']['instability'] == 'evidence_conflict'
+    stable = reconcile(parse(response()), parse(response(('b', 'a')), ('b', 'a')))['criteria'][0]['a']
+    assert stable.get('instability') is None

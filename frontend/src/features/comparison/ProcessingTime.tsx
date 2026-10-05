@@ -1,6 +1,8 @@
 "use client";
 import type {ProcessingEffort} from '../../shared/types/paired';
 import {useJudgeLocale} from './JudgeLocale';
+// Whole seconds for display; the backend keeps the measured value.
+const seconds=(value:number|null|undefined)=>typeof value==='number'?Math.round(value):null;
 export function ProcessingTime({effort}:{effort?:ProcessingEffort}) {
   const {t}=useJudgeLocale();const unknown=t('Time not established','Время не установлено');
   const rows=[['pipeline_seconds',t('Pipeline, seconds','Пайплайн, секунды')],['audit_operations',t('Applied audit edits','Применённые правки аудита')],
@@ -8,7 +10,7 @@ export function ProcessingTime({effort}:{effort?:ProcessingEffort}) {
     ['total_seconds',t('Total, seconds','Итого, секунды')]] as const;
   return <section className="panel"><h2>{t('Processing time','Время обработки')}</h2>
     <table><thead><tr><th>{t('Measurement','Показатель')}</th><th>A</th><th>B</th></tr></thead><tbody>
-      {rows.map(([key,label])=><tr key={key}><th>{label}</th>{(['a','b'] as const).map(side=><td key={side}>{effort?.sides[side][key]??unknown}</td>)}</tr>)}
+      {rows.map(([key,label])=><tr key={key}><th>{label}</th>{(['a','b'] as const).map(side=><td key={side}>{seconds(effort?.sides[side][key])??unknown}</td>)}</tr>)}
     </tbody></table>
     <p>{t('Edits are accepted automatically. Human participation is simulated: 5 seconds to accept one applied audit or editor edit. Proofreading is included in pipeline time.','Правки приняты автоматически. Участие человека смоделировано: 5 секунд на принятие одной применённой правки аудита или редактора. Корректор входит во время пайплайна.')}</p>
     <p className="muted">{t('This does not measure research work or guarantee error-free text. Judge findings do not enter the time calculation.','Это не измерение исследования источников и не гарантия безошибочного текста. Замечания судьи не входят в расчёт времени.')}</p>

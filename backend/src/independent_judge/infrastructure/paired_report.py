@@ -5,6 +5,11 @@ CRITERIA = {'accuracy': 'Точность', 'completeness': 'Полнота', 't
             'readability': 'Читаемость', 'seamlessness': 'Целостность сборки', 'apparatus': 'Научный аппарат'}
 STATES = {'not_assessed': 'Не оценено', 'not_applicable': 'Не применимо', 'unstable': 'Неустойчиво',
           'unverified_evidence': 'Цитата не подтверждена'}
+REASONS = {'score_changed': 'Оценка изменилась после перестановки A и B.',
+           'status_changed': 'Проходы дали разные статусы.',
+           'evidence_not_located': 'Один из проходов привёл цитату, которой нет в тексте.',
+           'evidence_conflict': 'Проходы пришли к противоположным выводам по одной и той же цитате.',
+           'symmetry': 'Одинаковые тексты получили разные оценки.'}
 VERDICTS = {'a': 'На этом материале преимущество у A', 'b': 'На этом материале преимущество у B',
             'mixed': 'Преимущества по разным критериям', 'none': 'Устойчивое преимущество не установлено'}
 TIME_ROWS = [('pipeline_seconds', 'Пайплайн, секунды'), ('audit_operations', 'Применённые правки аудита'),
@@ -18,8 +23,9 @@ def _cell(side: dict) -> str:
     notes = ''
     if side['status'] == 'unstable':
         notes += '<p>Проходы: ' + ' / '.join('—' if v is None else str(v) for v in side['pass_scores']) + '</p>'
-    if side.get('evidence_conflict'):
-        notes += '<p>Проходы пришли к противоположным выводам по одной и той же цитате.</p>'
+    reason = side.get('instability') or ('evidence_conflict' if side.get('evidence_conflict') else None)
+    if reason:
+        notes += f'<p>{REASONS[reason]}</p>'
     explanations = ''.join(f'<p>{e(x["explanation_ru"])}</p>' for x in side['explanations'])
     evidence = ''.join(f'''<p>Оригинал</p><blockquote dir="auto">{e(x["source_quote"])}</blockquote>
         <p>Перевод</p><blockquote dir="auto">{e(x["translation_quote"])}</blockquote><p>{e(x["explanation_ru"])}</p>
@@ -49,7 +55,7 @@ def paired_html(paired: dict | None, paired_protocol: bool) -> str:
 def processing_html(effort: dict) -> str:
     unknown = 'Время не установлено'
     rows = ''.join(f'<tr><th>{label}</th>' + ''.join(
-        f'<td>{escape(str(effort["sides"][s][key])) if effort["sides"][s][key] is not None else unknown}</td>'
+        f'<td>{round(effort["sides"][s][key]) if effort["sides"][s][key] is not None else unknown}</td>'
         for s in ('a', 'b')) + '</tr>' for key, label in TIME_ROWS)
     edits = ''.join(f'<details><summary>{side.upper()} · Применённые правки: до / после</summary>' + ''.join(
         f'<p>{"Аудит" if op["stage"] == "audit" else "Редактор"} · {escape(op["chunk_id"])}</p>'

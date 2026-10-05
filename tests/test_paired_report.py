@@ -55,3 +55,15 @@ def test_legacy_run_keeps_its_own_report():
     html = comparison_html(_view(record()))
     assert 'Кандидаты на проверку, включая спорные' in html
     assert 'По парной методике' not in html
+
+
+def test_html_export_explains_instability_and_rounds_seconds():
+    data = paired_record()
+    data['run']['paired']['criteria'][1]['a']['instability'] = 'evidence_not_located'
+    hashes = data['scope']['hashes']
+    data['processing'] = {'b': {'job_id': 'job', 'state': 'completed', 'source_sha256': hashes['source'],
+        'text_sha256': hashes['b'], 'timing_complete': True, 'intervals': [{'start': 0, 'end': 116.042259}],
+        'operations_complete': True, 'operations': []}}
+    html = comparison_html(_view(data))
+    assert 'Один из проходов привёл цитату, которой нет в тексте.' in html
+    assert '<td>116</td>' in html and '116.04' not in html

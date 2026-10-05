@@ -2,7 +2,7 @@ export type PairedEvidence={id:string;source_quote:string;translation_quote:stri
   explanation_en:string;explanation_ru:string;verified:boolean;pass:number;
   anchors?:Record<string,{status:string;ranges:{start:number;end:number}[]}>};
 export type PairedSide={score:number|null;status:string;pass_scores:(number|null)[];
-  coverage:string[];evidence_conflict?:boolean;evidence:PairedEvidence[];explanations:{explanation_en:string;explanation_ru:string}[]};
+  coverage:string[];evidence_conflict?:boolean;instability?:string;evidence:PairedEvidence[];explanations:{explanation_en:string;explanation_ru:string}[]};
 export type PairedResult={version:string;advantage:string;criteria:{criterion:string;a:PairedSide;b:PairedSide}[];
   unique_defects:Record<'a'|'b',number>};
 export type ProcessingSide={pipeline_seconds:number|null;audit_operations:number|null;editor_operations:number|null;

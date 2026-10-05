@@ -10,6 +10,14 @@ def _conflicting_quotes(first: dict, second: dict) -> set[str]:
     return {i for i, kind in claims if kind == 'defect' and (i, 'strength') in claims}
 
 
+def _instability(first: dict, second: dict, conflicts: set[str]) -> str:
+    if conflicts:
+        return 'evidence_conflict'
+    if 'unverified_evidence' in (first['status'], second['status']):
+        return 'evidence_not_located'
+    return 'score_changed' if first['score'] != second['score'] else 'status_changed'
+
+
 def reconcile_assessments(passes: list[dict], scope) -> dict:
     if len(passes) != 2:
         raise ValueError('Exactly two completed passes are required')
@@ -38,9 +46,11 @@ def reconcile_assessments(passes: list[dict], scope) -> dict:
                          'explanations': [{k: value[k] for k in ('explanation_en', 'explanation_ru')} for value in (a, b)]}
             if conflicts:
                 row[side]['evidence_conflict'] = True
+            if not stable:
+                row[side]['instability'] = _instability(a, b, conflicts)
         if scope.texts['a'] == scope.texts['b'] and any(row['a'][key] != row['b'][key] for key in ('score', 'status')):
             for side in ('a', 'b'):
-                row[side].update(score=None, status='unstable', symmetry_conflict=True)
+                row[side].update(score=None, status='unstable', symmetry_conflict=True, instability='symmetry')
         rows.append(row)
     signs = []
     complete = True

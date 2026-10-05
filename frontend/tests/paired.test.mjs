@@ -19,6 +19,10 @@ test('paired table shows uncertainty and source evidence without a composite gra
   assert.ok(!html.includes('<details open'));
   const conflict=show('PairedTable',{result:{advantage:'none',criteria:[{criterion:'accuracy',a:{...s,pass_scores:[2,2],evidence_conflict:true},b:s}],unique_defects:{a:0,b:1}}},'en');
   assert.ok(conflict.includes('The passes reached opposite conclusions on the same quotation.'));
+  const unlocated=show('PairedTable',{result:{advantage:'none',criteria:[{criterion:'accuracy',a:{...s,pass_scores:[5,5],instability:'evidence_not_located'},b:s}],unique_defects:{a:0,b:0}}},'en');
+  assert.ok(unlocated.includes('One pass cited a quotation that is not in the text.'));
+  const changed=show('PairedTable',{result:{advantage:'none',criteria:[{criterion:'accuracy',a:{...s,instability:'score_changed'},b:s}],unique_defects:{a:0,b:0}}});
+  assert.ok(changed.includes('Оценка изменилась после перестановки A и B.'));
 });
 test('unknown chat time and applied edits are separate in both locales',()=>{
   const unknown={pipeline_seconds:null,audit_operations:null,editor_operations:null,simulated_seconds:null,total_seconds:null,operations:[]};
@@ -30,6 +34,8 @@ test('unknown chat time and applied edits are separate in both locales',()=>{
     assert.ok(html.includes(label));
     assert.ok(html.includes('<del>was</del>') && html.includes('<ins>is</ins>'));
     assert.ok(html.includes('50'));
+    const precise=show('ProcessingTime',{effort:{sides:{a:unknown,b:{...b,pipeline_seconds:116.042259,total_seconds:221.042259}}}},locale);
+    assert.ok(precise.includes('>116<') && precise.includes('>221<') && !precise.includes('116.04'));
     assert.ok(!html.includes('remaining candidates'));
   }
 });
