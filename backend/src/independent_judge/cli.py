@@ -9,7 +9,8 @@ from pathlib import Path
 import subprocess
 from independent_judge.bootstrap import build_scope,data_directory
 from independent_judge.domain.scope import PreparedComparison
-from independent_judge.domain.evaluation import JudgeConfig,EvaluationError
+from independent_judge.domain.evaluation import EvaluationError
+from independent_judge.operator_config import load_judge_config
 from independent_judge.domain.judge_prompt import assessment_prompt
 from independent_judge.domain.budget import reservation
 from independent_judge.application.judge_runner import run_comparison
@@ -32,6 +33,9 @@ def code_checkpoint(repo:Path):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data-dir',type=Path)
+    parser.add_argument('--config',type=Path, default=os.environ.get(
+        'JUDGE_CONFIG_PATH', 'config/judge-gemini-3.8-flash.json'),
+        help='Explicit judge JSON configuration (or JUDGE_CONFIG_PATH).')
     parser.add_argument('--scope-id',required=True)
     parser.add_argument('--run-id',required=True)
     parser.add_argument('--live',action='store_true')
@@ -43,7 +47,7 @@ def main():
     directory=data_directory(args.data_dir)
     stored=build_scope(directory).get(args.scope_id)
     scope=PreparedComparison(**{f.name:stored[f.name] for f in fields(PreparedComparison)})
-    config=JudgeConfig()
+    config=load_judge_config(args.config)
     preflight={'scope_id':args.scope_id,'status':scope.status,'model':config.model,
                'characters':{k:len(v) for k,v in scope.texts.items()},
                'initial_six_call_reservation_usd':str(sum(reservation(assessment_prompt(scope,s),config)*3 for s in ('a','b'))),

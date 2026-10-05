@@ -2,13 +2,13 @@
 import httpx
 from independent_judge.domain.evaluation import EvaluationError, LlmResult
 from independent_judge.infrastructure.gateway_usage import reported_cost
+from independent_judge.domain.budget import reservation
 
 ENDPOINT='https://ai-gateway.vercel.sh/v1/chat/completions'
 
 
 def payload(prompt, config):
-    if config.model!='anthropic/claude-sonnet-5.5' or config.provider!='anthropic':
-        raise EvaluationError('unreviewed_model','This pilot adapter is reviewed for Sonnet 5.5 via Gateway only.')
+    reservation(prompt, config)  # Fail closed even when called outside the runner.
     body = {'model':config.model,'messages':[{'role':'system','content':prompt.system},
             {'role':'user','content':prompt.user}], 'max_tokens':config.max_tokens,
             'reasoning':{'effort':config.reasoning_effort},

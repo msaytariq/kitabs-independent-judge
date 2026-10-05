@@ -1,0 +1,10 @@
+{
+  "model": "google/gemini-3.8-flash",
+  "provider": "google",
+  "max_tokens": 8192,
+  "reasoning_effort": "high",
+  "input_usd_per_million": "0.75",
+  "output_usd_per_million": "3.75",
+  "reserve_input_usd_per_million": "0.825",
+  "price_version": "vercel-google-2026-10-05"
+}
