@@ -30,7 +30,7 @@ def test_kimi_rejects_changed_prices_and_oversized_output():
             payload(Prompt('', '', 'test'), replace(config(), **changes))
 
 
-def test_cli_paired_preflight_reserves_both_orders_and_dispute_pass(tmp_path, monkeypatch, capsys):
+def test_cli_rubric_preflight_reserves_one_call(tmp_path, monkeypatch, capsys):
     import json
     from pathlib import Path
     from fastapi.testclient import TestClient
@@ -43,11 +43,11 @@ def test_cli_paired_preflight_reserves_both_orders_and_dispute_pass(tmp_path, mo
         scope = prepare(client)
     monkeypatch.setattr('sys.argv', ['judge', '--data-dir', str(tmp_path), '--scope-id', scope,
         '--run-id', 'preflight', '--config', str(root / 'config/judge-kimi-k3.json'),
-        '--protocol', 'paired-rubric-v1'])
+        '--protocol', 'rubric-v1'])
     main()
     preflight = json.loads(capsys.readouterr().out)
-    assert preflight['protocol'] == 'paired-rubric-v1'
+    assert preflight['protocol'] == 'rubric-v1'
     assert preflight['model'] == 'moonshotai/kimi-k3'
-    assert preflight['maximum_calls'] == 3
+    assert preflight['maximum_calls'] == 1
     assert float(preflight['maximum_reservation_usd']) > 0
     assert not (tmp_path / 'budget.sqlite3').exists()

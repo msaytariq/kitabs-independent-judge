@@ -60,9 +60,10 @@ test('jury result keeps evidence and methodology collapsed and uses both languag
   assert.ok(!html.includes('<details open'));
   assert.ok(html.includes('Method and provenance'));
   assert.ok(!html.includes('Точность'));
-  const failed=component('JuryResult',{view:{...view,paired:null,paired_protocol:true}});
-  assert.ok(failed.includes('The paired run did not finish. Judge gave no grades.'));
+  const failed=component('JuryResult',{view:{...view,rubric:null,rubric_protocol:true}});
+  assert.ok(failed.includes('The assessment did not finish.'));
   assert.ok(!failed.includes('different protocol'));
+  assert.ok(!failed.includes('reverse order'));
 });
 
 test('intake errors respect language and do not expose unsupported Russian server text in English',()=>{

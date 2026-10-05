@@ -1,6 +1,6 @@
 import type {SourceReviewData} from './sourceReview';
 import type {Effort,HadithResult} from './options';
-import type {PairedResult,ProcessingEffort} from './paired';
+import type {RubricResult,ProcessingEffort} from './rubric';
 
 export type InputMethod = 'file'|'text'|'url';
 export type Role = 'source' | 'a' | 'b';
@@ -26,8 +26,7 @@ export type GeneratedApparatusEvidence = {artifact_sha256:string;label_ru:string
     examples:{text:string;start:number;end:number;sha256:string}[]}[]};
 export type ComparisonView = {id: string; title: string; description: string; scope: Scope;
   demonstration?:boolean;ratings:Ratings;decision_effort:DecisionEffort;
-  paired?:PairedResult|null;paired_protocol?:boolean;processing_effort?:ProcessingEffort;
-  adjudication?:{status:string;result?:{criteria:{criterion:string;a:{explanation_en:string;explanation_ru:string};b:{explanation_en:string;explanation_ru:string}}[]}|null}|null;
+  rubric?:RubricResult|null;rubric_protocol?:boolean;processing_effort?:ProcessingEffort;
   effort:Effort;hadith:HadithResult|null;
   source_review: SourceReviewData | null;
   generated_apparatus: GeneratedApparatusEvidence | null;

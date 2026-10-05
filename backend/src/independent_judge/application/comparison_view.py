@@ -9,15 +9,16 @@ from independent_judge.domain.effort_forecast import forecast_effort
 from independent_judge.domain.ratings import comparison_ratings
 from independent_judge.domain.decision_effort import decision_effort
 from independent_judge.domain.processing_effort import processing_effort
+from independent_judge.domain.rubric_result import VERSION as RUBRIC_VERSION
 from independent_judge.application.local_evaluation import reference_key
 
 
 def _view(record: dict) -> dict:
     run = record.get('run')
     manifest = run.get('manifest', {}) if run else {}
-    paired_protocol = str(manifest.get('protocol_version') or '').startswith('paired')
-    # A paired run stores no legacy findings; counting them would show false zeros.
-    summary = summarize_comparison(record | {'run': None} if paired_protocol else record)
+    rubric_protocol = manifest.get('protocol_version') == RUBRIC_VERSION
+    # A rubric run stores no legacy findings; counting them would show false zeros.
+    summary = summarize_comparison(record | {'run': None} if rubric_protocol else record)
     return {key: record.get(key) for key in (
         'id', 'title', 'description', 'scope', 'provenance', 'boundary_review',
         'apparatus', 'references', 'matched_example_id')} | {
@@ -27,10 +28,9 @@ def _view(record: dict) -> dict:
         'ratings': comparison_ratings(record, summary),
         'decision_effort': decision_effort(record, summary),
         'processing_effort': processing_effort(record),
-        'paired': run.get('paired') if run and run['status'] == 'completed' else None,
-        'paired_protocol': paired_protocol,
+        'rubric': run.get('rubric') if rubric_protocol and run['status'] == 'completed' else None,
+        'rubric_protocol': rubric_protocol,
         'structural': run.get('structural') if run else None,
-        'adjudication': run.get('adjudication') if run else None,
         'hadith': record.get('hadith'),
         'generated_apparatus': apparatus_evidence(record.get('capability_evidence'), record['scope']),
         'source_review': source_review(record),

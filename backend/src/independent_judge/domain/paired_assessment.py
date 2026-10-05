@@ -1,4 +1,4 @@
-"""Strict paired response parsing and exact quote verification."""
+"""Strict judge response parsing and exact quote location."""
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from independent_judge.domain.evaluation import EvaluationError
@@ -61,12 +61,6 @@ def parse_assessment(text: str, scope, order=('a', 'b'), *, expected=None) -> di
                            'translation': locate(scope.texts[side], evidence['translation_quote'])}
                 evidence.update(anchors=anchors, verified=all(a['status'] == 'verified' for a in anchors.values()),
                                 id=digest([side, evidence['source_quote'], evidence['translation_quote']])[:24])
-            ev = assessment['evidence']
-            valid = bool(ev) and all(e['verified'] for e in ev)
-            if assessment['score'] == 5:
-                valid = valid and assessment['coverage'] == 'whole_selected_range' and any(e['kind'] == 'strength' for e in ev)
-            if assessment['status'] == 'assessed' and not valid:
-                assessment.update(status='unverified_evidence', proposed_score=assessment['score'], score=None)
             out[side] = assessment
         rows.append(out)
     return {'criteria': rows, 'order': list(order)}

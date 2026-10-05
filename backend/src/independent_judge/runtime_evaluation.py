@@ -21,4 +21,4 @@ def configured_evaluation(directory: Path) -> EvaluationRuntime | None:
     budget = BudgetLedger(Path(os.environ.get('JUDGE_BUDGET_DIR', directory)), total_usd=Decimal(os.environ['JUDGE_BUDGET_TOTAL_USD']),
                           per_run_usd=Decimal(os.environ['JUDGE_BUDGET_RUN_USD']))
     return EvaluationRuntime(config, GatewayJudge(os.environ.get('AI_GATEWAY_API_KEY', '')),
-                             budget, RunRepository(directory), sha, protocol='paired-rubric-v1')
+                             budget, RunRepository(directory), sha, protocol='rubric-v1')

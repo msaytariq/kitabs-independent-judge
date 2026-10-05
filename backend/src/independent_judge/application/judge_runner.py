@@ -21,9 +21,9 @@ from independent_judge.domain.scoring import counts,pending_review
 
 def run_comparison(scope,config,judge,budget,repository,*,run_id,code_sha,
                    translator_vendors=None,on_progress=None,protocol='blind-3pass-exact-consensus-v1'):
-    if protocol == 'paired-rubric-v1':
-        from independent_judge.application.paired_runner import run_paired
-        return run_paired(scope,config,judge,budget,repository,run_id=run_id,code_sha=code_sha,
+    if protocol == 'rubric-v1':
+        from independent_judge.application.rubric_runner import run_rubric
+        return run_rubric(scope,config,judge,budget,repository,run_id=run_id,code_sha=code_sha,
                           translator_vendors=translator_vendors,on_progress=on_progress)
     if protocol != 'blind-3pass-exact-consensus-v1':
         raise EvaluationError('unknown_protocol', 'Select a versioned comparison protocol.')

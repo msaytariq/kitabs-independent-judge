@@ -4,7 +4,7 @@ from independent_judge.infrastructure.apparatus_report import apparatus_html
 from independent_judge.infrastructure.source_review_report import source_review_html
 from independent_judge.infrastructure.effort_report import effort_html
 from independent_judge.infrastructure.hadith_report import hadith_html
-from independent_judge.infrastructure.paired_report import paired_html, processing_html
+from independent_judge.infrastructure.rubric_report import rubric_html, processing_html
 
 LABELS = {'K': 'Критические', 'T': 'Терминология', 'A': 'Научный аппарат', 'S': 'Стиль', '?': 'Категория спорная'}
 
@@ -46,7 +46,7 @@ def comparison_html(view: dict) -> str:
         passport += f'<p>{e(provenance.get("independence_note", "Независимость судьи от переводчиков отдельно не подтверждена."))}</p>'
     passport += ''.join(f'<p>Хэш {label}: <code>{e(scope["hashes"][role])}</code></p>'
                         for role, label in [('source','оригинала'),('a','перевода A'),('b','перевода B')])
-    paired_mode = bool(view.get('paired') or view.get('paired_protocol'))
+    rubric_mode = bool(view.get('rubric') or view.get('rubric_protocol'))
     candidates = ''.join(f'<p>Перевод {side.upper()}: находок — {s["candidates"] if s["candidates"] is not None else "не оценено"}; '
                          f'спорных — {s["disputed"]}. Необходимых правок: не установлено.</p>'
                          for side, s in summary['sides'].items())
@@ -62,15 +62,15 @@ def comparison_html(view: dict) -> str:
     article{{border-top:1px solid #ccd7d1;padding:14px 0}}code{{overflow-wrap:anywhere}}
     @media print{{body{{margin:0}}details{{display:block}}}}</style>
     <h1>Независимый судья</h1><h2>{e(view['title'])}</h2><p>{e(view.get('description') or '')}</p>
-    {paired_html(view.get('paired'), view.get('paired_protocol', False)) + processing_html(view['processing_effort']) if paired_mode else ''}
+    {rubric_html(view.get('rubric'), view.get('rubric_protocol', False)) + processing_html(view['processing_effort']) if rubric_mode else ''}
     {apparatus_html(view.get('generated_apparatus'))}
-    {'' if paired_mode else effort_html(view['effort'])}
+    {'' if rubric_mode else effort_html(view['effort'])}
     {hadith_html(view.get('hadith'))}
     {source_review_html(view.get('source_review'))}
-    <p>Необходимых правок: <b>не установлено</b>. Экспертная проверка не завершена.</p>
+    {'' if rubric_mode else '<p>Необходимых правок: <b>не установлено</b>. Экспертная проверка не завершена.</p>'}
     <p>Оригинал: {summary['source_chars']} знаков, {summary['source_pages']} условной страницы по 1800 знаков.</p>
     <p>{'Выборка меньше 3 страниц: обобщать результат на книгу или платформу нельзя.' if not summary['negotiation_grade'] else ''}</p>
-    {'' if paired_mode else legacy}
+    {'' if rubric_mode else legacy}
     <h2>Научный аппарат</h2><p>Сохранённые примечания. Наличие сносок не подтверждает их правильность. Потребность в дополнении и исправлении отдельно не установлена.</p>{notes}
     <h2>Границы фрагмента</h2><p>{e(boundary)}</p>
     <h2>Материалы полностью</h2>{materials}
