@@ -6,6 +6,7 @@ from independent_judge.domain.comparison_summary import summarize_comparison
 from independent_judge.domain.apparatus_evidence import apparatus_evidence
 from independent_judge.domain.source_review import source_review
 from independent_judge.domain.effort_forecast import forecast_effort
+from independent_judge.domain.ratings import comparison_ratings
 from independent_judge.application.local_evaluation import reference_key
 
 
@@ -18,6 +19,7 @@ def _view(record: dict) -> dict:
         'apparatus', 'references', 'matched_example_id')} | {
         'summary': summary,
         'effort': forecast_effort(summary),
+        'ratings': comparison_ratings(record, summary),
         'hadith': record.get('hadith'),
         'generated_apparatus': apparatus_evidence(record.get('capability_evidence'), record['scope']),
         'source_review': source_review(record),

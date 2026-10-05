@@ -58,6 +58,7 @@ def test_new_materials_and_unconfirmed_scope_have_no_invented_score(tmp_path):
             'confirmed': False, 'ranges': {k: {'start': 0, 'end': len(v['text']), 'text_sha256': v['sha256']}
                                          for k, v in draft['materials'].items()}}).json()
         view = client.get(f"/api/scopes/{prepared['id']}/comparison").json()
+        assert view['ratings']['sides']['a']['total'] is None
         assert view['run'] is None
         assert view['summary']['sides']['a']['candidates'] is None
         assert view['scope']['status'] == 'needs_review'

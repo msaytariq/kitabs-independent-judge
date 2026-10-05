@@ -23,6 +23,7 @@ export type GeneratedApparatusEvidence = {artifact_sha256:string;label_ru:string
   quality_status:'not_adjudicated'; groups:{id:string;title_ru:string;purpose_ru:string;count:number;
     examples:{text:string;start:number;end:number;sha256:string}[]}[]};
 export type ComparisonView = {id: string; title: string; description: string; scope: Scope;
+  ratings:Ratings;
   effort:Effort;hadith:HadithResult|null;
   source_review: SourceReviewData | null;
   generated_apparatus: GeneratedApparatusEvidence | null;
@@ -36,3 +37,9 @@ export type ComparisonView = {id: string; title: string; description: string; sc
   run: {id: string; status: string; model: string; code_sha: string;
     calls: number; independence: Record<string, string>; report_sha256: string} | null;
   matched_example_id: string | null; live_enabled: false};
+
+export type SideRating = {accuracy:number|null;terminology:number|null;readability:number|null;
+  apparatus:number|null;total:number|null;apparatus_correctness:null;apparatus_basis:string;
+  inventory:Record<string,number>;excluded:number;finding_ids:string[]};
+export type Ratings = {version:string;kind:string;sides:Record<Side,SideRating>;
+  winner:Side|'tie'|null;weights:{accuracy:number;apparatus:number}};
