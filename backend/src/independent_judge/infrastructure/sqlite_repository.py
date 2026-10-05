@@ -27,6 +27,9 @@ class SqliteComparisonRepository:
                     warnings TEXT NOT NULL, UNIQUE(comparison_id, role)
                 );
             """)
+            columns = {r[1] for r in db.execute("PRAGMA table_info(materials)")}
+            if "metadata" not in columns:
+                db.execute("ALTER TABLE materials ADD COLUMN metadata TEXT NOT NULL DEFAULT '{}'")
 
     def _connect(self):
         db = sqlite3.connect(self.path, timeout=10)
@@ -42,9 +45,10 @@ class SqliteComparisonRepository:
                 datetime.now(timezone.utc).isoformat(),
             ))
             for m in inputs.materials:
-                db.execute("INSERT INTO materials VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (
+                db.execute("INSERT INTO materials VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (
                     m.id, comparison_id, m.role, m.text, m.sha256, m.filename,
                     m.file_sha256, m.content_type, m.content, json.dumps(m.warnings),
+                    json.dumps({"page_count": m.page_count, "provenance": m.provenance}),
                 ))
         return comparison_id
 
@@ -59,6 +63,7 @@ class SqliteComparisonRepository:
             values = dict(item)
             values.pop("comparison_id")
             values["warnings"] = tuple(json.loads(values["warnings"]))
+            values.update(json.loads(values.pop("metadata")))
             materials[item["role"]] = MaterialInput(**values)
         return Comparison(
             id=row["id"], created_at=row["created_at"],

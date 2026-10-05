@@ -10,6 +10,7 @@ MAX_FILE_BYTES = 20 * 1024 * 1024
 class ExtractedText:
     text: str
     warnings: tuple[str, ...] = ()
+    page_count: int | None = None
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,8 @@ class MaterialInput:
     content_type: str
     content: bytes = field(repr=False)
     warnings: tuple[str, ...] = ()
+    page_count: int | None = None
+    provenance: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

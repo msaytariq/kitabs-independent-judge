@@ -67,3 +67,18 @@ def test_unknown_profile_and_oversized_source_rejected(tmp_path):
         assert c.post(f"/api/comparisons/{d['id']}/scopes", json=selection(d) | {'profile': 'brand-wins'}).status_code == 422
         d = c.post('/api/comparisons/text', json={'source':'x'*18001, 'a':'one', 'b':'two', 'source_language':'en','target_language':'en'}).json()
         assert c.post(f"/api/comparisons/{d['id']}/scopes", json=selection(d)).status_code == 422
+
+
+def test_source_pdf_limit_is_physical_pages_before_scope_selection(tmp_path):
+    import pymupdf
+    from independent_judge.bootstrap import build_intake
+    from independent_judge.application.intake import Upload
+    from independent_judge.domain.errors import InputError
+    import pytest
+    doc = pymupdf.open()
+    for _ in range(11): doc.new_page().insert_text((72,72), 'A page.')
+    content = doc.tobytes()
+    doc.close()
+    with pytest.raises(InputError) as error:
+        build_intake(tmp_path).create(Upload(content,'source.pdf'), Upload(b'A','a.txt'), Upload(b'B','b.txt'), 'ar','en')
+    assert error.value.code == 'source_page_limit'

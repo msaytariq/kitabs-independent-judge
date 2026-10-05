@@ -1,5 +1,6 @@
 """Select a local parser by the declared file format; never perform OCR."""
 from pathlib import Path
+from independent_judge.infrastructure.formats.html import extract_html
 
 from independent_judge.domain.errors import InputError
 from independent_judge.domain.inputs import ExtractedText
@@ -18,6 +19,8 @@ class LocalTextExtractor:
             if any(ord(c) < 32 and c not in "\t\n\r" for c in text):
                 raise InputError("invalid_text", "Text contains binary control characters.")
             return ExtractedText(text)
+        if extension in (".html", ".htm"):
+            return extract_html(content)
         if extension == ".docx":
             return extract_docx(content)
         if extension == ".pdf":

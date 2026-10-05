@@ -25,4 +25,4 @@ def extract_pdf(content: bytes) -> ExtractedText:
         ))
     return ExtractedText("\n\n".join(pages), (
         "PDF reading order and character extraction can differ from the page. Review the extracted text before comparison.",
-    ))
+    ), page_count=len(pages))

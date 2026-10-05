@@ -22,7 +22,7 @@ from independent_judge.api.local_runs import build_run_router
 from independent_judge.infrastructure.sunnah_source import SunnahSource
 
 
-def create_app(data_dir: Path | None = None, *, evaluation=None) -> FastAPI:
+def create_app(data_dir: Path | None = None, *, evaluation=None, retriever=None) -> FastAPI:
     from independent_judge.runtime_evaluation import configured_evaluation
     directory = data_directory(data_dir)
     jobs = LocalJobs(directory)
@@ -42,7 +42,12 @@ def create_app(data_dir: Path | None = None, *, evaluation=None) -> FastAPI:
     app.add_exception_handler(InputError, input_error_handler)
     app.add_middleware(RequestBodyLimit)
     app.add_middleware(LocalStandAccess)
-    app.include_router(build_router(build_intake(data_dir)))
+    from independent_judge.api.mixed_inputs import build_mixed_router
+    from independent_judge.application.mixed_intake import MixedIntake
+    from independent_judge.infrastructure.url_retrieval import UrlRetriever
+    intake = build_intake(data_dir)
+    app.include_router(build_mixed_router(MixedIntake(intake, retriever or UrlRetriever())))
+    app.include_router(build_router(intake))
     app.include_router(build_scope_router(build_scope(data_dir)))
     app.state.editorial=build_editorial(data_dir)
     app.include_router(build_editorial_router(app.state.editorial))

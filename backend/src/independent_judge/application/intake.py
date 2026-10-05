@@ -1,5 +1,5 @@
 """Validate and extract all three inputs before storing a draft atomically."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from hashlib import sha256
 import re
 from uuid import uuid4
@@ -14,6 +14,7 @@ class Upload:
     content: bytes
     filename: str
     content_type: str = "application/octet-stream"
+    provenance: dict = field(default_factory=dict)
 
 
 def _language(value: str) -> str:
@@ -41,6 +42,8 @@ class IntakeService:
             if not name or len(name) > 255 or any(ord(c) < 32 for c in name):
                 raise InputError("invalid_filename", "Provide a file with a valid filename.")
             extracted = self.extractor.extract(item.content, name, item.content_type)
+            if role == "source" and extracted.page_count is not None and extracted.page_count > 10:
+                raise InputError("source_page_limit", "Use at most 10 physical source PDF pages; no pages were removed.")
             if not extracted.text.strip():
                 raise InputError("empty_text", "The document has no usable text. Check the file before comparison.")
             materials.append(MaterialInput(
@@ -48,6 +51,7 @@ class IntakeService:
                 sha256=sha256(extracted.text.encode("utf-8")).hexdigest(), filename=name,
                 file_sha256=sha256(item.content).hexdigest(), content_type=item.content_type,
                 content=item.content, warnings=extracted.warnings,
+                page_count=extracted.page_count, provenance=item.provenance,
             ))
         inputs = InputTriple(*materials, source_language=source_language, target_language=target_language)
         comparison_id = self.repository.create(inputs)

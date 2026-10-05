@@ -23,6 +23,8 @@ class MaterialView(BaseModel):
     filename: str
     content_type: str
     warnings: tuple[str, ...]
+    page_count: int | None
+    provenance: dict
 
 
 class ComparisonView(BaseModel):
