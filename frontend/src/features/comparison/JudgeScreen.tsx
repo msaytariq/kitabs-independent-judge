@@ -26,7 +26,7 @@ function JudgeContent(){
     <header><div className="brand"><span className="brand-mark">IJ</span><span>{t('Independent Judge','Независимый судья')}<small>{t('TRANSLATION COMPARISON','СРАВНЕНИЕ ПЕРЕВОДОВ')}</small></span></div><LanguageSwitch/></header>
     <section className="intro"><h1>{t('One source. Two translations.','Один оригинал. Два перевода.')}<br/>{t('An evidence-based comparison.','Сравнение с доказательствами.')}</h1>
       <p>{t('Compare quality indices and the remaining review work.','Сравните показатели качества и оставшуюся работу редактора.')}</p></section>
-    <nav className="tabs main-tabs" aria-label="Материалы сравнения">
+    <nav className="tabs main-tabs" aria-label={t('Comparison materials','Материалы сравнения')}>
       <button disabled={busy} className={mode==='own'?'selected':''} aria-pressed={mode==='own'} onClick={()=>setMode('own')}>{t('Your materials','Свои материалы')}</button>
       <button disabled={busy} className={mode==='example'?'selected':''} aria-pressed={mode==='example'} onClick={()=>{
         setMode('example');if(work.reference?.kind!=='example'&&work.examples[0])void work.open({kind:'example',id:work.examples[0].id});

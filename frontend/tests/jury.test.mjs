@@ -61,3 +61,10 @@ test('jury result keeps evidence and methodology collapsed and uses both languag
   assert.ok(html.includes('Method and provenance'));
   assert.ok(!html.includes('Точность'));
 });
+
+test('intake errors respect language and do not expose unsupported Russian server text in English',()=>{
+  const {intakeError}=require('../src/shared/i18n/intake.ts');
+  assert.match(intakeError('scope_too_large','', 'en'),/18,000/);
+  assert.match(intakeError('private_url','', 'ru'),/локальн/);
+  assert.ok(!/[А-Яа-я]/.test(intakeError('unexpected','Русский серверный текст','en')));
+});

@@ -1,6 +1,6 @@
 import type {ComparisonView, Draft, Example, Inputs, Reference, Scope, Role, InputMethod} from '../types/comparison';
 import {fullRanges} from '../utils/textRanges.mjs';
-import {intakeErrors} from '../i18n/intake';
+import {currentError} from '../i18n/intake';
 async function request<T>(path: string, body?: unknown): Promise<T> {
   const form = body instanceof FormData;
   const response = await fetch(path, {method: body === undefined ? 'GET' : 'POST', cache:'no-store',
@@ -8,8 +8,8 @@ async function request<T>(path: string, body?: unknown): Promise<T> {
     body: body === undefined ? undefined : form ? body : JSON.stringify(body)});
   let data;
   try { data = await response.json(); }
-  catch { throw new Error('Локальный сервер недоступен. Материалы на экране сохранены.'); }
-  if (!response.ok) throw new Error(intakeErrors[data.error?.code] || data.error?.message || 'Не удалось обработать материалы. Проверьте формат файлов и заполнение полей.');
+  catch { throw new Error(currentError('network')); }
+  if (!response.ok) throw new Error(currentError(data.error?.code||'request_failed',data.error?.message));
   return data;
 }
 export const listExamples = () => request<Example[]>('/api/examples');

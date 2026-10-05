@@ -22,3 +22,33 @@ const warnings: Record<string,string> = {
   'Headers, footers, comments and text inside images are not extracted; no OCR is performed.':'Колонтитулы, комментарии и текст на изображениях не извлекаются. OCR не выполнялся.',
 };
 export const inputWarning = (message:string) => warnings[message] || message;
+
+const englishErrors:Record<string,string>={
+  scope_too_large:'Select matching passages with at most 18,000 source characters.',
+  source_page_limit:'Use at most 10 physical source PDF pages. Nothing was truncated.',
+  private_url:'Local and private network URLs are not allowed.',
+  url_unavailable:'Cannot retrieve this URL. Upload the document instead.',
+  unsupported_url_content:'Use a text, HTML, DOCX or PDF document URL.',
+  file_too_large:'Each document must be at most 20 MiB.',
+  missing_input:'Provide all three materials before comparison.',
+  judge_disabled:'Live judging requires an operator-configured model and approved budget.',
+  network:'The local server is unavailable. Your materials remain on screen.',
+  polling:'Cannot read the run status. Work continues on the server.',
+  references:'Cannot check sources now. Try again later.',
+};
+Object.assign(intakeErrors,{
+  source_page_limit:'Загрузите не более 10 физических страниц оригинала PDF. Ничего не обрезано.',
+  private_url:'Ссылки на локальные и частные сетевые адреса запрещены.',
+  url_unavailable:'Не удалось получить документ по ссылке. Загрузите файл.',
+  unsupported_url_content:'Нужна ссылка на TXT, HTML, DOCX или PDF.',
+  missing_input:'Добавьте все три материала перед сравнением.',
+  network:'Локальный сервер недоступен. Материалы на экране сохранены.',
+  polling:'Не удалось получить состояние. Запуск продолжается на сервере.',
+  references:'Не удалось проверить источники. Повторите позднее.',
+});
+export function intakeError(code:string,message:string,locale:string):string{
+  if(locale==='ru')return intakeErrors[code]||message||'Не удалось выполнить действие.';
+  return englishErrors[code]||(!/[А-Яа-я]/.test(message)&&message)||`Cannot complete this action (${code||'request failed'}).`;
+}
+export const currentError=(code:string,message='')=>intakeError(code,message,
+  typeof document==='undefined'?'en':document.documentElement.lang);

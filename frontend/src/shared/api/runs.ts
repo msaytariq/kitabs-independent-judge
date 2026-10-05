@@ -1,9 +1,10 @@
+import {currentError} from '../i18n/intake';
 import type {Reference} from '../types/comparison';
 import type {HadithResult,RunState} from '../types/options';
 async function request<T>(path:string,method='GET'):Promise<T> {
   const response=await fetch(path,{method,cache:'no-store'});
   const data=await response.json();
-  if(!response.ok) throw new Error(data.error?.message||'Локальный сервер недоступен.');
+  if(!response.ok) throw new Error(currentError(data.error?.code||'network',data.error?.message));
   return data;
 }
 export const capabilities=()=>request<{live_enabled:boolean}>('/api/runtime');

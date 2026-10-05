@@ -1,4 +1,5 @@
 "use client";
+import {currentError} from '../../shared/i18n/intake';
 import {useEffect,useRef,useState} from 'react';
 import {capabilities,startRun,runStatus,checkReferences} from '../../shared/api/runs';
 import type {Reference} from '../../shared/types/comparison';
@@ -16,16 +17,16 @@ export function useLocalRun(reference:Reference|null,reload:(ref:Reference)=>Pro
   useEffect(()=>{if(reference?.kind!=='scope'||!['queued','running','checking_references'].includes(job?.status||''))return;
     let active=true;const timer=setInterval(()=>{void runStatus(reference.id).then(next=>{
       if(!active)return;setJob(next);if(!['queued','running','checking_references'].includes(next.status))void latestReload.current(reference);
-    }).catch(()=>{if(active)setError('Не удалось получить состояние. Запуск продолжается на сервере.');});},1000);
+    }).catch(()=>{if(active)setError(currentError('polling'));});},1000);
     return()=>{active=false;clearInterval(timer);};
   },[key,job?.status]);
   async function start(){if(!reference||reference.kind!=='scope')return;const ticket=key;setError('');
     try{const next=await startRun(reference.id);if(current.current===ticket){setJob(next);
       if(!['queued','running','checking_references'].includes(next.status))await latestReload.current(reference);}}
-    catch(e){if(current.current===ticket)setError(e instanceof Error?e.message:'Ошибка запуска.');}}
+    catch(e){if(current.current===ticket)setError(e instanceof Error?e.message:currentError('request_failed'));}}
   async function verify(){if(!reference)return;const ticket=key;setChecking(true);setError('');
     try{await checkReferences(reference);if(current.current===ticket)await latestReload.current(reference);}
-    catch{if(current.current===ticket)setError('Не удалось проверить источники. Повторите позднее.');}
+    catch{if(current.current===ticket)setError(currentError('references'));}
     finally{if(current.current===ticket)setChecking(false);}}
   return {enabled,checking,error,job,start,verify,running:['queued','running','checking_references'].includes(job?.status||'')};
 }

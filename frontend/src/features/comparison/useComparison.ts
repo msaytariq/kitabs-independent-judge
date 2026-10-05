@@ -1,4 +1,5 @@
 "use client";
+import {currentError} from '../../shared/i18n/intake';
 import {useEffect, useRef, useState} from 'react';
 import {mixedInputs, listExamples, loadComparison, pasteInputs, uploadInputs, prepareComparison} from '../../shared/api/comparison';
 import type {ComparisonView, Draft, Example, Inputs, Reference, Role, InputMethod} from '../../shared/types/comparison';
@@ -15,7 +16,7 @@ export function useComparison() {
     const ticket = ++generation.current;
     setBusy(true); setError('');
     try { const result = await operation(); return ticket === generation.current ? result : null; }
-    catch (e) { if (ticket === generation.current) setError(e instanceof Error ? e.message : 'Не удалось выполнить действие.'); return null; }
+    catch (e) { if (ticket === generation.current) setError(e instanceof Error ? e.message : currentError('request_failed')); return null; }
     finally { if (ticket === generation.current) setBusy(false); }
   }
   async function open(ref:Reference) {
@@ -31,7 +32,7 @@ export function useComparison() {
       if (ref?.kind === 'legacy') {window.location.replace(`/editorial/#${ref.id}`); return;}
       if (ref) await open(ref as Reference);
       else if (items[0]) await open({kind:'example',id:items[0].id});
-    }).catch(()=>{if(active) setError('Не удалось загрузить примеры с локального сервера.');});
+    }).catch(()=>{if(active) setError(currentError('network'));});
     return ()=>{active=false;};
   },[]);
   async function intake(inputs:Inputs, files:Partial<Record<Role,File>>|null, methods?:Record<Role,InputMethod>) {
