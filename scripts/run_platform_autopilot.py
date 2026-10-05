@@ -13,9 +13,12 @@ from pathlib import Path
 import sqlite3
 import subprocess
 import sys
+import time
 
 from independent_judge.infrastructure.budget_repository import BudgetLedger
 from independent_judge.infrastructure.platform_budget_transport import BudgetedGatewayTransport
+from independent_judge.infrastructure.platform_processing import processing_packet
+from independent_judge.domain.scope import text_hash
 
 
 def save(path, data):
@@ -50,7 +53,8 @@ async def run(args):
     if database.resolve() == args.source_db.resolve():
         raise ValueError('Output must be an isolated database copy')
     copy_database(args.source_db, database)
-    budget = BudgetLedger(args.budget_dir, total_usd=Decimal('1'), per_run_usd=Decimal('1'))
+    budget = BudgetLedger(args.budget_dir, total_usd=Decimal(args.budget_total_usd),
+                          per_run_usd=Decimal(args.budget_run_usd))
     rates = json.loads(args.rates.read_text())['rates']
     def progress(call_id, state, usage):
         print(json.dumps({'call': call_id, 'state': state, 'budget': usage}), flush=True)
@@ -91,6 +95,8 @@ async def run(args):
                 'preparation': 'deterministic pipeline preparation; no UI classifier invocation'}
             save(state_path, state)
         job = await runtime.jobs.get(state['job_id'])
+        # Executor wall clock: preparation through assembly, no queue and no judging.
+        started_at = time.time()
         prepared = await runtime.source_preparer.prepare(job)
         state['stage_configs'] = [asdict(stage) for stage in job.stage_configs]
         state['chunks'] = len(prepared.chunks.payload.chunks)
@@ -107,8 +113,16 @@ async def run(args):
                 if event.event in {'stage_started', 'stage_completed', 'job_completed', 'error', 'job_blocked'}:
                     print(json.dumps({'event': event.event, 'stage': event.data.get('stageId'),
                         'message': event.data.get('message')}), flush=True)
+        finished_at = time.time()
         artifacts = await runtime.artifacts.list_for_job(job.id)
-        save(args.work_dir / 'artifacts.json', [serialize_artifact(a) for a in artifacts])
+        serialized = [serialize_artifact(a) for a in artifacts]
+        save(args.work_dir / 'artifacts.json', serialized)
+        with sqlite3.connect(database) as db:
+            db.row_factory = sqlite3.Row
+            reviews = [dict(r) for r in db.execute(
+                'SELECT stage_id,chunk_id,issue_index,status,updated_at FROM stage_issue_reviews WHERE job_id=?', (job.id,))]
+        save(args.work_dir / 'reviews.json', reviews)
+        intervals = [{'start': started_at, 'end': finished_at}]
         finished = await runtime.jobs.get(job.id)
         state.update(status=finished.status.value, budget=budget.summary())
         save(state_path, state)
@@ -120,6 +134,10 @@ async def run(args):
         (args.work_dir / 'b.txt').write_text(output)
         state['b_sha256'] = hashlib.sha256(output.encode()).hexdigest()
         save(state_path, state)
+        source_text = next(a['payload']['text'] for a in serialized if a['kind'] == 'source_text')
+        save(args.work_dir / 'processing.json', processing_packet(
+            job_id=job.id, artifacts=serialized, reviews=reviews, intervals=intervals,
+            source_sha256=text_hash(source_text), b_text=output))
         print(json.dumps({'status': 'completed', 'b_characters': len(output), 'budget': budget.summary()}), flush=True)
     finally:
         close_runtime_storage(runtime.storage)
@@ -130,6 +148,8 @@ if __name__ == '__main__':
     for name in ('platform-root', 'source-db', 'source', 'work-dir', 'budget-dir', 'rates'):
         parser.add_argument('--' + name, required=True, type=Path)
     parser.add_argument('--run-id', required=True)
+    parser.add_argument('--budget-total-usd', required=True, help='Must equal the ledger policy.')
+    parser.add_argument('--budget-run-usd', required=True, help='Must equal the ledger policy.')
     parser.add_argument('--title', default='Local translation comparison')
     parser.add_argument('--live', action='store_true')
     asyncio.run(run(parser.parse_args()))
