@@ -41,7 +41,7 @@ def test_full_symmetric_protocol_manifest_and_immutable_replay(tmp_path):
     assert report['status']=='completed'
     assert report['scores']['a']['K']==1 and report['scores']['b']['K']==0
     assert sum(p.version=='assessment-v1' for p in judge.calls)==6
-    assert sum(p.version=='coverage-v1' for p in judge.calls)==4
+    assert sum(p.version=='coverage-v2' for p in judge.calls)==4
     assert sum(p.version=='critical-review-v1' for p in judge.calls)==1
     assert sum(p.version=='cross-check-v1' for p in judge.calls)==1
     assert report['manifest']['translator_independence']=={'a':'unknown','b':'same_vendor'}

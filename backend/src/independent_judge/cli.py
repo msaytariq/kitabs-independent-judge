@@ -17,6 +17,7 @@ from independent_judge.application.judge_runner import run_comparison
 from independent_judge.infrastructure.budget_repository import BudgetLedger
 from independent_judge.infrastructure.run_repository import RunRepository
 from independent_judge.infrastructure.gateway import GatewayJudge
+from independent_judge.infrastructure.receipt_reuse import ReceiptReuseJudge
 
 
 def code_checkpoint(repo:Path):
@@ -39,6 +40,7 @@ def main():
     parser.add_argument('--scope-id',required=True)
     parser.add_argument('--run-id',required=True)
     parser.add_argument('--live',action='store_true')
+    parser.add_argument('--reuse-run',help='Reuse exact priced receipts from a finalized local run.')
     parser.add_argument('--translator-a-vendor')
     parser.add_argument('--translator-b-vendor')
     args=parser.parse_args()
@@ -62,6 +64,8 @@ def main():
         raise EvaluationError('missing_budget','Set explicit total and per-run USD limits.') from None
     budget=BudgetLedger(directory,total_usd=total,per_run_usd=per_run)
     judge=GatewayJudge(os.environ.get('AI_GATEWAY_API_KEY',''))
+    if args.reuse_run:
+        judge=ReceiptReuseJudge(judge,directory/'runs.sqlite3',args.reuse_run,config)
     def progress(call_id,state,cost):
         print(json.dumps({'call':call_id,'state':state,'budget':cost}),flush=True)
     report=run_comparison(scope,config,judge,budget,RunRepository(directory),run_id=args.run_id,code_sha=sha,on_progress=progress,
