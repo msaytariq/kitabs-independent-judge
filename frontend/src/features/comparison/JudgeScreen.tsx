@@ -52,6 +52,7 @@ function JudgeContent(){
       {(show||!!view.run&&mode==='own')&&<JuryResult view={view}/>}
       <Materials key={view.id} texts={view.scope.texts}/>
     </>}
-    <footer>{t('Local preview · Machine assessment of the selected material.','Локальный просмотр · Машинная оценка выбранного материала.')}</footer>
+    <footer>{process.env.NEXT_PUBLIC_BASE_PATH?t('Kitabs.ai Independent Judge · Machine assessment of the selected material.','Kitabs.ai, Независимый судья · Машинная оценка выбранного материала.')
+      :t('Local preview · Machine assessment of the selected material.','Локальный просмотр · Машинная оценка выбранного материала.')}</footer>
   </main>;
 }

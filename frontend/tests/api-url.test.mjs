@@ -20,3 +20,7 @@ test('every API client sends requests through apiUrl',()=>{
     assert.ok(!/fetch\((?!apiUrl\()/.test(source),name);
   }
 });
+test('the public footer does not call the page a local preview',()=>{
+  const source=fs.readFileSync(new URL('../src/features/comparison/JudgeScreen.tsx',import.meta.url),'utf8');
+  assert.ok(source.includes("process.env.NEXT_PUBLIC_BASE_PATH?t('Kitabs.ai Independent Judge"));
+});
