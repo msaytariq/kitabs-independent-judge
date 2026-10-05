@@ -17,6 +17,7 @@ class EvaluationRuntime:
     budget: BudgetPort
     reports: RunPort
     code_sha: str
+    protocol: str = 'blind-3pass-exact-consensus-v1'
 
 
 def reference_key(scope: dict) -> str:
@@ -65,7 +66,8 @@ class LocalEvaluation:
             scope = PreparedComparison(**{f.name: stored[f.name] for f in fields(PreparedComparison)})
             runtime = self.runtime
             report = run_comparison(scope, runtime.config, runtime.judge, runtime.budget,
-                                    runtime.reports, run_id=run_id, code_sha=runtime.code_sha)
+                                    runtime.reports, run_id=run_id, code_sha=runtime.code_sha,
+                                    protocol=runtime.protocol)
             self.jobs.update(scope_id, 'checking_references', report=report,
                              error=report.get('error', {}).get('code'))
             if scope.profile == 'islamic-scholarly':

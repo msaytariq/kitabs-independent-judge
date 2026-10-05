@@ -8,6 +8,7 @@ from independent_judge.domain.source_review import source_review
 from independent_judge.domain.effort_forecast import forecast_effort
 from independent_judge.domain.ratings import comparison_ratings
 from independent_judge.domain.decision_effort import decision_effort
+from independent_judge.domain.processing_effort import processing_effort
 from independent_judge.application.local_evaluation import reference_key
 
 
@@ -23,12 +24,19 @@ def _view(record: dict) -> dict:
         'effort': forecast_effort(summary),
         'ratings': comparison_ratings(record, summary),
         'decision_effort': decision_effort(record, summary),
+        'processing_effort': processing_effort(record),
+        'paired': run.get('paired') if run and run['status'] == 'completed' else None,
+        'structural': run.get('structural') if run else None,
+        'adjudication': run.get('adjudication') if run else None,
         'hadith': record.get('hadith'),
         'generated_apparatus': apparatus_evidence(record.get('capability_evidence'), record['scope']),
         'source_review': source_review(record),
         'run': {'id': run['id'], 'status': run['status'],
                 'model': ', '.join(manifest.get('actual_models', [])),
                 'code_sha': manifest.get('code_sha'),
+                'protocol': manifest.get('protocol_version'),
+                'cost': run.get('cost'),
+                'effective_parameters': manifest.get('effective_parameters'),
                 'calls': len(run.get('calls', [])),
                 'independence': manifest.get('translator_independence', {}),
                 'report_sha256': record.get('report_sha256')} if run else None,
@@ -65,7 +73,7 @@ class ComparisonViewService:
         record = {'id': scope_id, 'scope': scope, 'title': 'Ваши материалы',
                   'description': 'Оригинал и два перевода сохранены локально.',
                   'provenance': {'a': 'Перевод A', 'b': 'Перевод B'},
-                  'apparatus': {'a': [], 'b': []}, 'run': None}
+                  'apparatus': {'a': [], 'b': []}, 'processing': scope.get('processing'), 'run': None}
         job = self.jobs.get(scope_id) if self.jobs else None
         if job and job['report']:
             return self.project(record | {'run': job['report']})

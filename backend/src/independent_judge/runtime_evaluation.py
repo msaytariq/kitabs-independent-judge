@@ -18,7 +18,7 @@ def configured_evaluation(directory: Path) -> EvaluationRuntime | None:
     config = load_judge_config(Path(config_path))
     payload(Prompt('', '', 'preflight'), config)  # Validate supported provider before spending.
     sha = code_checkpoint(Path(__file__).resolve().parents[3])
-    budget = BudgetLedger(directory, total_usd=Decimal(os.environ['JUDGE_BUDGET_TOTAL_USD']),
+    budget = BudgetLedger(Path(os.environ.get('JUDGE_BUDGET_DIR', directory)), total_usd=Decimal(os.environ['JUDGE_BUDGET_TOTAL_USD']),
                           per_run_usd=Decimal(os.environ['JUDGE_BUDGET_RUN_USD']))
     return EvaluationRuntime(config, GatewayJudge(os.environ.get('AI_GATEWAY_API_KEY', '')),
-                             budget, RunRepository(directory), sha)
+                             budget, RunRepository(directory), sha, protocol='paired-rubric-v1')

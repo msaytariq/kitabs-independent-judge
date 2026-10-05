@@ -1,5 +1,6 @@
 import type {SourceReviewData} from './sourceReview';
 import type {Effort,HadithResult} from './options';
+import type {PairedResult,ProcessingEffort} from './paired';
 
 export type InputMethod = 'file'|'text'|'url';
 export type Role = 'source' | 'a' | 'b';
@@ -25,6 +26,8 @@ export type GeneratedApparatusEvidence = {artifact_sha256:string;label_ru:string
     examples:{text:string;start:number;end:number;sha256:string}[]}[]};
 export type ComparisonView = {id: string; title: string; description: string; scope: Scope;
   demonstration?:boolean;ratings:Ratings;decision_effort:DecisionEffort;
+  paired?:PairedResult|null;processing_effort?:ProcessingEffort;
+  adjudication?:{status:string;result?:{criteria:{criterion:string;a:{explanation_en:string;explanation_ru:string};b:{explanation_en:string;explanation_ru:string}}[]}|null}|null;
   effort:Effort;hadith:HadithResult|null;
   source_review: SourceReviewData | null;
   generated_apparatus: GeneratedApparatusEvidence | null;
@@ -36,6 +39,7 @@ export type ComparisonView = {id: string; title: string; description: string; sc
   summary: {source_chars: number; source_pages: number; negotiation_grade: boolean;
     measured: boolean; sides: Record<Side, SideSummary>; findings: Finding[]};
   run: {id: string; status: string; model: string; code_sha: string;
+    protocol?:string;cost?:{reported_usd:string;unresolved_reserved_usd:string};
     calls: number; independence: Record<string, string>; report_sha256: string} | null;
   matched_example_id: string | null; live_enabled: false};
 

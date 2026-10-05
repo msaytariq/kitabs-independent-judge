@@ -23,9 +23,9 @@ function JudgeContent(){
   const busy=work.busy||run.running||run.checking;
   async function compare(){setShow(true);if(work.reference?.kind==='scope'&&!view?.run)await run.start();else await run.verify();}
   return <main className="comparison-screen">
-    <header><div className="brand"><span className="brand-mark">IJ</span><span>{t('Independent Judge','Независимый судья')}<small>{t('TRANSLATION COMPARISON','СРАВНЕНИЕ ПЕРЕВОДОВ')}</small></span></div><LanguageSwitch/></header>
+    <header><div className="brand"><span className="brand-mark">J</span><span>Judge<small>{t('TRANSLATION COMPARISON','СРАВНЕНИЕ ПЕРЕВОДОВ')}</small></span></div><LanguageSwitch/></header>
     <section className="intro"><h1>{t('One source. Two translations.','Один оригинал. Два перевода.')}<br/>{t('An evidence-based comparison.','Сравнение с доказательствами.')}</h1>
-      <p>{t('Compare quality indices and the remaining review work.','Сравните показатели качества и оставшуюся работу редактора.')}</p></section>
+      <p>{t('Compare translation quality, evidence and processing time.','Сравните качество переводов, доказательства и время обработки.')}</p></section>
     <nav className="tabs main-tabs" aria-label={t('Comparison materials','Материалы сравнения')}>
       <button disabled={busy} className={mode==='own'?'selected':''} aria-pressed={mode==='own'} onClick={()=>setMode('own')}>{t('Your materials','Свои материалы')}</button>
       <button disabled={busy} className={mode==='example'?'selected':''} aria-pressed={mode==='example'} onClick={()=>{
@@ -52,6 +52,6 @@ function JudgeContent(){
       {(show||!!view.run&&mode==='own')&&<JuryResult view={view}/>}
       <Materials key={view.id} texts={view.scope.texts}/>
     </>}
-    <footer>{t('Local preview · Machine indices require expert review.','Локальный просмотр · Индексы ИИ требуют экспертной проверки.')}</footer>
+    <footer>{t('Local preview · Machine assessment of the selected material.','Локальный просмотр · Машинная оценка выбранного материала.')}</footer>
   </main>;
 }
