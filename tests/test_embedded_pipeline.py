@@ -13,7 +13,8 @@ class Platform:
     def create(self, document_id): self.creates += 1; return 'job'
     def start(self, job_id): self.starts += 1; self.done = True
     def status(self, job_id): return {'id': job_id, 'status': 'completed' if self.done else 'running'}
-    def completed(self, job_id, source_sha256):
+    def completed(self, job_id, source_sha256, started_at=None):
+        self.started_at = started_at
         return {'job_id': job_id, 'text': 'Translation B', 'sha256': text_hash('Translation B'),
                 'source_sha256': source_sha256, 'state': 'completed', 'processing': None}
 
@@ -151,3 +152,14 @@ def test_capabilities_report_the_remaining_launches(tmp_path):
     app = FastAPI()
     app.include_router(build_pipeline_router(PipelineBService(PipelineJobs(tmp_path), Platform(), LocalTextExtractor(), max_requests=10), None))
     assert TestClient(app).get('/api/pipeline-b/capabilities').json() == {'enabled': True, 'remaining': 10}
+
+
+def test_the_start_moment_is_saved_before_the_paid_start_and_reaches_the_journal(tmp_path):
+    port = Platform()
+    s = service(tmp_path, port)
+    try:
+        submit(s)
+        out = wait(s)
+        assert out['status'] == 'completed'
+        assert isinstance(out['started_at'], float) and port.started_at == out['started_at']
+    finally: s.close()

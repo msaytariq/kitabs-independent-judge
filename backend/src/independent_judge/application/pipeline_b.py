@@ -7,6 +7,7 @@ from independent_judge.pipeline_ports import PipelinePort
 from concurrent.futures import ThreadPoolExecutor
 import base64
 import re
+import time
 
 
 def handoff(source: str, mode: str, web_origin: str) -> dict:
@@ -70,8 +71,8 @@ class PipelineBService:
             doc = self.platform.upload(packet['source'], packet['source_language'], packet['target_language'])
             self.jobs.update(key, status='creating', document_id=doc)
             job = self.platform.create(doc)
-            # Commit the known job before the only paid start attempt.
-            self.jobs.update(key, status='running', job_id=job)
+            # Commit the known job and the start moment before the only paid start attempt.
+            self.jobs.update(key, status='running', job_id=job, started_at=time.time())
             self.platform.start(job)
             self.status(key)
         except Exception:
@@ -84,7 +85,8 @@ class PipelineBService:
             try:
                 job = self.platform.status(packet['job_id'])
                 if job['status'] == 'completed':
-                    result = self.platform.completed(packet['job_id'], packet['source_sha256'])
+                    result = self.platform.completed(packet['job_id'], packet['source_sha256'],
+                                                     started_at=packet.get('started_at'))
                     self.jobs.update(request_id, status='completed', result=result, error=None)
                 elif job['status'] in ('failed', 'cancelled', 'paused', 'waiting_review'):
                     self.jobs.update(request_id, status='failed', error='pipeline_' + job['status'])
