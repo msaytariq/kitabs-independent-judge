@@ -61,7 +61,7 @@ test('jury result keeps evidence and methodology collapsed and uses both languag
   assert.ok(html.includes('Method and provenance'));
   assert.ok(!html.includes('Точность'));
   const failed=component('JuryResult',{view:{...view,paired:null,paired_protocol:true}});
-  assert.ok(failed.includes('The paired run did not finish; no grades were assigned.'));
+  assert.ok(failed.includes('The paired run did not finish. Judge gave no grades.'));
   assert.ok(!failed.includes('different protocol'));
 });
 
