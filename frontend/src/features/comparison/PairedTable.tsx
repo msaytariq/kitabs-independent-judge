@@ -18,6 +18,7 @@ export function PairedTable({result}:{result:PairedResult}) {
       {result.criteria.map(row=><tr key={row.criterion}><th scope="row">{labels[row.criterion]}</th>{(['a','b'] as const).map(side=>{
         const s=row[side];return <td key={side}><strong>{s.score===null?(states[s.status]||states.not_assessed):`${s.score} / 5`}</strong>
           {s.status==='unstable'&&<p className="muted">{t('Passes','Проходы')}: {s.pass_scores.map(v=>v??'—').join(' / ')}</p>}
+          {s.evidence_conflict&&<p className="muted">{t('The passes reached opposite conclusions on the same quotation.','Проходы пришли к противоположным выводам по одной и той же цитате.')}</p>}
           <details><summary>{t('Evidence and coverage','Доказательства и охват')}</summary>
             <p>{s.coverage.every(v=>v==='whole_selected_range')?t('The model reports checking the selected range.','Модель заявляет проверку выбранного диапазона.'):t('Partial coverage.','Частичный охват.')}</p>
             {s.explanations.map((e,i)=><p key={i}>{locale==='ru'?e.explanation_ru:e.explanation_en}</p>)}

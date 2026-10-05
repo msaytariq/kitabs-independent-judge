@@ -58,6 +58,22 @@ def test_disagreement_is_not_averaged_into_a_final_grade():
     assert result['advantage'] == 'none'
 
 
+def test_opposite_conclusions_on_the_same_quotes_are_unstable_despite_equal_scores():
+    second = response(('b', 'a'))
+    evidence = second['criteria'][0]['b']['evidence'][0]
+    evidence.update(kind='strength', explanation_en='Faithful.', explanation_ru='Смысл передан верно.')
+    result = reconcile(parse(response()), parse(second, ('b', 'a')))
+    a = result['criteria'][0]['a']
+    assert a['score'] is None and a['status'] == 'unstable'
+    assert a['evidence_conflict'] is True
+    assert a['pass_scores'] == [2, 2]
+    assert result['advantage'] == 'none'
+    from independent_judge.application.paired_disputes import examine_disputes
+    calls = []
+    examine_disputes(sample(), result, lambda name, prompt: calls.append(name) or '{}')
+    assert calls == ['paired-disputes']
+
+
 def test_missing_or_ambiguous_quotes_cannot_support_a_score():
     data = response()
     data['criteria'][0]['a']['evidence'][0]['translation_quote'] = 'not in text'

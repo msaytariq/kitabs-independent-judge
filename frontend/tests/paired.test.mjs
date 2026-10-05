@@ -17,6 +17,8 @@ test('paired table shows uncertainty and source evidence without a composite gra
   assert.ok(html.includes('المصدر') && html.includes('Причина'));
   assert.ok(!html.includes('70%') && !html.includes('100'));
   assert.ok(!html.includes('<details open'));
+  const conflict=show('PairedTable',{result:{advantage:'none',criteria:[{criterion:'accuracy',a:{...s,pass_scores:[2,2],evidence_conflict:true},b:s}],unique_defects:{a:0,b:1}}},'en');
+  assert.ok(conflict.includes('The passes reached opposite conclusions on the same quotation.'));
 });
 test('unknown chat time and applied edits are separate in both locales',()=>{
   const unknown={pipeline_seconds:null,audit_operations:null,editor_operations:null,simulated_seconds:null,total_seconds:null,operations:[]};

@@ -2,6 +2,14 @@
 from independent_judge.domain.paired_rubric import RUBRIC, VERSION
 
 
+def _conflicting_quotes(first: dict, second: dict) -> set[str]:
+    """Verified quote pairs called a defect in one pass and a strength in the other."""
+    def kinds(value):
+        return {(e['id'], e['kind']) for e in value['evidence'] if e['verified'] and e['kind'] != 'observation'}
+    claims = kinds(first) | kinds(second)
+    return {i for i, kind in claims if kind == 'defect' and (i, 'strength') in claims}
+
+
 def reconcile_assessments(passes: list[dict], scope) -> dict:
     if len(passes) != 2:
         raise ValueError('Exactly two completed passes are required')
@@ -11,13 +19,14 @@ def reconcile_assessments(passes: list[dict], scope) -> dict:
         row = {'criterion': criterion}
         for side in ('a', 'b'):
             a, b = (p[criterion][side] for p in indexed)
-            stable = a['status'] == b['status'] and a['score'] == b['score']
+            conflicts = _conflicting_quotes(a, b)
+            stable = a['status'] == b['status'] and a['score'] == b['score'] and not conflicts
             evidence = []
             seen = set()
             for pass_number, value in enumerate((a, b), 1):
                 for item in value['evidence']:
                     key = (item['id'], item['kind'], item['explanation_en'], item['explanation_ru'])
-                    if item['verified'] and item['kind'] == 'defect':
+                    if item['verified'] and item['kind'] == 'defect' and item['id'] not in conflicts:
                         defects[side].add(item['id'])
                     if key not in seen:
                         evidence.append(item | {'pass': pass_number})
@@ -27,6 +36,8 @@ def reconcile_assessments(passes: list[dict], scope) -> dict:
                          'pass_scores': [a.get('proposed_score', a['score']), b.get('proposed_score', b['score'])],
                          'coverage': [a['coverage'], b['coverage']], 'evidence': evidence,
                          'explanations': [{k: value[k] for k in ('explanation_en', 'explanation_ru')} for value in (a, b)]}
+            if conflicts:
+                row[side]['evidence_conflict'] = True
         if scope.texts['a'] == scope.texts['b'] and any(row['a'][key] != row['b'][key] for key in ('score', 'status')):
             for side in ('a', 'b'):
                 row[side].update(score=None, status='unstable', symmetry_conflict=True)
