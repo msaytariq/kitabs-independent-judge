@@ -59,9 +59,15 @@ verify the accuracy of a live judge. Existing catalog entries are not overwritte
 ## Review and publication boundary
 
 Local functionality and offline protocol tests are separate from live-model
-accuracy and production readiness. The primary real example is a human Farahi
-translation against a future KITABS Autopilot result. The source and A must be
-identified and source boundaries verified before pricing or running B. No manual
+accuracy and production readiness. The primary real example is Madelain Farah's
+human translation of al-Ghazali's Book XII, *Book on the Etiquette of Marriage*,
+against a future KITABS Autopilot result. The translator and title are confirmed
+on [ghazali.org](https://www.ghazali.org/rrs-bk12-mfarh/), matching the existing
+H-01/H-02 catalog provenance. The [Arabic catalog](https://www.ghazali.org/ihya-arabic/)
+links the [Book XII Word original](https://www.ghazali.org/ihya/arabic/j2-k02.doc).
+The name is Farah, not Farahi; the verified domain is ghazali.org, not ghazali.com.
+The exact matching fragment and note boundaries still need selection before
+pricing or running B. No manual
 review is planned. Five seconds per remaining candidate is a hypothesis, not
 measured editing time or a claim of end-to-end savings.
 
@@ -94,6 +100,12 @@ A public upload-and-judge deployment still needs the public access contract abov
 the local build alone does not meet that contract. The existing platform remains
 read-only throughout this task. The workspace handoff is usable without platform
 changes; a seamless return requires delegated authorization/callback support.
+
+Dependency limitation: the current locked frontend installs and builds, but
+`npm audit` reports two affected packages (Next.js/PostCSS: one moderate, one high).
+The report includes PostCSS source-map file disclosure advisories. Resolve and
+revalidate the dependency contract before public release; the audit's proposed
+automatic fix is a major Next.js upgrade and was not applied in this iteration.
 
 See [rating method](rating-method.md), [KITABS bridge](kitabs-bridge.md), and
 [synthetic fixture](../examples/synthetic/README.md). No claim of verified takhrij,
