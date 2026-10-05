@@ -3,7 +3,7 @@ import type {ComparisonView} from '../../shared/types/comparison';
 import {useJudgeLocale} from './JudgeLocale';
 import {RubricTable} from './RubricTable';
 import {ProcessingTime} from './ProcessingTime';
-import {HadithEvidence} from './HadithEvidence';
+import {ReferenceEvidence} from './ReferenceEvidence';
 import {Findings} from './Findings';
 export function JuryResult({view}:{view:ComparisonView}) {
   const {t,locale}=useJudgeLocale();
@@ -13,7 +13,7 @@ export function JuryResult({view}:{view:ComparisonView}) {
     <ProcessingTime effort={view.processing_effort}/>
     {!view.rubric&&!view.rubric_protocol&&<details className="panel"><summary>{t('Evidence and explanations','Доказательства и пояснения')}</summary>
       <Findings findings={view.summary.findings}/></details>}
-    <HadithEvidence result={view.hadith}/>
+    <ReferenceEvidence result={view.hadith}/>
     <details className="panel"><summary>{t('Method and provenance','Методика и происхождение')}</summary>
       <p>{view.rubric?t('The AI judge reads the source and two anonymous translations once and grades six criteria.','ИИ-судья один раз читает оригинал и два анонимных перевода и оценивает шесть критериев.'):t('Saved detailed protocol of an earlier method.','Сохранённый протокол прежней методики.')}</p>
       <p>{t('Unknown vendor chunk boundaries are not inferred. API reference matching is shown separately from machine grades.','Неизвестные границы чанков вендора не угадываются. Сверка с API библиотеки показана отдельно от машинных оценок.')}</p>

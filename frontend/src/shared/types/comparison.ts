@@ -1,5 +1,5 @@
 import type {SourceReviewData} from './sourceReview';
-import type {Effort,HadithResult} from './options';
+import type {Effort,ReferenceResult} from './options';
 import type {RubricResult,ProcessingEffort} from './rubric';
 
 export type InputMethod = 'file'|'text'|'url';
@@ -27,7 +27,7 @@ export type GeneratedApparatusEvidence = {artifact_sha256:string;label_ru:string
 export type ComparisonView = {id: string; title: string; description: string; scope: Scope;
   demonstration?:boolean;ratings:Ratings;decision_effort:DecisionEffort;
   rubric?:RubricResult|null;rubric_protocol?:boolean;processing_effort?:ProcessingEffort;
-  effort:Effort;hadith:HadithResult|null;
+  effort:Effort;hadith:ReferenceResult|null;
   source_review: SourceReviewData | null;
   generated_apparatus: GeneratedApparatusEvidence | null;
   provenance: Record<string, string> | null;

@@ -40,14 +40,19 @@ test('unknown chat time and applied edits are separate in both locales',()=>{
     assert.ok(!html.includes('remaining candidates'));
   }
 });
-test('official hadith evidence retains scholar attribution and unknown access',()=>{
-  const record={text:'Arabic text',english_text:'English text',grade:'Scholar: Sahih',
-    url:'https://sunnah.com/bukhari:13',snapshot_sha256:'a'.repeat(64),retrieved_at:'2026-10-05'};
-  const html=show('HadithEvidence',{result:{status:'checked',detection:'marked',items:[],official:{status:'checked',records:[
-    {quote:'Quotation',candidate_id:'bukhari:13',status:'review',record}]}}});
-  assert.ok(html.includes('Scholar: Sahih'));
-  assert.ok(html.includes('Есть расхождения'));
-  assert.ok(html.includes('https://sunnah.com/bukhari:13'));
-  const missing=show('HadithEvidence',{result:null});
-  assert.ok(missing.includes('Не сверено'));
+test('source references show found counts, wrong labels and collections in both locales',()=>{
+  const result={status:'checked',quran:{found:5,total:5,label_differs:1,items:[
+      {quote:'استعينوا بالصبر والصلاة',status:'found',ayah:'2:153',surah_name:'البقرة',label:'محمد : 31',label_status:'label_differs',verse_text:'يا أيها الذين آمنوا استعينوا'}]},
+    hadith:{found:20,total:20,by_collection:{'Sahih al-Bukhari':12,'Sahih Muslim':4},items:[
+      {quote:'عجبا لأمر المؤمن',status:'fragment',candidate_count:1,candidates:[{id:'muslim:7500',collection:'Sahih Muslim',number:7500,
+        text:'عجبا لأمر المؤمن',url:'https://example.org/7500',edition:'ara-muslim',retrieved_at:'2026-10-05',snapshot_sha256:'a'}]}]},official:{status:'requires_key',records:[]}};
+  const ru=show('ReferenceEvidence',{result});
+  assert.ok(ru.includes('Аяты Корана: найдено 5 из 5'));
+  assert.ok(ru.includes('Хадисы: найдено 20 из 20'));
+  assert.ok(ru.includes('Sahih al-Bukhari — 12'));
+  assert.ok(ru.includes('Ошибка ссылки в оригинале: «محمد : 31», в Коране — 2:153'));
+  assert.ok(!ru.includes('Sunnah.com'));
+  const en=show('ReferenceEvidence',{result},'en');
+  assert.ok(en.includes('Quran verses: 5 of 5 found') && en.includes('Hadith: 20 of 20 found'));
+  assert.ok(show('ReferenceEvidence',{result:null}).includes('Сверка источников ещё не выполнена'));
 });

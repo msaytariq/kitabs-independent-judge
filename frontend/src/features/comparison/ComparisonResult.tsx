@@ -4,7 +4,7 @@ import {countLabel} from './helpers.mjs';
 import {Findings} from './Findings';
 import {Apparatus} from './Apparatus';
 import {EffortSummary} from './EffortSummary';
-import {HadithSummary} from './HadithSummary';
+import {ReferenceEvidence} from './ReferenceEvidence';
 import {GeneratedApparatus} from './GeneratedApparatus';
 import {SourceReview} from './SourceReview';
 
@@ -25,7 +25,7 @@ export function ComparisonResult({view,reference}:{view:ComparisonView;reference
           <p>Ожидают проверки: {(s.candidates||0)-s.disputed} · Спорные: {s.disputed}</p>
         </section>;
       })}</div>
-      <div className="versions"><EffortSummary effort={view.effort}/><HadithSummary result={view.hadith}/></div>
+      <div className="versions"><EffortSummary effort={view.effort}/><ReferenceEvidence result={view.hadith}/></div>
       <details className="panel"><summary>Типы замечаний</summary><div className="table-scroll"><table>
         <thead><tr><th>Кандидаты на исправление текста</th><th>A</th><th>B</th></tr></thead>
         <tbody>{[['K','Критические'],['T','Терминология'],['S','Стиль']].map(([code,label])=><tr key={code}>
@@ -37,7 +37,7 @@ export function ComparisonResult({view,reference}:{view:ComparisonView;reference
       </details>
       <details className="panel"><summary>Посмотреть конкретные правки и обоснования</summary><Findings key={view.id} findings={result.findings}/></details>
     </>}
-    {!result.measured&&<HadithSummary result={view.hadith}/>}
+    {!result.measured&&<ReferenceEvidence result={view.hadith}/>}
     {view.source_review&&<details className="panel"><summary>Сохранённый разбор по источникам</summary>
       <SourceReview review={view.source_review} reportHref={reportUrl(reference)}/></details>}
     <details className="panel"><summary>Научный аппарат</summary><Apparatus view={view}/>

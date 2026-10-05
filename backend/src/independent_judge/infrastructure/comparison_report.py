@@ -3,7 +3,7 @@ from html import escape
 from independent_judge.infrastructure.apparatus_report import apparatus_html
 from independent_judge.infrastructure.source_review_report import source_review_html
 from independent_judge.infrastructure.effort_report import effort_html
-from independent_judge.infrastructure.hadith_report import hadith_html
+from independent_judge.infrastructure.reference_report import reference_html
 from independent_judge.infrastructure.rubric_report import rubric_html, processing_html
 
 LABELS = {'K': 'Критические', 'T': 'Терминология', 'A': 'Научный аппарат', 'S': 'Стиль', '?': 'Категория спорная'}
@@ -65,7 +65,7 @@ def comparison_html(view: dict) -> str:
     {rubric_html(view.get('rubric'), view.get('rubric_protocol', False)) + processing_html(view['processing_effort']) if rubric_mode else ''}
     {apparatus_html(view.get('generated_apparatus'))}
     {'' if rubric_mode else effort_html(view['effort'])}
-    {hadith_html(view.get('hadith'))}
+    {reference_html(view.get('hadith'))}
     {source_review_html(view.get('source_review'))}
     {'' if rubric_mode else '<p>Необходимых правок: <b>не установлено</b>. Экспертная проверка не завершена.</p>'}
     <p>Оригинал: {summary['source_chars']} знаков, {summary['source_pages']} условной страницы по 1800 знаков.</p>
@@ -75,5 +75,4 @@ def comparison_html(view: dict) -> str:
     <h2>Границы фрагмента</h2><p>{e(boundary)}</p>
     <h2>Материалы полностью</h2>{materials}
     <h2>Паспорт</h2>{passport}
-    <p>Полная проверка справочников Корана и хадисов в этом стенде не выполнялась.</p>
     </html>'''

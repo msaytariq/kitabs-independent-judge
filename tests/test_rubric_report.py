@@ -59,3 +59,18 @@ def test_legacy_run_keeps_its_own_report():
     html = comparison_html(_view(record()))
     assert 'Кандидаты на проверку, включая спорные' in html
     assert 'Лучше перевод' not in html
+
+
+def test_html_export_shows_source_reference_counts_and_wrong_labels():
+    data = rubric_record()
+    data['hadith'] = {'status': 'checked',
+        'quran': {'found': 5, 'total': 5, 'label_differs': 1, 'items': [
+            {'quote': 'استعينوا بالصبر', 'status': 'found', 'ayah': '2:153', 'surah_name': 'البقرة',
+             'label': 'محمد : 31', 'label_status': 'label_differs'}]},
+        'hadith': {'found': 2, 'total': 3, 'by_collection': {'Sahih Muslim': 2}, 'items': [
+            {'quote': 'عجبا لأمر المؤمن', 'status': 'fragment', 'candidate_count': 1, 'candidates': [
+                {'id': 'muslim:1', 'collection': 'Sahih Muslim', 'number': 1, 'url': 'https://example.org/1'}]}]}}
+    html = comparison_html(_view(data))
+    assert 'Аяты Корана: найдено 5 из 5' in html
+    assert 'Ошибка ссылки в оригинале: «محمد : 31», в Коране — 2:153' in html
+    assert 'Хадисы: найдено 2 из 3' in html and 'Sahih Muslim — 2' in html

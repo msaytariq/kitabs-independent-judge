@@ -1,6 +1,6 @@
 import {currentError} from '../i18n/intake';
 import type {Reference} from '../types/comparison';
-import type {HadithResult,RunState} from '../types/options';
+import type {ReferenceResult,RunState} from '../types/options';
 async function request<T>(path:string,method='GET'):Promise<T> {
   const response=await fetch(path,{method,cache:'no-store'});
   const data=await response.json();
@@ -10,4 +10,4 @@ async function request<T>(path:string,method='GET'):Promise<T> {
 export const capabilities=()=>request<{live_enabled:boolean}>('/api/runtime');
 export const startRun=(id:string)=>request<RunState>(`/api/scopes/${encodeURIComponent(id)}/run`,'POST');
 export const runStatus=(id:string)=>request<RunState>(`/api/scopes/${encodeURIComponent(id)}/run`);
-export const checkReferences=(ref:Reference)=>request<HadithResult>(`/api/${ref.kind==='example'?'examples':'scopes'}/${encodeURIComponent(ref.id)}/references`,'POST');
+export const checkReferences=(ref:Reference)=>request<ReferenceResult>(`/api/${ref.kind==='example'?'examples':'scopes'}/${encodeURIComponent(ref.id)}/references`,'POST');

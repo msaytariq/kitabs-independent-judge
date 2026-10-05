@@ -45,8 +45,9 @@ def test_portable_report_includes_official_source_and_its_qualification():
     from independent_judge.application.comparison_view import _view
     from independent_judge.infrastructure.comparison_report import comparison_html
     from test_comparison_summary import record
-    data = record() | {'hadith': {'status': 'checked', 'library': 'Candidate index',
-        'items': [], 'official': {'source': 'Sunnah.com', 'status': 'checked', 'records': [
+    data = record() | {'hadith': {'status': 'checked',
+        'quran': {'found': 0, 'total': 0, 'label_differs': 0, 'items': []},
+        'hadith': {'found': 0, 'total': 0, 'by_collection': {}, 'items': []}, 'official': {'source': 'Sunnah.com', 'status': 'checked', 'records': [
             {'quote': QUOTE, 'status': 'review', 'record': {
                 'text': '<script>bad</script>', 'english_text': 'Reference translation',
                 'grade': 'Named scholar: Sahih', 'url': 'https://sunnah.com/bukhari:13',
@@ -54,7 +55,7 @@ def test_portable_report_includes_official_source_and_its_qualification():
     html = comparison_html(_view(data))
     assert 'https://sunnah.com/bukhari:13' in html
     assert 'Named scholar: Sahih' in html
-    assert 'Есть расхождения' in html
+    assert 'Близкий текст с расхождениями' in html
     assert '<script>bad</script>' not in html
 
 
