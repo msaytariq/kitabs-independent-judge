@@ -53,3 +53,6 @@
 .comparison-screen .conclusion{font-size:20px}
 .comparison-screen code{overflow-wrap:anywhere}
 @media(max-width:480px){.comparison-screen .quality-table .total-row{font-size:19px}.comparison-screen table{font-size:13px}.comparison-screen th,.comparison-screen td{padding:10px 6px}}
+.comparison-screen .points{font-size:24px;line-height:1.1}
+.comparison-screen .jury-summary{margin:12px 0;padding-left:20px;font-weight:600}
+.comparison-screen .case-study blockquote{margin:4px 0 8px;padding:6px 10px;border-left:3px solid #c9d3c6}
