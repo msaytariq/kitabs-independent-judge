@@ -77,7 +77,7 @@ def test_gemini_admission_respects_prior_translation_spend(tmp_path):
 def test_reviewed_file_loads_and_partial_settings_fail(tmp_path):
     from independent_judge.operator_config import load_judge_config
     path = Path(__file__).resolve().parents[1] / 'config/judge-gemini-3.8-flash.json'
-    assert load_judge_config(path) == gemini()
+    assert load_judge_config(path) == replace(gemini(), reasoning_effort='low')
     invalid = tmp_path / 'partial.json'
     invalid.write_text('{"model":"google/gemini-3.8-flash"}')
     with pytest.raises(ValueError, match='all judge configuration fields'):
@@ -94,7 +94,7 @@ def test_http_runtime_uses_explicit_gemini_config_without_spending(tmp_path, mon
     monkeypatch.setenv('AI_GATEWAY_API_KEY', 'offline-test')
     monkeypatch.setattr(runtime_evaluation, 'code_checkpoint', lambda _: 'a' * 40)
     runtime = runtime_evaluation.configured_evaluation(tmp_path)
-    assert runtime.config == gemini()
+    assert runtime.config == replace(gemini(), reasoning_effort='low')
     assert runtime.budget.summary()['calls'] == 0
 
 
