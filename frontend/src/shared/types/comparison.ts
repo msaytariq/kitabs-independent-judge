@@ -26,7 +26,7 @@ export type GeneratedApparatusEvidence = {artifact_sha256:string;label_ru:string
     examples:{text:string;start:number;end:number;sha256:string}[]}[]};
 export type ComparisonView = {id: string; title: string; description: string; scope: Scope;
   demonstration?:boolean;ratings:Ratings;decision_effort:DecisionEffort;
-  paired?:PairedResult|null;processing_effort?:ProcessingEffort;
+  paired?:PairedResult|null;paired_protocol?:boolean;processing_effort?:ProcessingEffort;
   adjudication?:{status:string;result?:{criteria:{criterion:string;a:{explanation_en:string;explanation_ru:string};b:{explanation_en:string;explanation_ru:string}}[]}|null}|null;
   effort:Effort;hadith:HadithResult|null;
   source_review: SourceReviewData | null;

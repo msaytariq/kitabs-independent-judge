@@ -10,9 +10,9 @@ export function JuryResult({view}:{view:ComparisonView}) {
   return <div className="comparison-result">
     {view.demonstration&&<p className="notice">{t('Synthetic test example; no live model.','Учебный пример; без живой модели.')}</p>}
     {view.paired?<PairedTable result={view.paired}/>:<section className="panel"><h2>{t('Not assessed with the paired rubric','По парной методике не оценено')}</h2>
-      <p>{view.run?t('This saved run uses a different protocol. Its evidence is available below.','Этот сохранённый запуск использует другую методику. Его доказательства доступны ниже.'):t('Start the comparison to obtain machine assessments.','Запустите сравнение для получения машинных оценок.')}</p></section>}
+      <p>{view.paired_protocol?t('The paired run did not finish; no grades were assigned.','Запуск по парной методике не завершён; оценки не выставлены.'):view.run?t('This saved run uses a different protocol. Its evidence is available below.','Этот сохранённый запуск использует другую методику. Его доказательства доступны ниже.'):t('Start the comparison to obtain machine assessments.','Запустите сравнение для получения машинных оценок.')}</p></section>}
     <ProcessingTime effort={view.processing_effort}/>
-    {!view.paired&&<details className="panel"><summary>{t('Evidence and explanations','Доказательства и пояснения')}</summary>
+    {!view.paired&&!view.paired_protocol&&<details className="panel"><summary>{t('Evidence and explanations','Доказательства и пояснения')}</summary>
       <Findings findings={view.summary.findings}/></details>}
     {view.adjudication&&view.adjudication.status!=='not_needed'&&<details className="panel"><summary>{t('Analysis of disagreements','Разбор противоречий')}</summary>
       <p>{view.adjudication.status==='completed'?t('Additional machine analysis. Original instability remains visible.','Дополнительный машинный разбор. Исходная неустойчивость сохранена.'):t('Additional analysis is incomplete.','Дополнительный разбор не завершён.')}</p>

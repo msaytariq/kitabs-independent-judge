@@ -13,9 +13,11 @@ from independent_judge.application.local_evaluation import reference_key
 
 
 def _view(record: dict) -> dict:
-    summary = summarize_comparison(record)
     run = record.get('run')
     manifest = run.get('manifest', {}) if run else {}
+    paired_protocol = str(manifest.get('protocol_version') or '').startswith('paired')
+    # A paired run stores no legacy findings; counting them would show false zeros.
+    summary = summarize_comparison(record | {'run': None} if paired_protocol else record)
     return {key: record.get(key) for key in (
         'id', 'title', 'description', 'scope', 'provenance', 'boundary_review',
         'apparatus', 'references', 'matched_example_id')} | {
@@ -26,6 +28,7 @@ def _view(record: dict) -> dict:
         'decision_effort': decision_effort(record, summary),
         'processing_effort': processing_effort(record),
         'paired': run.get('paired') if run and run['status'] == 'completed' else None,
+        'paired_protocol': paired_protocol,
         'structural': run.get('structural') if run else None,
         'adjudication': run.get('adjudication') if run else None,
         'hadith': record.get('hadith'),
