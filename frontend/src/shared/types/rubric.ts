@@ -7,3 +7,4 @@ export type ProcessingSide={pipeline_seconds:number|null;audit_operations:number
   simulated_seconds:number|null;total_seconds:number|null;reason?:string|null;job_id?:string|null;
   operations:{stage:string;chunk_id:string;edit_id:string;before:string;after:string}[]};
 export type ProcessingEffort={sides:Record<'a'|'b',ProcessingSide>;version:string};
+export type ReferenceCoverage=Record<'quran'|'hadith',{total:number;a:number;b:number}>;

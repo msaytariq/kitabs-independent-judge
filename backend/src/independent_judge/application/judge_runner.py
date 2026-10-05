@@ -21,6 +21,9 @@ from independent_judge.domain.scoring import counts,pending_review
 
 def run_comparison(scope,config,judge,budget,repository,*,run_id,code_sha,
                    translator_vendors=None,on_progress=None,protocol='blind-3pass-exact-consensus-v1'):
+    if protocol == 'coverage-v1':
+        from independent_judge.application.coverage_runner import run_coverage
+        return run_coverage(scope,config,judge,budget,repository,run_id=run_id,code_sha=code_sha,on_progress=on_progress)
     if protocol == 'rubric-v1':
         from independent_judge.application.rubric_runner import run_rubric
         return run_rubric(scope,config,judge,budget,repository,run_id=run_id,code_sha=code_sha,

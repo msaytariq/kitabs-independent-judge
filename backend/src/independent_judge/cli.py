@@ -45,7 +45,7 @@ def main():
     parser.add_argument('--translator-a-vendor')
     parser.add_argument('--translator-b-vendor')
     parser.add_argument('--protocol',default='blind-3pass-exact-consensus-v1',
-        choices=['blind-3pass-exact-consensus-v1','rubric-v1'])
+        choices=['blind-3pass-exact-consensus-v1','rubric-v1','coverage-v1'])
     args=parser.parse_args()
     if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}",args.run_id):
         raise EvaluationError("invalid_run_id","Run ID must contain 1-80 letters, digits, underscores or hyphens.")
@@ -55,8 +55,9 @@ def main():
     config=load_judge_config(args.config)
     preflight={'scope_id':args.scope_id,'status':scope.status,'model':config.model,'protocol':args.protocol,
                'characters':{k:len(v) for k,v in scope.texts.items()}}
-    if args.protocol=='rubric-v1':
-        per_call=reservation(paired_prompt(scope),config)
+    if args.protocol in ('rubric-v1','coverage-v1'):
+        from independent_judge.domain.reference_coverage import coverage_prompt
+        per_call=reservation(paired_prompt(scope) if args.protocol=='rubric-v1' else coverage_prompt(scope.texts),config)
         preflight|={'maximum_calls':1,'per_call_reservation_usd':str(per_call),
                     'maximum_reservation_usd':str(per_call)}
     else:

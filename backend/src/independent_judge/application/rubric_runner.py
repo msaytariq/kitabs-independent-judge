@@ -7,6 +7,7 @@ from independent_judge.domain.evaluation import EvaluationError
 from independent_judge.domain.paired_rubric import paired_prompt
 from independent_judge.domain.paired_assessment import parse_assessment
 from independent_judge.domain.rubric_result import summarize_assessment, VERSION
+from independent_judge.application.coverage_runner import assess_coverage
 from independent_judge.domain.structural_checks import structural_checks
 from independent_judge.domain.run_manifest import identity, independence, digest
 from independent_judge.domain.scope import text_hash
@@ -41,6 +42,13 @@ def run_rubric(scope, config, judge, budget, repository, *, run_id, code_sha,
     try:
         report['passes'].append(parse_assessment(call('assess-0', prompt), scope))
         report['rubric'] = summarize_assessment(report['passes'][0])
+        report['coverage'] = None
+        try:  # verses and hadith in each translation; a failure here keeps the grades
+            report['coverage'] = assess_coverage(scope, call)
+        except EvaluationError as exc:
+            if exc.code == 'budget_exceeded':
+                raise
+            report['coverage_error'] = {'code': exc.code, 'message': str(exc)}
         report['status'] = 'completed'
     except EvaluationError as exc:
         report['status'] = 'budget_stopped' if exc.code == 'budget_exceeded' else 'failed'

@@ -22,6 +22,10 @@ test('rubric table shows a grade in every cell, a total and a winner',()=>{
   assert.ok(ru.includes('المصدر') && ru.includes('Почему так'));
   for(const word of ['Неустойчиво','Не оценено','Проходы','Unstable']) assert.ok(!ru.includes(word));
   assert.ok(!ru.includes('<details open'));
+  const counted=show('RubricTable',{result,coverage:{quran:{total:17,a:0,b:17},hadith:{total:8,a:3,b:8}}});
+  assert.ok(counted.includes('Аяты Корана в переводе') && counted.includes('0 из 17') && counted.includes('17 из 17'));
+  assert.ok(counted.includes('Хадисы в переводе') && counted.includes('3 из 8'));
+  assert.ok(show('RubricTable',{result,coverage:{quran:{total:2,a:1,b:2},hadith:{total:0,a:0,b:0}}},'en').includes('1 of 2'));
   const en=show('RubricTable',{result:{...result,winner:'tie',totals:{a:3,b:3}}},'en');
   assert.ok(en.includes('The translations are equal') && en.includes('3.0 / 5'));
 });

@@ -74,3 +74,19 @@ def test_html_export_shows_source_reference_counts_and_wrong_labels():
     assert 'Аяты Корана: найдено 5 из 5' in html
     assert 'Ошибка ссылки в оригинале: «محمد : 31», в Коране — 2:153' in html
     assert 'Хадисы: найдено 2 из 3' in html and 'Sahih Muslim — 2' in html
+
+
+def test_table_rows_count_verses_and_hadith_in_each_translation():
+    data = rubric_record()
+    data['hadith'] = {'status': 'checked', 'quran': {'found': 2, 'total': 2, 'label_differs': 0,
+        'items': [{'start': 1, 'quote': 'x', 'status': 'found', 'ayah': '1:1', 'surah_name': 'الفاتحة', 'label_status': 'no_label'},
+                  {'start': 9, 'quote': 'y', 'status': 'found', 'ayah': '1:2', 'surah_name': 'الفاتحة', 'label_status': 'no_label'}]},
+        'hadith': {'found': 1, 'total': 1, 'by_collection': {}, 'items': [{'start': 20, 'quote': 'z', 'status': 'fragment', 'candidates': []}]}}
+    side = lambda present: {'present': present, 'quote': None, 'claimed': present}
+    data['coverage'] = {'items': [{'start': 1, 'a': side(False), 'b': side(True)}, {'start': 9, 'a': side(False), 'b': side(True)},
+                                  {'start': 20, 'a': side(True), 'b': side(True)}]}
+    view = _view(data)
+    assert view['reference_coverage'] == {'quran': {'total': 2, 'a': 0, 'b': 2}, 'hadith': {'total': 1, 'a': 1, 'b': 1}}
+    html = comparison_html(view)
+    assert '<tr><th>Аяты Корана в переводе</th><td><b>0 из 2</b></td><td><b>2 из 2</b></td></tr>' in html
+    assert '<tr><th>Хадисы в переводе</th><td><b>1 из 1</b></td><td><b>1 из 1</b></td></tr>' in html

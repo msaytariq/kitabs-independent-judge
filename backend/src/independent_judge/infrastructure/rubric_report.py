@@ -23,7 +23,7 @@ def _cell(side: dict) -> str:
             f'<p>{e(side["explanation_ru"])}</p>{evidence}</details></td>')
 
 
-def rubric_html(rubric: dict | None, rubric_protocol: bool) -> str:
+def rubric_html(rubric: dict | None, rubric_protocol: bool, coverage: dict | None = None) -> str:
     if not rubric:
         reason = 'Оценка не завершена.' if rubric_protocol else 'Запустите сравнение, чтобы получить оценку.'
         return f'<section><h2>{reason}</h2></section>'
@@ -32,6 +32,9 @@ def rubric_html(rubric: dict | None, rubric_protocol: bool) -> str:
     totals = rubric['totals']
     total = ''.join(f'<td><b>{_number(totals[s])} / 5</b></td>' if totals[s] is not None else '<td>—</td>'
                     for s in ('a', 'b'))
+    labels = {'quran': 'Аяты Корана в переводе', 'hadith': 'Хадисы в переводе'}
+    rows += ''.join(f'<tr><th>{labels[g]}</th>' + ''.join(f'<td><b>{c[s]} из {c["total"]}</b></td>' for s in ('a', 'b')) + '</tr>'
+                    for g, c in (coverage or {}).items() if c['total'])
     defects = rubric['unique_defects']
     return f'''<section><h2>{WINNERS.get(rubric['winner'], 'Оценка не завершена.')}</h2>
     <table><tr><th>Критерий</th><th>A</th><th>B</th></tr>{rows}<tr><th>Итог</th>{total}</tr></table>

@@ -1,7 +1,7 @@
 "use client";
-import type {RubricResult,RubricSide} from '../../shared/types/rubric';
+import type {RubricResult,RubricSide,ReferenceCoverage} from '../../shared/types/rubric';
 import {useJudgeLocale} from './JudgeLocale';
-export function RubricTable({result}:{result:RubricResult}) {
+export function RubricTable({result,coverage}:{result:RubricResult;coverage?:ReferenceCoverage|null}) {
   const {t,locale}=useJudgeLocale();
   const labels:Record<string,string>={accuracy:t('Accuracy','Точность'),completeness:t('Completeness','Полнота'),
     terminology:t('Terminology','Терминология'),readability:t('Readability','Читаемость'),
@@ -19,6 +19,8 @@ export function RubricTable({result}:{result:RubricResult}) {
   return <section className="panel"><h2>{result.winner?winners[result.winner]:t('The assessment did not finish.','Оценка не завершена.')}</h2>
     <table><thead><tr><th>{t('Criterion','Критерий')}</th><th>A</th><th>B</th></tr></thead><tbody>
       {result.criteria.map(row=><tr key={row.criterion}><th scope="row">{labels[row.criterion]}</th>{cell(row.a,'a')}{cell(row.b,'b')}</tr>)}
+      {coverage&&(['quran','hadith'] as const).filter(g=>coverage[g].total>0).map(g=><tr key={g}><th scope="row">{g==='quran'?t('Quran verses in the translation','Аяты Корана в переводе'):t('Hadith in the translation','Хадисы в переводе')}</th>
+        {(['a','b'] as const).map(side=><td key={side}><strong>{t(`${coverage[g][side]} of ${coverage[g].total}`,`${coverage[g][side]} из ${coverage[g].total}`)}</strong></td>)}</tr>)}
       <tr><th scope="row">{t('Total','Итог')}</th><td><strong>{total(result.totals.a)}</strong></td><td><strong>{total(result.totals.b)}</strong></td></tr>
     </tbody></table>
     <p className="muted">{t('Errors with quotations','Ошибки с цитатами')}: A — {result.unique_defects.a}; B — {result.unique_defects.b}.</p>

@@ -10,6 +10,7 @@ from independent_judge.domain.ratings import comparison_ratings
 from independent_judge.domain.decision_effort import decision_effort
 from independent_judge.domain.processing_effort import processing_effort
 from independent_judge.domain.rubric_result import VERSION as RUBRIC_VERSION
+from independent_judge.domain.reference_coverage import coverage_counts
 from independent_judge.application.local_evaluation import reference_key
 
 
@@ -30,6 +31,7 @@ def _view(record: dict) -> dict:
         'processing_effort': processing_effort(record),
         'rubric': run.get('rubric') if rubric_protocol and run['status'] == 'completed' else None,
         'rubric_protocol': rubric_protocol,
+        'reference_coverage': coverage_counts(record.get('hadith'), record.get('coverage') or (run or {}).get('coverage')),
         'structural': run.get('structural') if run else None,
         'hadith': record.get('hadith'),
         'generated_apparatus': apparatus_evidence(record.get('capability_evidence'), record['scope']),

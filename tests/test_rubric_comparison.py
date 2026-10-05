@@ -94,11 +94,12 @@ def test_single_pass_runner_makes_one_call_and_keeps_vendor_names_out(tmp_path):
     result, judge = run(tmp_path)
     assert result['status'] == 'completed'
     assert result['rubric']['winner'] == 'b'
-    assert len(judge.calls) == 1
+    assert len(judge.calls) == 2 and judge.calls[1].version == 'coverage-v1'
+    assert result['coverage'] is None and result['coverage_error']['code'] == 'invalid_coverage_response'
     prompt = json.loads(judge.calls[0].user)
     assert prompt['translations'] == {'a': sample().texts['a'], 'b': sample().texts['b']}
     assert result['manifest']['protocol_version'] == 'rubric-v1'
-    assert result['cost']['reported_usd'] == '0.001000'
+    assert result['cost']['reported_usd'] == '0.002000'
     assert RunRepository(tmp_path).get('rubric') == result
 
 
