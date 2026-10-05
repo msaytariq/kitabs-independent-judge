@@ -62,7 +62,7 @@ def comparison_html(view: dict) -> str:
     article{{border-top:1px solid #ccd7d1;padding:14px 0}}code{{overflow-wrap:anywhere}}
     @media print{{body{{margin:0}}details{{display:block}}}}</style>
     <h1>Независимый судья</h1><h2>{e(view['title'])}</h2><p>{e(view.get('description') or '')}</p>
-    {rubric_html(view.get('rubric'), view.get('rubric_protocol', False), view.get('reference_coverage')) + processing_html(view['processing_effort']) if rubric_mode else ''}
+    {rubric_html(view) + processing_html(view['processing_effort']) if rubric_mode else ''}
     {apparatus_html(view.get('generated_apparatus'))}
     {'' if rubric_mode else effort_html(view['effort'])}
     {reference_html(view.get('hadith'))}

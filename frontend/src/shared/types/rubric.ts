@@ -8,3 +8,9 @@ export type ProcessingSide={pipeline_seconds:number|null;audit_operations:number
   operations:{stage:string;chunk_id:string;edit_id:string;before:string;after:string}[]};
 export type ProcessingEffort={sides:Record<'a'|'b',ProcessingSide>;version:string};
 export type ReferenceCoverage=Record<'quran'|'hadith',{total:number;a:number;b:number}>;
+export type JuryRow={key:string;kind:'criterion'|'coverage';a:number|null;b:number|null;
+  level?:Record<'a'|'b',number|null>;found?:Record<'a'|'b',number>;total?:number};
+export type JuryTable={version:string;rows:JuryRow[];totals:Record<'a'|'b',number|null>;winner:'a'|'b'|'tie'|null};
+export type EffortSide={edits:number;defects:number;missing_quotations:number;review_minutes:number;minutes:number};
+export type EffortReduction={version:string;minutes_per_edit:number;reduction_percent:number|null;a:EffortSide;b:EffortSide};
+export type JurySummary={en:string[];ru:string[]};

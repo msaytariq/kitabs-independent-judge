@@ -71,3 +71,16 @@ def test_saved_reference_check_is_kept_when_no_newer_check_exists():
 
     service = ComparisonViewService(None, None, renderer=str, jobs=Jobs())
     assert service.project(saved)['hadith']['status'] == 'checked'
+
+
+def test_view_gives_points_remaining_work_and_summary_for_a_rubric_run():
+    from test_rubric_report import rubric_record
+    view = _view(rubric_record())
+    assert view['jury']['totals'] == {'a': 38, 'b': 75} and view['jury']['winner'] == 'b'
+    assert view['effort_reduction']['a']['minutes'] == 3 and view['effort_reduction']['reduction_percent'] == 100
+    assert view['jury_summary']['en'][0] == 'Translation B is better: 75 against 38 points.'
+
+
+def test_view_without_a_finished_rubric_has_no_points():
+    view = _view(record())
+    assert view['jury'] is None and view['effort_reduction'] is None and view['jury_summary'] is None

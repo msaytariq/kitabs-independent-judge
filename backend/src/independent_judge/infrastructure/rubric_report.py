@@ -9,37 +9,62 @@ TIME_ROWS = [('pipeline_seconds', 'Пайплайн, секунды'), ('audit_o
              ('simulated_seconds', 'Смоделированное принятие, секунды'), ('total_seconds', 'Итого, секунды')]
 
 
-def _number(value: float) -> str:
-    return f'{value:.1f}'.replace('.', ',')
+LEGEND = ('100 — замечаний нет; 75 — мелкие местные дефекты; 50 — заметные дефекты; '
+          '25 — много существенных ошибок; 0 — смысл систематически искажён.')
+COVERAGE_LABELS = {'quran': 'Аяты Корана в переводе', 'hadith': 'Хадисы в переводе'}
 
 
-def _cell(side: dict) -> str:
-    e = lambda value: escape(str(value))
-    value = f'{side["score"]} / 5' if side['score'] is not None else '—'
+def _cell(side: dict, value: int | None) -> str:
+    e = lambda text: escape(str(text))
+    if value is None:
+        return '<td>—</td>'
     evidence = ''.join(f'''<p>Оригинал</p><blockquote dir="auto">{e(x["source_quote"])}</blockquote>
         <p>Перевод</p><blockquote dir="auto">{e(x["translation_quote"])}</blockquote><p>{e(x["explanation_ru"])}</p>'''
         for x in side['evidence'])
-    return (f'<td><b>{value}</b><details><summary>Почему</summary>'
+    return (f'<td><b>{value}</b><br>уровень {side["score"]} из 5<details><summary>Почему</summary>'
             f'<p>{e(side["explanation_ru"])}</p>{evidence}</details></td>')
 
 
-def rubric_html(rubric: dict | None, rubric_protocol: bool, coverage: dict | None = None) -> str:
-    if not rubric:
-        reason = 'Оценка не завершена.' if rubric_protocol else 'Запустите сравнение, чтобы получить оценку.'
+def _effort_html(effort: dict | None) -> str:
+    if not effort:
+        return ''
+    rows = [('Осталось правок', 'edits'), ('из них ошибки с цитатами', 'defects'),
+            ('из них пропущенные аяты и хадисы', 'missing_quotations'),
+            ('Принятие правок Kitabs, минуты', 'review_minutes'), ('Время редактора, минуты', 'minutes')]
+    body = ''.join(f'<tr><th>{label}</th><td>{effort["a"][key]}</td><td>{effort["b"][key]}</td></tr>' for label, key in rows)
+    percent = effort['reduction_percent']
+    verdict = f'<p><b>Экономия времени с B: {percent}%</b></p>' if percent is not None else ''
+    return (f'<section><h2>Редактура до публикации</h2><table><tr><th>Показатель</th><th>A</th><th>B</th></tr>{body}</table>'
+            f'{verdict}<p>Допущение: {effort["minutes_per_edit"]} минуты на одну правку редактора; '
+            '5 секунд на принятие одной правки, которую Kitabs уже применил.</p></section>')
+
+
+def rubric_html(view: dict) -> str:
+    rubric, jury = view.get('rubric'), view.get('jury')
+    if not rubric or not jury:
+        reason = 'Оценка не завершена.' if view.get('rubric_protocol') else 'Запустите сравнение, чтобы получить оценку.'
         return f'<section><h2>{reason}</h2></section>'
-    rows = ''.join(f'<tr><th>{CRITERIA.get(r["criterion"], escape(r["criterion"]))}</th>'
-                   f'{_cell(r["a"])}{_cell(r["b"])}</tr>' for r in rubric['criteria'])
-    totals = rubric['totals']
-    total = ''.join(f'<td><b>{_number(totals[s])} / 5</b></td>' if totals[s] is not None else '<td>—</td>'
+    indexed = {r['criterion']: r for r in rubric['criteria']}
+    rows = ''
+    for row in jury['rows']:
+        if row['kind'] == 'criterion':
+            source = indexed[row['key']]
+            rows += (f'<tr><th>{CRITERIA.get(row["key"], escape(row["key"]))}</th>'
+                     f'{_cell(source["a"], row["a"])}{_cell(source["b"], row["b"])}</tr>')
+        else:
+            rows += (f'<tr><th>{COVERAGE_LABELS[row["key"]]}</th>' + ''.join(
+                f'<td><b>{row[s]}</b><br>{row["found"][s]} из {row["total"]}</td>' for s in ('a', 'b')) + '</tr>')
+    total = ''.join(f'<td><b>{jury["totals"][s]}</b></td>' if jury['totals'][s] is not None else '<td>—</td>'
                     for s in ('a', 'b'))
-    labels = {'quran': 'Аяты Корана в переводе', 'hadith': 'Хадисы в переводе'}
-    rows += ''.join(f'<tr><th>{labels[g]}</th>' + ''.join(f'<td><b>{c[s]} из {c["total"]}</b></td>' for s in ('a', 'b')) + '</tr>'
-                    for g, c in (coverage or {}).items() if c['total'])
+    summary = ''.join(f'<li>{escape(line)}</li>' for line in (view.get('jury_summary') or {}).get('ru', []))
     defects = rubric['unique_defects']
-    return f'''<section><h2>{WINNERS.get(rubric['winner'], 'Оценка не завершена.')}</h2>
-    <table><tr><th>Критерий</th><th>A</th><th>B</th></tr>{rows}<tr><th>Итог</th>{total}</tr></table>
+    return f'''<section><h2>{WINNERS.get(jury['winner'], 'Оценка не завершена.')}</h2>
+    <table><tr><th>Показатель, баллы 0–100</th><th>A</th><th>B</th></tr>{rows}<tr><th>Итог, 0–100</th>{total}</tr></table>
+    <ul>{summary}</ul>
     <p>Ошибки с цитатами: A — {defects['a']}; B — {defects['b']}.</p>
-    <p>Оценки 1–5 выставляет ИИ-судья по одинаковым критериям для A и B. Итог — среднее оценок по критериям.</p></section>'''
+    <p>{LEGEND}</p>
+    <p>ИИ-судья выставляет уровни 1–5 по одинаковым критериям для A и B: 1 = 0, 2 = 25, 3 = 50, 4 = 75, 5 = 100 баллов.
+    Строки аятов и хадисов — доля цитат оригинала, найденных в переводе. Итог — среднее всех строк.</p></section>''' + _effort_html(view.get('effort_reduction'))
 
 
 def processing_html(effort: dict) -> str:

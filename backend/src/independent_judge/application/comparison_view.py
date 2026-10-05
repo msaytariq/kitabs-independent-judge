@@ -11,6 +11,7 @@ from independent_judge.domain.decision_effort import decision_effort
 from independent_judge.domain.processing_effort import processing_effort
 from independent_judge.domain.rubric_result import VERSION as RUBRIC_VERSION
 from independent_judge.domain.reference_coverage import coverage_counts
+from independent_judge.domain.jury_points import effort_reduction, jury_summary, jury_table
 from independent_judge.application.local_evaluation import reference_key
 
 
@@ -20,6 +21,10 @@ def _view(record: dict) -> dict:
     rubric_protocol = manifest.get('protocol_version') == RUBRIC_VERSION
     # A rubric run stores no legacy findings; counting them would show false zeros.
     summary = summarize_comparison(record | {'run': None} if rubric_protocol else record)
+    rubric = run.get('rubric') if rubric_protocol and run['status'] == 'completed' else None
+    coverage = coverage_counts(record.get('hadith'), record.get('coverage') or (run or {}).get('coverage'))
+    processing = processing_effort(record)
+    jury = jury_table(rubric, coverage)
     return {key: record.get(key) for key in (
         'id', 'title', 'description', 'scope', 'provenance', 'boundary_review',
         'apparatus', 'references', 'matched_example_id')} | {
@@ -28,10 +33,13 @@ def _view(record: dict) -> dict:
         'effort': forecast_effort(summary),
         'ratings': comparison_ratings(record, summary),
         'decision_effort': decision_effort(record, summary),
-        'processing_effort': processing_effort(record),
-        'rubric': run.get('rubric') if rubric_protocol and run['status'] == 'completed' else None,
+        'processing_effort': processing,
+        'rubric': rubric,
         'rubric_protocol': rubric_protocol,
-        'reference_coverage': coverage_counts(record.get('hadith'), record.get('coverage') or (run or {}).get('coverage')),
+        'reference_coverage': coverage,
+        'jury': jury,
+        'effort_reduction': effort_reduction(rubric, coverage, processing),
+        'jury_summary': jury_summary(jury),
         'structural': run.get('structural') if run else None,
         'hadith': record.get('hadith'),
         'generated_apparatus': apparatus_evidence(record.get('capability_evidence'), record['scope']),

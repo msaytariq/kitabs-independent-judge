@@ -1,0 +1,103 @@
+"""Points 0-100, remaining editing work and a plain summary for the jury table.
+
+The judge grades levels 1-5; each level has a written definition (paired_rubric.RUBRIC).
+Points only rename the levels: 1 -> 0, 2 -> 25, 3 -> 50, 4 -> 75, 5 -> 100.
+"""
+from independent_judge.domain.paired_rubric import RUBRIC
+
+VERSION = 'points-v1'
+EFFORT_VERSION = 'effort-v1'
+MINUTES_PER_EDIT = 3
+COVERAGE_KEYS = ('quran', 'hadith')
+LABELS = {
+    'en': {'accuracy': 'accuracy', 'completeness': 'completeness', 'terminology': 'terminology',
+           'readability': 'readability', 'seamlessness': 'assembly integrity',
+           'apparatus': 'scholarly apparatus', 'quran': 'Quran verses', 'hadith': 'hadith'},
+    'ru': {'accuracy': 'точность', 'completeness': 'полнота', 'terminology': 'терминология',
+           'readability': 'читаемость', 'seamlessness': 'целостность сборки',
+           'apparatus': 'научный аппарат', 'quran': 'аяты Корана', 'hadith': 'хадисы'},
+}
+
+
+def points(level: int | None) -> int | None:
+    return None if level is None else (level - 1) * 25
+
+
+def _percent(found: int, total: int) -> int:
+    return round(100 * found / total)
+
+
+def jury_table(rubric: dict | None, coverage: dict | None) -> dict | None:
+    if not rubric:
+        return None
+    indexed = {row['criterion']: row for row in rubric['criteria']}
+    rows = []
+    for name in RUBRIC:
+        if name in indexed:
+            levels = {s: indexed[name][s]['score'] for s in ('a', 'b')}
+            rows.append({'key': name, 'kind': 'criterion', 'a': points(levels['a']), 'b': points(levels['b']),
+                         'level': levels})
+    for key in COVERAGE_KEYS:
+        counts = (coverage or {}).get(key)
+        if counts and counts['total']:
+            rows.append({'key': key, 'kind': 'coverage', 'a': _percent(counts['a'], counts['total']),
+                         'b': _percent(counts['b'], counts['total']),
+                         'found': {'a': counts['a'], 'b': counts['b']}, 'total': counts['total']})
+    # The total compares like with like: only rows with a value for both sides.
+    both = [r for r in rows if r['a'] is not None and r['b'] is not None]
+    totals = {s: round(sum(r[s] for r in both) / len(both)) if both else None for s in ('a', 'b')}
+    winner = None
+    if both:
+        winner = 'tie' if totals['a'] == totals['b'] else 'a' if totals['a'] > totals['b'] else 'b'
+    return {'version': VERSION, 'rows': rows, 'totals': totals, 'winner': winner}
+
+
+def effort_reduction(rubric: dict | None, coverage: dict | None, processing: dict | None) -> dict | None:
+    """Editing time that remains to reach the same standard, with the assumptions stated."""
+    if not rubric:
+        return None
+    sides = {}
+    for side in ('a', 'b'):
+        defects = (rubric.get('unique_defects') or {}).get(side, 0)
+        missing = sum(c['total'] - c[side] for c in (coverage or {}).values() if c and c['total'])
+        measured = ((processing or {}).get('sides') or {}).get(side) or {}
+        review_seconds = measured.get('simulated_seconds') or 0
+        review = round(review_seconds / 60)
+        edits = defects + missing
+        sides[side] = {'edits': edits, 'defects': defects, 'missing_quotations': missing,
+                       'review_minutes': review, 'minutes': round(edits * MINUTES_PER_EDIT + review_seconds / 60)}
+    a, b = sides['a']['minutes'], sides['b']['minutes']
+    return sides | {'reduction_percent': round(100 * (1 - b / a)) if a else None,
+                    'minutes_per_edit': MINUTES_PER_EDIT, 'version': EFFORT_VERSION}
+
+
+def jury_summary(table: dict | None) -> dict | None:
+    if not table or table['winner'] is None:
+        return None
+    totals = table['totals']
+    better = {'a': [], 'b': []}
+    equal = []
+    for row in table['rows']:
+        if row['a'] is None or row['b'] is None:
+            continue
+        gap = row['b'] - row['a']
+        (better['b'] if gap > 0 else better['a'] if gap < 0 else equal).append((row['key'], abs(gap)))
+    text = {}
+    for lang in ('en', 'ru'):
+        label = LABELS[lang]
+        listed = lambda items: ', '.join(f'{label[k]} (+{gap})' for k, gap in items)
+        if table['winner'] == 'tie':
+            lines = [f'The translations are equal: {totals["a"]} points each.' if lang == 'en'
+                     else f'Переводы равны: по {totals["a"]} баллов.']
+        else:
+            win, lose = table['winner'], 'a' if table['winner'] == 'b' else 'b'
+            lines = [f'Translation {win.upper()} is better: {totals[win]} against {totals[lose]} points.' if lang == 'en'
+                     else f'Перевод {win.upper()} лучше: {totals[win]} против {totals[lose]} баллов.']
+        for side in ('b', 'a'):
+            if better[side]:
+                lines.append((f'{side.upper()} is better in: ' if lang == 'en' else f'{side.upper()} лучше в: ')
+                             + listed(better[side]) + '.')
+        if equal:
+            lines.append(('Equal in: ' if lang == 'en' else 'Одинаково: ') + ', '.join(label[k] for k, _ in equal) + '.')
+        text[lang] = lines
+    return text

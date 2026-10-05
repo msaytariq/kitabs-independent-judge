@@ -39,20 +39,33 @@ def test_rubric_run_does_not_produce_legacy_zero_counts():
 def test_html_export_shows_definite_grades_total_winner_and_time():
     html = comparison_html(_view(rubric_record()))
     assert 'Лучше перевод B' in html
-    assert '2 / 5' in html and '4 / 5' in html
-    assert 'Итог' in html and '2,5 / 5' in html and '4,0 / 5' in html
+    assert '<b>25</b>' in html and '<b>75</b>' in html and 'уровень 2 из 5' in html
+    # A: 25 and 50 -> 38; B: 75 and 75 -> 75. Apparatus has no grade for either side.
+    assert 'Итог, 0–100' in html and '<b>38</b>' in html and '<b>75</b>' in html
+    assert '100 — замечаний нет' in html
     assert 'Смысл искажён.' in html and 'One claim.' in html
     assert 'Ошибки с цитатами: A — 1; B — 0' in html
+    assert 'Перевод B лучше: 75 против 38 баллов.' in html
     assert '<td>116</td>' in html and '116.04' not in html
     assert html.count('Время не установлено') == 1
     for word in ('Неустойчиво', 'Не оценено', 'не оценено', 'Проходы', 'находок — 0', 'Кандидаты на проверку'):
         assert word not in html
 
 
+def test_html_export_shows_the_editing_time_that_remains():
+    html = comparison_html(_view(rubric_record()))
+    assert 'Редактура до публикации' in html
+    # A: 1 defect x 3 min = 3 min; B: 0 defects and no applied edits = 0 min.
+    assert '<tr><th>Осталось правок</th><td>1</td><td>0</td></tr>' in html
+    assert '<tr><th>Время редактора, минуты</th><td>3</td><td>0</td></tr>' in html
+    assert 'Экономия времени с B: 100%' in html
+    assert '3 минуты на одну правку' in html
+
+
 def test_incomplete_rubric_run_reports_failure_without_zero():
     html = comparison_html(_view(rubric_record(status='failed')))
     assert 'Оценка не завершена' in html
-    assert '/ 5' not in html
+    assert '/ 5' not in html and 'Итог, 0–100' not in html
 
 
 def test_legacy_run_keeps_its_own_report():
@@ -88,5 +101,6 @@ def test_table_rows_count_verses_and_hadith_in_each_translation():
     view = _view(data)
     assert view['reference_coverage'] == {'quran': {'total': 2, 'a': 0, 'b': 2}, 'hadith': {'total': 1, 'a': 1, 'b': 1}}
     html = comparison_html(view)
-    assert '<tr><th>Аяты Корана в переводе</th><td><b>0 из 2</b></td><td><b>2 из 2</b></td></tr>' in html
-    assert '<tr><th>Хадисы в переводе</th><td><b>1 из 1</b></td><td><b>1 из 1</b></td></tr>' in html
+    assert '<tr><th>Аяты Корана в переводе</th><td><b>0</b><br>0 из 2</td><td><b>100</b><br>2 из 2</td></tr>' in html
+    assert '<tr><th>Хадисы в переводе</th><td><b>100</b><br>1 из 1</td><td><b>100</b><br>1 из 1</td></tr>' in html
+    assert view['jury']['totals'] == {'a': 44, 'b': 88}  # A: 25, 50, 0, 100; B: 75, 75, 100, 100

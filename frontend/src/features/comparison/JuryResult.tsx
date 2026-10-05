@@ -2,6 +2,7 @@
 import type {ComparisonView} from '../../shared/types/comparison';
 import {useJudgeLocale} from './JudgeLocale';
 import {RubricTable} from './RubricTable';
+import {EffortReduction} from './EffortReduction';
 import {ProcessingTime} from './ProcessingTime';
 import {ReferenceEvidence} from './ReferenceEvidence';
 import {Findings} from './Findings';
@@ -9,7 +10,8 @@ export function JuryResult({view}:{view:ComparisonView}) {
   const {t,locale}=useJudgeLocale();
   return <div className="comparison-result">
     {view.demonstration&&<p className="notice">{t('Synthetic test example; no live model.','Учебный пример; без живой модели.')}</p>}
-    {view.rubric?<RubricTable result={view.rubric} coverage={view.reference_coverage}/>:<section className="panel"><h2>{view.rubric_protocol?t('The assessment did not finish.','Оценка не завершена.'):view.run?t('Saved result of an earlier method','Сохранённый результат прежней методики'):t('Start the comparison to get grades.','Запустите сравнение, чтобы получить оценки.')}</h2></section>}
+    {view.rubric&&view.jury?<RubricTable result={view.rubric} jury={view.jury} summary={view.jury_summary}/>:<section className="panel"><h2>{view.rubric_protocol?t('The assessment did not finish.','Оценка не завершена.'):view.run?t('Saved result of an earlier method','Сохранённый результат прежней методики'):t('Start the comparison to get grades.','Запустите сравнение, чтобы получить оценки.')}</h2></section>}
+    <EffortReduction effort={view.effort_reduction}/>
     <ProcessingTime effort={view.processing_effort}/>
     {!view.rubric&&!view.rubric_protocol&&<details className="panel"><summary>{t('Evidence and explanations','Доказательства и пояснения')}</summary>
       <Findings findings={view.summary.findings}/></details>}
