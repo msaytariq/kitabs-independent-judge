@@ -23,3 +23,17 @@ def test_a_paragraph_that_ends_without_a_sentence_end_or_a_paragraph_in_lowercas
 def test_one_paragraph_has_no_seams():
     result = seam_check({'source': '', 'a': 'One paragraph only.', 'b': KITABS})
     assert result['a'] == {'joins': 0, 'broken': 0, 'items': []}
+
+
+def test_a_text_with_single_line_breaks_has_a_seam_at_each_line():
+    # A chat writes paragraphs on single lines; each line break is then a paragraph join.
+    text = 'He prayed at night.\nHe slept early,\nand rose at dawn.'
+    result = seam_check({'source': '', 'a': text, 'b': KITABS})
+    assert (result['a']['joins'], result['a']['broken']) == (2, 1)
+
+
+def test_a_plain_heading_line_is_not_a_broken_seam():
+    text = ('The Merit of Remembering Death\nThe Messenger of God said: remember death.\n'
+            'The strong take their provisions from the end of the night,\nAnd if he reads, he gains.')
+    result = seam_check({'source': '', 'a': text, 'b': KITABS})
+    assert (result['a']['joins'], result['a']['broken']) == (2, 1)
