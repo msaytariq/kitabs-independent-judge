@@ -123,6 +123,11 @@
 .comparison-screen .why-sides>div{min-width:0}
 .comparison-screen .why-sides h3{margin-top:0}
 .comparison-screen .why-sides blockquote{margin:4px 0 8px;padding:6px 10px;border-inline-start:3px solid #c9d3c6}
+.comparison-screen .row-source{display:inline-block;margin-top:3px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.comparison-screen .total-explained{background:var(--pale);border-radius:12px;padding:14px 20px;margin:16px 0}
+.comparison-screen .total-explained h3{margin:0 0 8px}
+.comparison-screen .total-explained ul{margin:0;padding:0;padding-inline-start:20px}
+.comparison-screen .total-explained li{margin:4px 0}
 .comparison-screen .method-link a{color:var(--green);font-weight:600}
 .comparison-screen .table-notes{margin-top:10px}
 .comparison-screen .table-notes summary{cursor:pointer;font-weight:600;color:var(--green)}

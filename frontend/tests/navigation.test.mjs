@@ -116,3 +116,20 @@ test('the score table and the method section link the full method on GitHub',()=
   assert.ok(show('RubricTable',{result:rubric,jury},'ru').includes('Методика: критерии, уровни 1–5 и формулы (на английском)'));
   assert.ok(show('RubricTable',{result:rubric,jury},'ar').includes('المنهجية: المعايير والمستويات 1–5 والصيغ (بالإنجليزية)'));
 });
+
+test('under the table, a plain text tells how the total is made, with the numbers of this example',()=>{
+  const plain={...jury,totals:{a:13,b:88}};
+  const html=show('RubricTable',{result:rubric,jury:plain});
+  const block=html.indexOf('How the total is made');
+  assert.ok(block>0 && block<html.indexOf('Errors with quotations'),'the explanation is right under the table');
+  assert.ok(block<html.indexOf('<details class="table-notes">'),'the explanation is not folded');
+  assert.ok(html.includes('Total = the mean of all rows: A — 25 ÷ 2 = 13; B — 175 ÷ 2 = 88.'));
+  assert.ok(html.includes('The higher total wins.') && html.includes('Critical errors and the second judge are not part of the total.'));
+  assert.match(html,/Accuracy<br\/><small class="row-source">AI judge<\/small>/);
+  assert.match(html,/Quran verses in the translation<br\/><small class="row-source">Count<\/small>/);
+  assert.match(html,/Critical errors, count<br\/><small class="row-source">Not in the total<\/small>/);
+  const ru=show('RubricTable',{result:rubric,jury:plain},'ru');
+  assert.ok(ru.includes('Как получается итог') && ru.includes('Итог = среднее всех строк: A — 25 ÷ 2 = 13; B — 175 ÷ 2 = 88.') && ru.includes('ИИ-судья'));
+  const ar=show('RubricTable',{result:rubric,jury:plain},'ar');
+  assert.ok(ar.includes('كيف يُحسب المجموع') && ar.includes('المحكِّم الآلي') && ar.includes('يفوز المجموع الأعلى.'));
+});

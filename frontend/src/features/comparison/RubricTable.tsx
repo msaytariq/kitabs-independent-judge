@@ -52,7 +52,7 @@ export function RubricTable({result,jury}:{result:RubricResult;jury:JuryTable}) 
   const line=(row:JuryRow)=>{
     const id=`why-${row.key}`,parts=(['a','b'] as const).map(side=>reasons(row,side));
     const has=parts.some(Boolean),shown=!!open[row.key];
-    return <Fragment key={row.key}><tr><th scope="row">{labels[row.key]||row.key}
+    return <Fragment key={row.key}><tr><th scope="row">{labels[row.key]||row.key}<br/><small className="row-source">{origin(row)}</small>
         {has&&<><br/><button type="button" className="why" aria-expanded={shown} aria-controls={id}
           onClick={()=>setOpen({...open,[row.key]:!shown})}>{row.kind==='critical'?t('Which errors','Какие'):t('Why','Почему')}</button></>}</th>
         {cell(row,'a')}{cell(row,'b')}</tr>
@@ -61,11 +61,27 @@ export function RubricTable({result,jury}:{result:RubricResult;jury:JuryTable}) 
           {parts[i]??<p className="muted">—</p>}</div>)}</div></td></tr>}</Fragment>;
   };
   const note=(text:React.ReactNode)=><p className="muted">{text}</p>;
+  // Who gives the points of a row: the AI judge (levels 1-5) or a count by the code.
+  const origin=(row:JuryRow)=>row.kind==='critical'?t('Not in the total','Не входит в итог')
+    :row.kind==='criterion'?t('AI judge','ИИ-судья'):t('Count','Подсчёт');
+  // The total in plain numbers: the same rows and rounding as the total row (jury_points._total).
+  const counted=jury.rows.filter(row=>row.kind!=='critical'&&row.a!==null&&row.b!==null);
+  const sum=(side:'a'|'b')=>counted.reduce((total,row)=>total+(row[side] as number),0);
+  const mean=(side:'a'|'b')=>Math.floor(sum(side)/counted.length+0.5);
   return <section className="panel"><h2>{t('Scores','Оценки')}</h2>
     <table className={jury.winner==='a'||jury.winner==='b'?`rubric-table win-${jury.winner}`:'rubric-table'}><thead><tr><th>{t('Measure, points 0–100','Показатель, баллы 0–100')}</th><th>A</th><th>B</th></tr></thead><tbody>
       {jury.rows.map(line)}
       <tr className="total-row"><th scope="row">{t('Total, 0–100','Итог, 0–100')}</th><td>{points(jury.totals.a)}</td><td>{points(jury.totals.b)}</td></tr>
     </tbody></table>
+    {counted.length>0&&<div className="total-explained"><h3>{t('How the total is made','Как получается итог')}</h3><ul>
+      <li>{t('Each row gives A and B from 0 to 100 points.','В каждой строке у A и B оценка от 0 до 100 баллов.')}</li>
+      <li>{t('Rows "AI judge": an AI model reads the source and the two translations. It does not know which vendor made each translation. For each row it selects a level from 1 to 5 by a written definition: 1 = 0 points, 2 = 25, 3 = 50, 4 = 75, 5 = 100.',
+        'Строки «ИИ-судья»: модель ИИ читает оригинал и оба перевода и не знает, чей какой перевод. По каждой строке она ставит уровень от 1 до 5 по готовому описанию: 1 = 0 баллов, 2 = 25, 3 = 50, 4 = 75, 5 = 100.')}</li>
+      <li>{t('Rows "Count": the code counts the verses, the hadith, the references, the seams and the edits without AI. The points are the part that the code finds: for example, 3 of 4 = 75.',
+        'Строки «Подсчёт»: программа считает аяты, хадисы, ссылки, стыки и правки без ИИ. Балл — доля найденного: например, 3 из 4 = 75.')}</li>
+      <li><strong>{t('Total = the mean of all rows','Итог = среднее всех строк')}: A — {sum('a')} ÷ {counted.length} = {mean('a')}; B — {sum('b')} ÷ {counted.length} = {mean('b')}.</strong> {t('The higher total wins.','Побеждает больший итог.')}</li>
+      {jury.rows.some(row=>row.kind==='critical')&&<li>{t('Critical errors and the second judge are not part of the total.','Критические ошибки и второй судья в итог не входят.')}</li>}
+    </ul></div>}
     <p className="muted">{t('Errors with quotations','Ошибки с цитатами')}: A — {result.unique_defects.a}; B — {result.unique_defects.b}.</p>
     {jury.rows.some(row=>row.kind==='critical')&&note(t('Critical errors: the judge lists them, and the code counts an error only when it finds both quotes. The count is not part of the total. In Kitabs.ai, a person corrects each critical error: the audit and the editor propose an edit, and the person accepts or rejects it. Chat and other AI translation services that work without a person do not have this step.',
       'Критические ошибки: их перечисляет судья, код засчитывает ошибку, только если нашёл обе цитаты. В итог не входит. В Kitabs.ai критическую ошибку исправляет человек: аудит и редактор предлагают правку, человек принимает или отклоняет её. У чата и других сервисов ИИ перевода без участия человека такого шага нет.'))}

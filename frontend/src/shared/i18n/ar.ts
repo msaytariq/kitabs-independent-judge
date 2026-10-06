@@ -276,6 +276,18 @@ export const AR: Record<string, string> = {
   'How to read the table': 'كيف يُقرأ الجدول',
   'Critical errors': 'الأخطاء الجسيمة',
   'Second judge': 'المحكِّم الثاني',
+  'Not in the total': 'لا يدخل في المجموع',
+  'AI judge': 'المحكِّم الآلي',
+  'Count': 'عدّ',
+  'How the total is made': 'كيف يُحسب المجموع',
+  'Each row gives A and B from 0 to 100 points.': 'في كل صف تحصل A وB على 0 إلى 100 نقطة.',
+  'Rows "AI judge": an AI model reads the source and the two translations. It does not know which vendor made each translation. For each row it selects a level from 1 to 5 by a written definition: 1 = 0 points, 2 = 25, 3 = 50, 4 = 75, 5 = 100.':
+    'صفوف «المحكِّم الآلي»: يقرأ نموذج ذكاء اصطناعي الأصل والترجمتين ولا يعرف مصدر كل ترجمة. يختار لكل صف مستوى من 1 إلى 5 وفق تعريف مكتوب: 1 = 0 نقطة، 2 = 25، 3 = 50، 4 = 75، 5 = 100.',
+  'Rows "Count": the code counts the verses, the hadith, the references, the seams and the edits without AI. The points are the part that the code finds: for example, 3 of 4 = 75.':
+    'صفوف «عدّ»: يعدّ البرنامج الآيات والأحاديث والإحالات والوصلات والتعديلات دون ذكاء اصطناعي. النقاط هي نسبة ما يجده البرنامج: مثلًا 3 من 4 = 75.',
+  'Total = the mean of all rows': 'المجموع = متوسط جميع الصفوف',
+  'The higher total wins.': 'يفوز المجموع الأعلى.',
+  'Critical errors and the second judge are not part of the total.': 'لا تدخل الأخطاء الجسيمة والمحكِّم الثاني في المجموع.',
   'Method: criteria, levels 1–5 and formulas': 'المنهجية: المعايير والمستويات 1–5 والصيغ (بالإنجليزية)',
 };
 
