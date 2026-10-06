@@ -10,7 +10,8 @@ _SAYING = (r'(?:(?:قال|يقول|فقال|وقال)\s+(?:رسول الله|ا�
            r'|' + _PROPHET + r'\s*(?:قال|يقول|فقال))')
 _CONTEXT_BEFORE = re.compile(r'رسول الله|النبي|' + _PROPHET)
 _CONTEXT_AFTER = re.compile(r'رواه|أخرجه|متفق|البخاري|مسلم')
-_QURAN_FORMULA = r'(?:قال|وقال|قوله|يقول)\s+(?:الله\s+)?(?:تعالى|عز وجل|سبحانه(?:\s+وتعالى)?)'
+# An intake that unifies alef maqsura writes "تعالي"; both forms open a verse.
+_QURAN_FORMULA = r'(?:قال|وقال|قوله|يقول)\s+(?:الله\s+)?(?:تعال[ىي]|عز وجل|سبحانه(?:\s+وتعال[ىي])?)'
 _ATTRIBUTION = re.compile(r'\s*(?:رواه|متفق|أخرجه|انظر|وفي رواية|وفى رواية|صحيح|سنن|مسند)')
 _DIGITS = re.compile(r'[0-9٠-٩]')
 _STOP = re.compile(r'[.\n]|\s(?:حديث|أخرجه|رواه|متفق)\s')
@@ -49,7 +50,7 @@ def detect_references(source: str) -> list[dict]:
             if kind == 'quoted' and not (_CONTEXT_BEFORE.search(source, sentence, start)
                                          or _CONTEXT_AFTER.search(source, end, end + 60)
                                          or surah_label_follows(source, end)
-                                         or re.search(r'تعالى|عز وجل|سبحانه', source[max(0, start - 60):start])):
+                                         or re.search(r'تعال[ىي]|عز وجل|سبحانه', source[max(0, start - 60):start])):
                 continue  # an ordinary quotation, neither attributed to the Prophet nor to the Quran
             if any(s <= start < e for s, e in taken):
                 continue

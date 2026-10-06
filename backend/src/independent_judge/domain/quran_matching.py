@@ -17,6 +17,9 @@ LABEL = re.compile(r'[﴾}»"”]?\s*\(\(?\s*([^():\d]{1,30}?)\s*:\s*(\d{1,3})\s
 # Some editions print the label without brackets after the verse: (...) الإسراء: 79
 BARE_LABEL = re.compile(r'\)?\s*\[?\s*([^():\[\]\d\s،,.]{2,20}(?:\s[^():\[\]\d\s،,.]{2,20})?)\s*:\s*([0-9٠-٩]{1,3})')
 MIN_WORDS = 3
+MIN_SCAN_WORDS = 6  # an unmarked passage counts as a verse only with six or more words in Quran order
+_TOKEN = re.compile(r'\S+')
+_BASMALA = folded('بسم الله الرحمن الرحيم').split()
 
 
 class QuranIndex:
@@ -33,6 +36,30 @@ class QuranIndex:
         self.text = ' ' + ' '.join(parts) + ' '
         words = self.text.split()
         self.trigrams = {' '.join(words[i:i + 3]) for i in range(len(words) - 2)}
+
+    def scan(self, source: str) -> list[tuple[int, int]]:
+        """Spans of the source that quote the Quran without brackets or formula, six words or more."""
+        tokens = [(m.start(), m.end(), folded(m.group())) for m in _TOKEN.finditer(source)]
+        tokens = [t for t in tokens if t[2] and ' ' not in t[2]]
+        # The basmala opens a book or a chapter; it is a formula, not a quotation.
+        words = [t[2] for t in tokens]
+        tokens = [t for n, t in enumerate(tokens)
+                  if not any(words[k:k + 4] == _BASMALA for k in range(max(0, n - 3), n + 1))]
+        spans, i = [], 0
+        while i + MIN_SCAN_WORDS <= len(tokens):
+            j = i
+            while j + 3 <= len(tokens) and ' '.join(t[2] for t in tokens[j:j + 3]) in self.trigrams:
+                j += 1
+            if j - i + 2 >= MIN_SCAN_WORDS:
+                located = self.locate(source[tokens[i][0]:tokens[j + 1][1]], anchored=True)
+                if located and located['matched_words'] >= MIN_SCAN_WORDS:
+                    first = i + located['first_word']
+                    last = first + located['matched_words'] - 1
+                    spans.append((tokens[first][0], tokens[last][1]))
+                    i = last + 1
+                    continue
+            i += 1
+        return spans
 
     def _verse_at(self, position: int) -> dict:
         return self.refs[max(0, bisect_right(self.starts, position - 1) - 1)]

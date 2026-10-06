@@ -139,3 +139,34 @@ def test_an_ordinary_bracket_followed_by_a_number_is_not_a_surah_label():
     source = 'قال رسول الله ﷺ (إنما الأعمال بالنيات وإنما لكل امرئ ما نوى) رواه البخاري: 1'
     result = verify_references({'source': source, 'a': '', 'b': ''}, Library(VERSES), Library(HADITH))
     assert all(i.get('label_status') != 'label_differs' for i in result['quran']['items'])
+
+
+DEATH = {'chapter': 62, 'verse': 8, 'text': 'قُلْ إِنَّ الْمَوْتَ الَّذِي تَفِرُّونَ مِنْهُ فَإِنَّهُ مُلَاقِيكُمْ ۖ ثُمَّ تُرَدُّونَ إِلَىٰ عَالِمِ الْغَيْبِ وَالشَّهَادَةِ فَيُنَبِّئُكُمْ بِمَا كُنْتُمْ تَعْمَلُونَ'}
+
+
+def test_a_verse_without_brackets_or_formula_is_found_by_its_words():
+    source = ('ونفر منه أولئك هم الذين قال الله فيهم قل إن الموت الذي تفرون منه فإنه ملاقيكم ثم تردون إلي عالم '
+              'الغيب والشهادة فينبئكم بما كنتم تعملون وقال الحسن رحمه الله تعالي فضح الموت الدنيا')
+    result = verify_references({'source': source, 'a': '', 'b': ''}, Library(VERSES + [DEATH]), Library(HADITH))
+    assert [(a['ayah'], a['status']) for a in result['quran']['items']] == [('62:8', 'found')]
+    item = result['quran']['items'][0]
+    assert source[item['start']:item['end']].startswith('قل إن الموت') and item['quote'].endswith('تعملون')
+
+
+def test_a_short_common_phrase_is_not_taken_for_a_verse():
+    source = 'إن الله مع الصابرين في كل حال كما قال الشيخ'
+    result = verify_references({'source': source, 'a': '', 'b': ''}, Library(VERSES), Library(HADITH))
+    assert result['quran']['total'] == 0
+
+
+def test_the_formula_accepts_the_ya_form_of_taala():
+    found = detect_references('وقال الله تعالي إنما يتقبل الله من المتقين فلا يمكن')
+    assert [r['kind'] for r in found] == ['quran']
+
+
+def test_the_basmala_and_an_opening_praise_are_not_a_verse():
+    opening = {'chapter': 6, 'verse': 1, 'text': 'الْحَمْدُ لِلَّهِ الَّذِي خَلَقَ السَّمَاوَاتِ وَالْأَرْضَ'}
+    basmala = {'chapter': 1, 'verse': 1, 'text': 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'}
+    source = 'بسم الله الرحمن الرحيم الحمد لله الذي قصم بالموت رقاب الجبابرة'
+    result = verify_references({'source': source, 'a': '', 'b': ''}, Library([basmala, opening]), Library(HADITH))
+    assert result['quran']['total'] == 0

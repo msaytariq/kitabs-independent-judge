@@ -11,14 +11,23 @@ LIMIT = 40
 
 def verify_references(texts: dict[str, str], quran_library, hadith_library, *, quran_index=None, hadith_index=None) -> dict:
     source = texts['source']
-    detected = detect_references(source)[:LIMIT]
-    base = {'detected_count': len(detected), 'translation_accuracy': 'not_assessed',
-            'authenticity': 'not_adjudicated', 'limit_reached': len(detect_references(source)) > LIMIT}
+    detected = detect_references(source)
     try:
         quran = quran_index or QuranIndex(quran_library.verses())
         hadith = hadith_index or HadithIndex(hadith_library.records())
     except LibraryUnavailable:
-        return base | {'status': 'unavailable', 'quran': None, 'hadith': None}
+        detected = detected[:LIMIT]
+        return {'detected_count': len(detected), 'translation_accuracy': 'not_assessed',
+                'authenticity': 'not_adjudicated', 'limit_reached': False,
+                'status': 'unavailable', 'quran': None, 'hadith': None}
+    # A verse quoted without brackets or formula is found by its words in Quran order.
+    taken = [(d['start'], d['end']) for d in detected]
+    detected += [{'kind': 'quran', 'marked': True, 'quote': source[s:e], 'start': s, 'end': e}
+                 for s, e in quran.scan(source) if not any(s < te and ts < e for ts, te in taken)]
+    detected.sort(key=lambda d: d['start'])
+    base = {'detected_count': min(len(detected), LIMIT), 'translation_accuracy': 'not_assessed',
+            'authenticity': 'not_adjudicated', 'limit_reached': len(detected) > LIMIT}
+    detected = detected[:LIMIT]
     ayat, reports = [], []
     for item in detected:
         unmarked_verse = item['kind'] == 'quran' and not item['marked']
