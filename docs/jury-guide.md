@@ -36,10 +36,13 @@ and the section **Sources in the original** shows each one.
 2. Supply the Arabic source (up to 18,000 characters, about 10 pages): file
    (TXT, MD, DOCX, HTML, PDF with a text layer), pasted text or URL.
 3. Supply translation A: file, text or URL.
-4. Supply translation B, or click **Start processing on Kitabs.ai (Autopilot)**.
-   Kitabs.ai translates and edits the source and returns B to this page.
+4. For translation B, keep the input **Kitabs.ai autopilot** and click **Start
+   the autopilot on Kitabs.ai**, or select file, text or URL for a completed B.
+   The autopilot sends the source file to the Kitabs intake (the same as on
+   the Kitabs desk), translates, audits, edits and assembles it, and returns
+   B with the Kitabs reading of the source. A bar shows the finished steps.
    The number of Kitabs launches for the demonstration is limited.
-5. Click **Check materials**, then start the comparison.
+5. Click **Continue to comparison**, then **Compare**.
 
 ## What the screen shows
 
@@ -94,7 +97,14 @@ The code finds each Quran verse of the source in the Quran text
 (fawazahmed0/quran-api, edition ara-quransimple) and gives the surah and verse.
 It also finds each hadith in seven collections (fawazahmed0/hadith-api:
 al-Bukhari, Muslim, Abu Dawud, at-Tirmidhi, an-Nasa'i, Ibn Majah, Malik).
-When the source gives a wrong reference, the screen shows it.
+When the source gives a wrong reference, the screen shows it. A verse that the
+source quotes without brackets is found by six or more words in Quran order;
+the basmala is not counted as a quotation.
+
+Some PDF text layers store each lam-alef pair in reverse order ("األول" for
+"الأول", "ال" for "لا"). The code repairs such a text with a word list of the
+Quran and the hadith collections: a word changes only when the list knows the
+repaired word and not the word as it stands.
 
 ### Seams
 
@@ -165,9 +175,18 @@ with the text before and after (section **Processing time**). The judge grades
 the text after these edits. In the saved examples B has 69 and 135 applied
 edits (207 and 405 minutes); A has none.
 
+### Readiness for publication
+
+A separate block, not part of the quality total. For A and B the code counts
+the anchored notes, glossary entries and person entries; for B the block adds
+the typeset book (PDF) that Kitabs.ai makes after the autopilot, with a download
+button, and the applied audit and editor edits. The block has its own score of
+4 checks.
+
 ### Second judge
 
-Judge 1 is Gemini 3.8 Flash (Google). Judge 2 is Grok 4.1 Fast (xAI). The
+Judge 1 is Gemini 3.8 Flash (Google). Judge 2 is Grok 4.1 Fast (xAI); it also
+grades your own comparisons, after judge 1. The
 translations B use Anthropic, OpenAI and DeepSeek models, so neither judge
 family made translation B. Both judges receive the texts as "A" and "B",
 without vendor or model names. In the saved example, both judges selected the
