@@ -103,3 +103,16 @@ test('a select list draws its arrow away from the edge, on the left side in Arab
   assert.match(css,/\.comparison-screen select\{[^}]*appearance:none[^}]*padding-inline-end:44px[^}]*background-position:right 16px center/);
   assert.match(css,/:root\[dir=rtl\] \.comparison-screen select\{background-position:left 16px center\}/);
 });
+
+test('the score table and the method section link the full method on GitHub',()=>{
+  const url='https://github.com/msaytariq/kitabs-independent-judge/blob/main/docs/rating-method.md';
+  const link=new RegExp(`<a[^>]+href="${url.replace(/[.]/g,'\\.')}"[^>]*>Method: criteria, levels 1–5 and formulas</a>`);
+  const table=show('RubricTable',{result:rubric,jury});
+  assert.match(table,link);
+  assert.ok(table.indexOf(url)<table.indexOf('How to read the table'),'the link is visible above the folded notes');
+  const view={id:'x',rubric,jury,summary:{source_chars:1800,source_pages:1,findings:[]},scope:{hashes:{source:'s'}},run:{id:'r',model:'m',code_sha:'abc'},hadith:null};
+  const method=show('JuryResult',{view}).split('id="result-method"')[1];
+  assert.match(method,link);
+  assert.ok(show('RubricTable',{result:rubric,jury},'ru').includes('Методика: критерии, уровни 1–5 и формулы (на английском)'));
+  assert.ok(show('RubricTable',{result:rubric,jury},'ar').includes('المنهجية: المعايير والمستويات 1–5 والصيغ (بالإنجليزية)'));
+});

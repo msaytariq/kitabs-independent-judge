@@ -10,6 +10,7 @@ import {ReferenceEvidence} from './ReferenceEvidence';
 import {TakhrijCheck} from './TakhrijCheck';
 import {EditionReadiness} from './EditionReadiness';
 import {Findings} from './Findings';
+import {MethodLink} from './MethodLink';
 import {VerdictCard} from './VerdictCard';
 import {ResultNav,type ResultSection} from './ResultNav';
 // The result reads from the verdict to the method: Result · Scores · Errors · Sources · Edition · Method.
@@ -36,6 +37,7 @@ export function JuryResult({view}:{view:ComparisonView}) {
     {part('result-sources',<><TakhrijCheck check={view.takhrij}/><ReferenceEvidence result={view.hadith}/></>)}
     {part('result-edition',<><EditionReadiness edition={view.edition}/><EffortReduction effort={view.effort_reduction}/><ProcessingTime effort={view.processing_effort}/></>)}
     {part('result-method',<details className="panel"><summary>{t('Method and provenance','Методика и происхождение')}</summary>
+      <MethodLink/>
       <p>{view.rubric?t('The AI judge reads the source and two anonymous translations once and grades six criteria.','ИИ-судья один раз читает оригинал и два анонимных перевода и оценивает шесть критериев.'):t('Saved detailed protocol of an earlier method.','Сохранённый протокол прежней методики.')}</p>
       <p>{t('Unknown vendor chunk boundaries are not inferred. API reference matching is shown separately from machine grades.','Неизвестные границы чанков вендора не угадываются. Сверка с API библиотеки показана отдельно от машинных оценок.')}</p>
       <p>{t('Source characters','Знаков оригинала')}: {view.summary.source_chars}; {t('1,800-character units','условных страниц по 1800 знаков')}: {view.summary.source_pages}.</p>

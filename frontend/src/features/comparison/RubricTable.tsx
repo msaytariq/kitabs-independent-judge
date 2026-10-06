@@ -2,6 +2,7 @@
 import {Fragment,useState} from 'react';
 import type {RubricResult,RubricSide,JuryTable,JuryRow,CriticalError} from '../../shared/types/rubric';
 import {useJudgeLocale} from './JudgeLocale';
+import {MethodLink} from './MethodLink';
 // The winner and the summary lines are in the verdict card; this table gives the scores and the reasons.
 export function RubricTable({result,jury}:{result:RubricResult;jury:JuryTable}) {
   const {t,locale}=useJudgeLocale();
@@ -68,6 +69,7 @@ export function RubricTable({result,jury}:{result:RubricResult;jury:JuryTable}) 
     <p className="muted">{t('Errors with quotations','Ошибки с цитатами')}: A — {result.unique_defects.a}; B — {result.unique_defects.b}.</p>
     {jury.rows.some(row=>row.kind==='critical')&&note(t('Critical errors: the judge lists them, and the code counts an error only when it finds both quotes. The count is not part of the total. In Kitabs.ai, a person corrects each critical error: the audit and the editor propose an edit, and the person accepts or rejects it. Chat and other AI translation services that work without a person do not have this step.',
       'Критические ошибки: их перечисляет судья, код засчитывает ошибку, только если нашёл обе цитаты. В итог не входит. В Kitabs.ai критическую ошибку исправляет человек: аудит и редактор предлагают правку, человек принимает или отклоняет её. У чата и других сервисов ИИ перевода без участия человека такого шага нет.'))}
+    <MethodLink/>
     <details className="table-notes"><summary>{t('How to read the table','Как читать таблицу')}</summary>
     <p className="muted">{t('100 — no defects; 75 — small local defects; 50 — notable defects; 25 — many substantive errors; 0 — meaning is systematically distorted.',
       '100 — замечаний нет; 75 — мелкие местные дефекты; 50 — заметные дефекты; 25 — много существенных ошибок; 0 — смысл систематически искажён.')}</p>

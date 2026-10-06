@@ -123,6 +123,7 @@
 .comparison-screen .why-sides>div{min-width:0}
 .comparison-screen .why-sides h3{margin-top:0}
 .comparison-screen .why-sides blockquote{margin:4px 0 8px;padding:6px 10px;border-inline-start:3px solid #c9d3c6}
+.comparison-screen .method-link a{color:var(--green);font-weight:600}
 .comparison-screen .table-notes{margin-top:10px}
 .comparison-screen .table-notes summary{cursor:pointer;font-weight:600;color:var(--green)}
 @media(max-width:640px){

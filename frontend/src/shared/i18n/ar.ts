@@ -276,6 +276,7 @@ export const AR: Record<string, string> = {
   'How to read the table': 'كيف يُقرأ الجدول',
   'Critical errors': 'الأخطاء الجسيمة',
   'Second judge': 'المحكِّم الثاني',
+  'Method: criteria, levels 1–5 and formulas': 'المنهجية: المعايير والمستويات 1–5 والصيغ (بالإنجليزية)',
 };
 
 // Texts with values: the English pattern and its Arabic form; {0}, {1} keep their order.
