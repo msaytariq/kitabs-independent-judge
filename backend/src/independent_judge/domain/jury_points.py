@@ -14,26 +14,32 @@ LABELS = {
     'en': {'accuracy': 'accuracy', 'completeness': 'completeness', 'terminology': 'terminology',
            'readability': 'readability', 'seamlessness': 'seamless assembly',
            'apparatus': 'scholarly apparatus', 'quran': 'Quran verses', 'hadith': 'hadith',
-           'takhrij': 'hadith takhrij', 'verse_refs': 'verse references', 'editing': 'editing', 'seams': 'seams without breaks'},
+           'takhrij': 'hadith takhrij', 'verse_refs': 'verse references', 'editing': 'editing', 'seams': 'seams without breaks',
+           'critical': 'critical errors'},
     'ru': {'accuracy': 'точность', 'completeness': 'полнота', 'terminology': 'терминология',
            'readability': 'читаемость', 'seamlessness': 'бесшовность сборки',
            'apparatus': 'научный аппарат', 'quran': 'аяты Корана', 'hadith': 'хадисы',
-           'takhrij': 'тахридж хадисов', 'verse_refs': 'ссылки на аяты', 'editing': 'редактура', 'seams': 'стыки без разрывов'},
+           'takhrij': 'тахридж хадисов', 'verse_refs': 'ссылки на аяты', 'editing': 'редактура', 'seams': 'стыки без разрывов',
+           'critical': 'критические ошибки'},
     'ar': {'accuracy': 'الدقة', 'completeness': 'الاكتمال', 'terminology': 'المصطلحات',
            'readability': 'سهولة القراءة', 'seamlessness': 'تجميع بلا فواصل',
            'apparatus': 'الجهاز العلمي', 'quran': 'آيات القرآن', 'hadith': 'الأحاديث',
-           'takhrij': 'تخريج الأحاديث', 'verse_refs': 'الإحالات إلى الآيات', 'editing': 'التحرير', 'seams': 'وصلات بلا انقطاع'},
+           'takhrij': 'تخريج الأحاديث', 'verse_refs': 'الإحالات إلى الآيات', 'editing': 'التحرير', 'seams': 'وصلات بلا انقطاع',
+           'critical': 'الأخطاء الجسيمة'},
 }
 PHRASES = {
     'en': {'tie': 'The translations are equal: {a} points each.',
            'win': 'Translation {win} is better: {high} against {low} points.',
-           'better': '{side} is better in: ', 'equal': 'Equal in: ', 'comma': ', '},
+           'better': '{side} is better in: ', 'equal': 'Equal in: ', 'comma': ', ',
+           'critical': 'Critical errors: A — {a}, B — {b}.'},
     'ru': {'tie': 'Переводы равны: итог {a} из 100 у каждого.',
            'win': 'Перевод {win} лучше: {high} против {low} баллов.',
-           'better': '{side} лучше в: ', 'equal': 'Одинаково: ', 'comma': ', '},
+           'better': '{side} лучше в: ', 'equal': 'Одинаково: ', 'comma': ', ',
+           'critical': 'Критические ошибки: A — {a}, B — {b}.'},
     'ar': {'tie': 'الترجمتان متساويتان: {a} نقطة لكل منهما.',
            'win': 'الترجمة {win} أفضل: {high} مقابل {low} نقطة.',
-           'better': '{side} أفضل في: ', 'equal': 'متساويتان في: ', 'comma': '، '},
+           'better': '{side} أفضل في: ', 'equal': 'متساويتان في: ', 'comma': '، ',
+           'critical': 'الأخطاء الجسيمة: A — {a}، B — {b}.'},
 }
 
 
@@ -106,6 +112,11 @@ def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None 
                 levels |= {s: 1 for s in without_notes}
                 row['no_notes'] = sorted(without_notes)
             rows.append(row | {'a': points(levels['a']), 'b': points(levels['b']), 'level': levels})
+    critical = rubric.get('critical_errors')
+    if critical is not None:
+        # A count of errors, not points: it stays out of the total (_points_rows).
+        rows.append({'key': 'critical', 'kind': 'critical', 'a': len(critical['a']), 'b': len(critical['b']),
+                     'errors': critical})
     for key in COVERAGE_KEYS:
         counts = (coverage or {}).get(key)
         if counts and counts['total']:
@@ -137,13 +148,23 @@ def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None 
                      **{s: _percent(done[s], done[s] + remaining[s]) if done[s] + remaining[s] else 100
                         for s in ('a', 'b')},
                      'done': done, 'remaining': remaining})
-    # The total compares like with like: only rows with a value for both sides.
-    both = [r for r in rows if r['a'] is not None and r['b'] is not None]
+    totals, winner = _total(rows)
+    return {'version': VERSION, 'rows': rows, 'totals': totals, 'winner': winner}
+
+
+def _points_rows(rows: list) -> list:
+    """Rows with points 0-100 for both sides; a count of critical errors is not points."""
+    return [r for r in rows if r['kind'] != 'critical' and r['a'] is not None and r['b'] is not None]
+
+
+def _total(rows: list) -> tuple[dict, str | None]:
+    # The total compares like with like: only rows with points for both sides.
+    both = _points_rows(rows)
     totals = {s: _round(sum(r[s] for r in both) / len(both)) if both else None for s in ('a', 'b')}
     winner = None
     if both:
         winner = 'tie' if totals['a'] == totals['b'] else 'a' if totals['a'] > totals['b'] else 'b'
-    return {'version': VERSION, 'rows': rows, 'totals': totals, 'winner': winner}
+    return totals, winner
 
 
 def effort_reduction(rubric: dict | None, coverage: dict | None, processing: dict | None,
@@ -177,9 +198,7 @@ def jury_summary(table: dict | None) -> dict | None:
     totals = table['totals']
     better = {'a': [], 'b': []}
     equal = []
-    for row in table['rows']:
-        if row['a'] is None or row['b'] is None:
-            continue
+    for row in _points_rows(table['rows']):
         gap = row['b'] - row['a']
         (better['b'] if gap > 0 else better['a'] if gap < 0 else equal).append((row['key'], abs(gap)))
     text = {}
@@ -196,6 +215,9 @@ def jury_summary(table: dict | None) -> dict | None:
                 lines.append(phrase['better'].format(side=side.upper()) + listed(better[side]) + '.')
         if equal:
             lines.append(phrase['equal'] + comma.join(label[k] for k, _ in equal) + '.')
+        for row in table['rows']:
+            if row['kind'] == 'critical':
+                lines.append(phrase['critical'].format(a=row['a'], b=row['b']))
         text[lang] = lines
     return text
 
@@ -207,13 +229,10 @@ def second_opinion(rubric: dict | None, model: str, second: dict | None,
         return None
     tables = {'first': jury_table(rubric, None, without_notes=without_notes, seams=seams),
               'second': jury_table(second['rubric'], None, without_notes=without_notes, seams=seams)}
-    # The second opinion compares the judges' criteria; the code row of seams stays out of it.
+    # The second opinion compares the judges' criteria and critical errors; code rows stay out of it.
     for table in tables.values():
-        table['rows'] = [r for r in table['rows'] if r['kind'] == 'criterion']
-        both = [r for r in table['rows'] if r['a'] is not None and r['b'] is not None]
-        table['totals'] = {s: _round(sum(r[s] for r in both) / len(both)) if both else None for s in ('a', 'b')}
-        table['winner'] = (None if not both else 'tie' if table['totals']['a'] == table['totals']['b']
-                           else 'a' if table['totals']['a'] > table['totals']['b'] else 'b')
+        table['rows'] = [r for r in table['rows'] if r['kind'] in ('criterion', 'critical')]
+        table['totals'], table['winner'] = _total(table['rows'])
     second_rows = {r['key']: r for r in tables['second']['rows']}
     rows = [{'key': r['key'], 'first': {'a': r['a'], 'b': r['b']},
              'second': {'a': second_rows[r['key']]['a'], 'b': second_rows[r['key']]['b']}}

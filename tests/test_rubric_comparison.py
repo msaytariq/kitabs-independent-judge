@@ -24,7 +24,7 @@ def response(a_score=2, b_score=4):
     rows = [{'criterion': c, 'a': side('a', a_score), 'b': side('b', b_score)} for c in CRITERIA]
     for s in ('a', 'b'):
         rows[-1][s].update(status='not_applicable', score=None, evidence=[])
-    return {'criteria': rows}
+    return {'criteria': rows, 'critical_errors': []}
 
 
 def summarize(data, scope=None):
@@ -71,6 +71,45 @@ def test_missing_criterion_and_invalid_scores_reject_entire_response():
     data = response()
     data['criteria'][0]['a']['score'] = True
     with pytest.raises(EvaluationError): summarize(data)
+
+
+def critical(side='a', translation='Truth is a vice.', category='meaning_reversed'):
+    return {'side': side, 'category': category, 'source_quote': 'الصدق فضيلة', 'translation_quote': translation,
+            'explanation_en': 'The translation reverses the meaning.', 'explanation_ru': 'Смысл перевёрнут.'}
+
+
+def test_critical_errors_count_only_located_quotes_once_per_side():
+    data = response()
+    data['critical_errors'] = [critical(), critical(),  # the same error twice counts once
+                               critical(translation='not in text'),  # the code cannot find it
+                               critical(translation='vice', category='content_invented')]
+    result = summarize(data)['critical_errors']
+    assert [e['category'] for e in result['a']] == ['meaning_reversed', 'content_invented']
+    assert result['b'] == []
+    assert all(e['verified'] for e in result['a'])
+
+
+def test_critical_errors_follow_the_anonymous_order():
+    parsing = importlib.import_module('independent_judge.domain.paired_assessment')
+    data = response()
+    data['critical_errors'] = [critical(side='b')]  # label b is side a in the reversed order
+    parsed = parsing.parse_assessment(json.dumps(data), sample(), order=('b', 'a'))
+    assert [e['side'] for e in parsed['critical_errors']] == ['a']
+
+
+def test_an_unknown_critical_category_rejects_the_response():
+    data = response()
+    data['critical_errors'] = [critical(category='style')]
+    with pytest.raises(EvaluationError): summarize(data)
+
+
+def test_an_assessment_without_critical_errors_gives_no_count():
+    parsing = importlib.import_module('independent_judge.domain.paired_assessment')
+    rubric = importlib.import_module('independent_judge.domain.rubric_result')
+    saved = parsing.parse_assessment(json.dumps(response()), sample())
+    del saved['critical_errors']
+    # A saved pass of the earlier rubric has no list: no count, never a false zero.
+    assert rubric.summarize_assessment(saved)['critical_errors'] is None
 
 
 class Judge:

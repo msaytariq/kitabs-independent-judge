@@ -8,7 +8,9 @@ export type ProcessingSide={pipeline_seconds:number|null;audit_operations:number
   operations:{stage:string;chunk_id:string;edit_id:string;before:string;after:string}[]};
 export type ProcessingEffort={sides:Record<'a'|'b',ProcessingSide>;version:string};
 export type ReferenceCoverage=Record<'quran'|'hadith',{total:number;a:number;b:number}>;
-export type JuryRow={key:string;kind:'criterion'|'coverage'|'takhrij'|'editing'|'seams';a:number|null;b:number|null;
+export type CriticalError={id:string;side:'a'|'b';category:'meaning_reversed'|'content_invented'|'unit_omitted'|'quotation_corrupted'|'attribution_wrong';
+  verified:boolean;source_quote:string;translation_quote:string;explanation_en:string;explanation_ru:string};
+export type JuryRow={key:string;kind:'criterion'|'coverage'|'takhrij'|'editing'|'seams'|'critical';errors?:Record<'a'|'b',CriticalError[]>;a:number|null;b:number|null;
   level?:Record<'a'|'b',number|null>;found?:Record<'a'|'b',number>;total?:number;
   delivered?:Record<'a'|'b',number>;wrong?:Record<'a'|'b',number>;no_notes?:('a'|'b')[];seam_breaks?:Partial<Record<'a'|'b',number>>;done?:Record<'a'|'b',number>;remaining?:Record<'a'|'b',number>;
   joins?:Record<'a'|'b',number>;broken?:Record<'a'|'b',number>};

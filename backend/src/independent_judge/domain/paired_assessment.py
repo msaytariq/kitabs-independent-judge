@@ -35,8 +35,25 @@ class Criterion(StrictModel):
     b: Assessment
 
 
+class CriticalError(StrictModel):
+    side: Literal['a', 'b']
+    category: Literal['meaning_reversed', 'content_invented', 'unit_omitted', 'quotation_corrupted', 'attribution_wrong']
+    source_quote: str = Field(min_length=1, max_length=1800)
+    translation_quote: str = Field(min_length=1, max_length=1800)
+    explanation_en: str = Field(min_length=1, max_length=2000)
+    explanation_ru: str = Field(min_length=1, max_length=2000)
+
+
 class Response(StrictModel):
     criteria: list[Criterion] = Field(min_length=1, max_length=6)
+    critical_errors: list[CriticalError] = Field(max_length=40)
+
+
+def _anchor(scope, side: str, item: dict) -> dict:
+    anchors = {'source': locate(scope.texts['source'], item['source_quote']),
+               'translation': locate(scope.texts[side], item['translation_quote'])}
+    return item | {'anchors': anchors, 'verified': all(a['status'] == 'verified' for a in anchors.values()),
+                   'id': digest([side, item['source_quote'], item['translation_quote']])[:24]}
 
 
 def parse_assessment(text: str, scope, order=('a', 'b'), *, expected=None) -> dict:
@@ -56,11 +73,9 @@ def parse_assessment(text: str, scope, order=('a', 'b'), *, expected=None) -> di
             assessment = getattr(row, label).model_dump()
             if (assessment['status'] == 'assessed') != (assessment['score'] is not None):
                 raise EvaluationError('invalid_paired_response', 'Only assessed criteria may have a score.')
-            for evidence in assessment['evidence']:
-                anchors = {'source': locate(scope.texts['source'], evidence['source_quote']),
-                           'translation': locate(scope.texts[side], evidence['translation_quote'])}
-                evidence.update(anchors=anchors, verified=all(a['status'] == 'verified' for a in anchors.values()),
-                                id=digest([side, evidence['source_quote'], evidence['translation_quote']])[:24])
+            assessment['evidence'] = [_anchor(scope, side, e) for e in assessment['evidence']]
             out[side] = assessment
         rows.append(out)
-    return {'criteria': rows, 'order': list(order)}
+    sides = dict(zip(('a', 'b'), order))
+    critical = [_anchor(scope, sides[e.side], e.model_dump() | {'side': sides[e.side]}) for e in parsed.critical_errors]
+    return {'criteria': rows, 'critical_errors': critical, 'order': list(order)}

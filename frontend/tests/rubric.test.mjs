@@ -120,3 +120,23 @@ test('Kitabs launch shows the remaining launches and the exhausted limit',()=>{
   assert.ok(view({remaining:0},'en').includes('All demonstration launches are used'));
   assert.equal(view({remaining:null},'en'),'');
 });
+test('the critical error row shows a count in each cell, the errors and who corrects them',()=>{
+  const side=(score)=>({score,status:'assessed',explanation_en:'Reason',explanation_ru:'Причина',evidence:[]});
+  const result={version:'rubric-v1',winner:'b',totals:{a:2,b:4},unique_defects:{a:1,b:0},criteria:[{criterion:'accuracy',a:side(2),b:side(4)}]};
+  const error={id:'c1',side:'a',category:'meaning_reversed',verified:true,source_quote:'المصدر',translation_quote:'Wrong sense',
+    explanation_en:'The meaning is reversed.',explanation_ru:'Смысл перевёрнут.'};
+  const jury={version:'points-v1',winner:'b',totals:{a:25,b:75},rows:[{key:'accuracy',kind:'criterion',a:25,b:75,level:{a:2,b:4}},
+    {key:'critical',kind:'critical',a:1,b:0,errors:{a:[error],b:[]}}]};
+  const ru=show('RubricTable',{result,jury});
+  assert.ok(ru.includes('Критические ошибки, число') && ru.includes('>1<') && ru.includes('>0<'));
+  assert.ok(ru.includes('Смысл перевёрнут') && ru.includes('Wrong sense'));
+  assert.ok(ru.includes('В итог не входит') && ru.includes('аудит и редактор предлагают правку, человек принимает или отклоняет её'));
+  assert.ok(ru.includes('>25<') && ru.includes('>75<'));
+  const en=show('RubricTable',{result,jury},'en');
+  assert.ok(en.includes('Critical errors, count') && en.includes('In Kitabs.ai, a person corrects each critical error'));
+  const plain=show('RubricTable',{result,jury:{...jury,rows:[jury.rows[0]]}},'en');
+  assert.ok(!plain.includes('Critical errors'));
+  const opinion={first:{model:'m1',totals:{a:25,b:75},winner:'b'},second:{model:'m2',totals:{a:50,b:75},winner:'b'},agree:true,
+    rows:[{key:'critical',first:{a:1,b:0},second:{a:2,b:0}}]};
+  assert.ok(show('SecondJudge',{opinion}).includes('Критические ошибки, число'));
+});

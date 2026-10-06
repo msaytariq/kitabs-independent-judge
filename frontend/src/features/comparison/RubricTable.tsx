@@ -1,5 +1,5 @@
 "use client";
-import type {RubricResult,RubricSide,JuryTable,JuryRow,JurySummary} from '../../shared/types/rubric';
+import type {RubricResult,RubricSide,JuryTable,JuryRow,JurySummary,CriticalError} from '../../shared/types/rubric';
 import {useJudgeLocale} from './JudgeLocale';
 export function RubricTable({result,jury,summary}:{result:RubricResult;jury:JuryTable;summary?:JurySummary|null}) {
   const {t,locale}=useJudgeLocale();
@@ -10,7 +10,11 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
     takhrij:t('Hadith takhrij: collections and hadith numbers','Тахридж хадисов: сборники и номера хадисов'),
     verse_refs:t('Verse references: surah and verse numbers','Ссылки на аяты: номера сур и аятов'),
     editing:t('Editing: the part of the editing work that is done','Редактура: доля выполненной правки'),
-    seams:t('Seams: paragraph joins without a broken sentence','Стыки: абзацы без разрыва предложения')};
+    seams:t('Seams: paragraph joins without a broken sentence','Стыки: абзацы без разрыва предложения'),
+    critical:t('Critical errors, count','Критические ошибки, число')};
+  const categories:Record<CriticalError['category'],string>={meaning_reversed:t('Meaning reversed','Смысл перевёрнут'),
+    content_invented:t('Invented content','Выдуманное содержание'),unit_omitted:t('Omitted text','Пропуск текста'),
+    quotation_corrupted:t('Verse or hadith changed','Искажён аят или хадис'),attribution_wrong:t('Wrong attribution or reference','Неверная атрибуция или ссылка')};
   const winners:Record<string,string>={a:t('Translation A is better','Лучше перевод A'),
     b:t('Translation B is better','Лучше перевод B'),tie:t('The translations are equal','Переводы равны')};
   const indexed=Object.fromEntries(result.criteria.map(row=>[row.criterion,row]));
@@ -21,7 +25,13 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
       <p>{t('Translation','Перевод')} {side.toUpperCase()}</p><blockquote dir="auto">{e.translation_quote}</blockquote>
       <p>{locale==='ru'?e.explanation_ru:e.explanation_en}</p></article>)}
   </details>;
+  const critical=(errors:CriticalError[],side:'a'|'b')=>errors.length>0&&<details><summary>{t('Which errors','Какие')}</summary>
+    {errors.map(e=><article key={e.id}><p><strong>{categories[e.category]}</strong></p><p>{t('Source','Оригинал')}</p><blockquote dir="auto">{e.source_quote}</blockquote>
+      <p>{t('Translation','Перевод')} {side.toUpperCase()}</p><blockquote dir="auto">{e.translation_quote}</blockquote>
+      <p>{locale==='ru'?e.explanation_ru:e.explanation_en}</p></article>)}
+  </details>;
   const cell=(row:JuryRow,side:'a'|'b')=>{
+    if(row.kind==='critical') return <td key={side}>{points(row[side])}{critical(row.errors?.[side]??[],side)}</td>;
     if(row.kind==='coverage') return <td key={side}>{points(row[side])}<br/><small>{t(`${row.found?.[side]} of ${row.total}`,`${row.found?.[side]} из ${row.total}`)}</small></td>;
     if(row.kind==='seams') return <td key={side}>{points(row[side])}<br/><small>{t(`breaks: ${row.broken?.[side]} of ${row.joins?.[side]}`,`разрывов: ${row.broken?.[side]} из ${row.joins?.[side]}`)}</small></td>;
     if(row.kind==='editing') return <td key={side}>{points(row[side])}<br/><small>{t(`done: ${row.done?.[side]}`,`сделано: ${row.done?.[side]}`)}</small>
@@ -51,7 +61,9 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
       'Строка стыков: код проверяет каждый стык двух абзацев текста — там же стыкуются фрагменты длинного текста. Стык разорван, если абзац не закончил предложение или следующий начинается со строчной буквы. Модель не участвует.')}</p>}
     {jury.rows.some(row=>row.kind==='editing')&&<p className="muted">{t('The editing row: applied audit and editor edits with receipts, as a part of all edits (done and still needed). An editor makes the remaining edits: errors with quotations, missing quotations and references.',
       'Строка редактуры: применённые правки аудита и редактора (с квитанциями) как доля всей правки — сделанной и ещё нужной. Оставшиеся правки делает редактор: ошибки с цитатами, пропущенные цитаты и ссылки.')}</p>}
-        {jury.rows.some(row=>row.kind==='takhrij')&&<p className="muted">{t('The takhrij and verse reference rows: correct references less wrong references, as a part of the references in the source.',
+    {jury.rows.some(row=>row.kind==='critical')&&<p className="muted">{t('Critical errors: the judge lists them, and the code counts an error only when it finds both quotes. The count is not part of the total. In Kitabs.ai, a person corrects each critical error: the audit and the editor propose an edit, and the person accepts or rejects it. A chat and other translation services do not give this step: you must find and correct each error manually.',
+      'Критические ошибки: их перечисляет судья, код засчитывает ошибку, только если нашёл обе цитаты. В итог не входит. В Kitabs.ai критическую ошибку исправляет человек: аудит и редактор предлагают правку, человек принимает или отклоняет её. У чата и других сервисов перевода такого шага нет: ошибку надо найти и исправить вручную.')}</p>}
+    {jury.rows.some(row=>row.kind==='takhrij')&&<p className="muted">{t('The takhrij and verse reference rows: correct references less wrong references, as a part of the references in the source.',
       'Строки тахриджа и ссылок на аяты: верные ссылки минус неверные, как доля ссылок оригинала.')}</p>}
   </section>;
 }

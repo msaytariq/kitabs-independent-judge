@@ -9,7 +9,15 @@ def items_schema(item_model: type[BaseModel], key: str) -> dict:
             'required': [key], 'additionalProperties': False}
     if definitions:
         root['$defs'] = definitions
+    return _portable(root)
 
+
+def model_schema(model: type[BaseModel]) -> dict:
+    """The complete response object, when it has more than one list."""
+    return _portable(model.model_json_schema())
+
+
+def _portable(root: dict) -> dict:
     def portable(node):
         if isinstance(node, dict):
             # Provider output grammars enforce shape; length checks remain local.

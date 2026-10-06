@@ -263,3 +263,40 @@ def test_breaks_found_by_the_code_cap_the_judge_level_of_seamless_assembly():
     table = jury_table(rubric({'seamlessness': (5, 5)}), None, seams=seams)
     row = next(r for r in table['rows'] if r['key'] == 'seamlessness')
     assert (row['a'], row['b'], row['level']['a'], row['seam_breaks']) == (50, 100, 3, {'a': 3})
+
+
+def critical_errors(a, b):
+    error = lambda side, i: {'id': f'{side}{i}', 'side': side, 'category': 'meaning_reversed', 'verified': True}
+    return {'a': [error('a', i) for i in range(a)], 'b': [error('b', i) for i in range(b)]}
+
+
+def test_critical_errors_are_a_count_in_each_cell_and_stay_out_of_the_total():
+    graded = rubric(PAIRS) | {'critical_errors': critical_errors(3, 0)}
+    table = jury_table(graded, COVERAGE)
+    row = next(r for r in table['rows'] if r['key'] == 'critical')
+    assert row['kind'] == 'critical' and (row['a'], row['b']) == (3, 0)
+    assert row['errors'] == graded['critical_errors']
+    # A count is not points: the total is the same as without the row.
+    assert table['totals'] == jury_table(rubric(PAIRS), COVERAGE)['totals'] == {'a': 55, 'b': 85}
+
+
+def test_an_earlier_assessment_without_critical_errors_has_no_row():
+    assert 'critical' not in [r['key'] for r in jury_table(rubric(PAIRS), None)['rows']]
+
+
+def test_the_summary_states_the_critical_errors_and_does_not_rank_them_as_points():
+    graded = rubric(PAIRS) | {'critical_errors': critical_errors(3, 1)}
+    text = jury_summary(jury_table(graded, COVERAGE))
+    assert 'Critical errors: A — 3, B — 1.' in text['en']
+    assert 'Критические ошибки: A — 3, B — 1.' in text['ru']
+    assert all('critical errors (' not in line for line in text['en'])
+
+
+def test_the_second_judge_gives_its_own_count_of_critical_errors():
+    from independent_judge.domain.jury_points import second_opinion
+    first = rubric(PAIRS) | {'critical_errors': critical_errors(2, 0)}
+    second = rubric(PAIRS) | {'critical_errors': critical_errors(1, 1)}
+    opinion = second_opinion(first, 'judge-1', {'model': 'judge-2', 'rubric': second})
+    row = next(r for r in opinion['rows'] if r['key'] == 'critical')
+    assert row['first'] == {'a': 2, 'b': 0} and row['second'] == {'a': 1, 'b': 1}
+    assert opinion['first']['totals'] == jury_table(rubric(PAIRS), None)['totals']

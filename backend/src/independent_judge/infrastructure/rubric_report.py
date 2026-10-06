@@ -12,6 +12,10 @@ TIME_ROWS = [('pipeline_seconds', 'Пайплайн, секунды'), ('audit_o
 LEGEND = ('100 — замечаний нет; 75 — мелкие местные дефекты; 50 — заметные дефекты; '
           '25 — много существенных ошибок; 0 — смысл систематически искажён.')
 COVERAGE_LABELS = {'quran': 'Аяты Корана в переводе', 'hadith': 'Хадисы в переводе'}
+CRITICAL_NOTE = ('Критические ошибки: их перечисляет судья, код засчитывает ошибку, только если нашёл обе цитаты. '
+                 'В итог не входит. В Kitabs.ai критическую ошибку исправляет человек: аудит и редактор предлагают '
+                 'правку, человек принимает или отклоняет её. У чата и других сервисов перевода такого шага нет: '
+                 'ошибку надо найти и исправить вручную.')
 
 
 def _cell(side: dict, value: int | None) -> str:
@@ -23,6 +27,16 @@ def _cell(side: dict, value: int | None) -> str:
         for x in side['evidence'])
     return (f'<td><b>{value}</b><br>уровень {side["score"]} из 5<details><summary>Почему</summary>'
             f'<p>{e(side["explanation_ru"])}</p>{evidence}</details></td>')
+
+
+def _critical_cell(errors: list) -> str:
+    e = lambda text: escape(str(text))
+    if not errors:
+        return '<td><b>0</b></td>'
+    listed = ''.join(f'''<p>Оригинал</p><blockquote dir="auto">{e(x["source_quote"])}</blockquote>
+        <p>Перевод</p><blockquote dir="auto">{e(x["translation_quote"])}</blockquote><p>{e(x["explanation_ru"])}</p>'''
+        for x in errors)
+    return f'<td><b>{len(errors)}</b><details><summary>Какие</summary>{listed}</details></td>'
 
 
 def _effort_html(effort: dict | None) -> str:
@@ -68,7 +82,8 @@ def _second_html(opinion: dict | None) -> str:
     if not opinion:
         return ''
     first, second = opinion['first'], opinion['second']
-    rows = ''.join(f'<tr><th>{CRITERIA.get(r["key"], escape(r["key"]))}</th>' + ''.join(
+    labels = CRITERIA | {'critical': 'Критические ошибки, число'}
+    rows = ''.join(f'<tr><th>{labels.get(r["key"], escape(r["key"]))}</th>' + ''.join(
         f'<td>{r[j][s] if r[j][s] is not None else "—"}</td>' for j in ('first', 'second') for s in ('a', 'b')) + '</tr>'
         for r in opinion['rows'])
     totals = ''.join(f'<td><b>{t["totals"][s]}</b></td>' for t in (first, second) for s in ('a', 'b'))
@@ -103,6 +118,9 @@ def rubric_html(view: dict) -> str:
             rows += ('<tr><th>Стыки абзацев без разрыва предложения</th>' + ''.join(
                 f'<td><b>{row[s]}</b><br>разрывов {row["broken"][s]} из {row["joins"][s]}</td>'
                 for s in ('a', 'b')) + '</tr>')
+        elif row['kind'] == 'critical':
+            rows += ('<tr><th>Критические ошибки, число</th>'
+                     + ''.join(_critical_cell(row['errors'][s]) for s in ('a', 'b')) + '</tr>')
         elif row['kind'] == 'editing':
             rows += ('<tr><th>Редактура: доля выполненной правки</th>' + ''.join(
                 f'<td><b>{row[s]}</b><br>сделано {row["done"][s]}, осталось {row["remaining"][s]}</td>'
@@ -114,13 +132,14 @@ def rubric_html(view: dict) -> str:
                     for s in ('a', 'b'))
     summary = ''.join(f'<li>{escape(line)}</li>' for line in (view.get('jury_summary') or {}).get('ru', []))
     defects = rubric['unique_defects']
+    critical = f'<p>{CRITICAL_NOTE}</p>' if any(r['kind'] == 'critical' for r in jury['rows']) else ''
     return f'''<section><h2>{WINNERS.get(jury['winner'], 'Оценка не завершена.')}</h2>
     <table><tr><th>Показатель, баллы 0–100</th><th>A</th><th>B</th></tr>{rows}<tr><th>Итог, 0–100</th>{total}</tr></table>
     <ul>{summary}</ul>
     <p>Ошибки с цитатами: A — {defects['a']}; B — {defects['b']}.</p>
     <p>{LEGEND}</p>
     <p>ИИ-судья выставляет уровни 1–5 по одинаковым критериям для A и B: 1 = 0, 2 = 25, 3 = 50, 4 = 75, 5 = 100 баллов.
-    Строки аятов и хадисов — доля цитат оригинала, найденных в переводе. Итог — среднее всех строк.</p></section>''' + _case_html(view.get('case_study')) + _second_html(view.get('second_judge')) + _effort_html(view.get('effort_reduction'))
+    Строки аятов и хадисов — доля цитат оригинала, найденных в переводе. Итог — среднее всех строк.</p>{critical}</section>''' + _case_html(view.get('case_study')) + _second_html(view.get('second_judge')) + _effort_html(view.get('effort_reduction'))
 
 
 def processing_html(effort: dict) -> str:

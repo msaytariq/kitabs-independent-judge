@@ -145,3 +145,18 @@ def test_report_shows_the_editing_row():
                                  'done': {'a': 0, 'b': 69}, 'remaining': {'a': 41, 'b': 6}})
     html = rubric_html(view)
     assert 'Редактура: доля выполненной правки' in html and 'сделано 69, осталось 6' in html
+
+
+def test_html_export_shows_the_critical_errors_and_who_corrects_them():
+    data = rubric_record()
+    error = {'id': 'c1', 'side': 'a', 'category': 'meaning_reversed', 'verified': True,
+             'source_quote': 'First claim.', 'translation_quote': 'One claim.',
+             'explanation_en': 'Reversal.', 'explanation_ru': 'Смысл перевёрнут.'}
+    data['run']['rubric']['critical_errors'] = {'a': [error], 'b': []}
+    html = comparison_html(_view(data))
+    assert '<tr><th>Критические ошибки, число</th><td><b>1</b>' in html and '<td><b>0</b></td>' in html
+    assert 'Смысл перевёрнут.' in html
+    assert 'В итог не входит' in html
+    assert 'аудит и редактор предлагают правку, человек принимает или отклоняет её' in html
+    # The total stays the mean of the points rows.
+    assert '<b>38</b>' in html

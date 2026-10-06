@@ -25,4 +25,22 @@ def test_the_source_layout_does_not_make_inline_notes_correct():
 
 def test_the_rule_is_neutral_and_the_version_changes():
     assert 'Do not infer producers or reward a platform' in SYSTEM
-    assert VERSION == 'paired-rubric-v2'
+    assert VERSION == 'paired-rubric-v3'
+
+
+def test_critical_errors_have_a_closed_list_of_categories():
+    from independent_judge.domain.paired_rubric import CRITICAL
+    assert set(CRITICAL) == {'meaning_reversed', 'content_invented', 'unit_omitted',
+                             'quotation_corrupted', 'attribution_wrong'}
+    assert 'critical_errors' in SYSTEM and 'are not critical errors' in SYSTEM
+
+
+def test_the_prompt_schema_asks_for_criteria_and_critical_errors():
+    from test_judge_contracts import sample
+    from independent_judge.domain.paired_rubric import paired_prompt
+    schema = paired_prompt(sample()).response_schema
+    assert schema['required'] == ['criteria', 'critical_errors']
+    reference = schema['properties']['critical_errors']['items']['$ref']
+    item = schema['$defs'][reference.rsplit('/', 1)[1]]
+    assert set(item['properties']['category']['enum']) == {'meaning_reversed', 'content_invented', 'unit_omitted',
+                                                            'quotation_corrupted', 'attribution_wrong'}

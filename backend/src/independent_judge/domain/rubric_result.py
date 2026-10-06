@@ -26,4 +26,16 @@ def summarize_assessment(assessment: dict) -> dict:
     if totals['a'] is not None:
         winner = 'tie' if totals['a'] == totals['b'] else 'a' if totals['a'] > totals['b'] else 'b'
     return {'version': VERSION, 'kind': 'machine_assessment', 'criteria': rows, 'totals': totals,
-            'winner': winner, 'unique_defects': {s: len(v) for s, v in defects.items()}}
+            'winner': winner, 'unique_defects': {s: len(v) for s, v in defects.items()},
+            'critical_errors': _critical(assessment.get('critical_errors'))}
+
+
+def _critical(errors: list | None) -> dict | None:
+    """Critical errors whose two quotes the code found, each error once; None for an earlier rubric."""
+    if errors is None:
+        return None
+    sides = {'a': {}, 'b': {}}
+    for error in errors:
+        if error['verified']:
+            sides[error['side']].setdefault(error['id'], error)
+    return {side: list(found.values()) for side, found in sides.items()}
