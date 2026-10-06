@@ -32,6 +32,9 @@ class PipelineBService:
         self.max_requests = max_requests
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='pipeline-b')
 
+    def available(self):
+        return self.platform is not None and self.platform.ready()
+
     def remaining(self):
         if not self.platform or self.max_requests is None:
             return None
@@ -43,6 +46,8 @@ class PipelineBService:
     def submit(self, request_id, upload, source_language, target_language):
         if not self.platform:
             raise InputError('pipeline_disabled', 'The operator has not enabled the pipeline connection.')
+        if not self.platform.ready():  # Refuse before the claim: a refused request uses no launch.
+            raise InputError('pipeline_auth_required', 'No Kitabs account is connected for launches.')
         if not re.fullmatch('[A-Za-z0-9_-]{1,80}', request_id):
             raise InputError('invalid_pipeline_id', 'Invalid request ID.')
         if (source_language, target_language) != ('ar', 'en'):

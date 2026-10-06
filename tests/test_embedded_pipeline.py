@@ -9,6 +9,7 @@ from independent_judge.application.intake import Upload
 
 class Platform:
     def __init__(self): self.starts = 0; self.creates = 0; self.done = False
+    def ready(self): return True
     def upload(self, source, source_language, target_language): return 'doc'
     def create(self, document_id): self.creates += 1; return 'job'
     def start(self, job_id): self.starts += 1; self.done = True
@@ -154,6 +155,20 @@ def test_capabilities_report_the_remaining_launches(tmp_path):
     assert TestClient(app).get('/api/pipeline-b/capabilities').json() == {'enabled': True, 'remaining': 10}
 
 
+def test_capabilities_are_off_while_no_operator_account_is_connected(tmp_path):
+    from fastapi.testclient import TestClient
+    from independent_judge.api.pipeline_b import build_pipeline_router
+    from fastapi import FastAPI
+    from independent_judge.infrastructure.text_extractors import LocalTextExtractor
+    from independent_judge.application.pipeline_b import PipelineBService
+    from independent_judge.infrastructure.pipeline_jobs import PipelineJobs
+    port = Platform()
+    port.ready = lambda: False
+    app = FastAPI()
+    app.include_router(build_pipeline_router(PipelineBService(PipelineJobs(tmp_path), port, LocalTextExtractor(), max_requests=10), None))
+    assert TestClient(app).get('/api/pipeline-b/capabilities').json() == {'enabled': False, 'remaining': 10}
+
+
 def test_the_start_moment_is_saved_before_the_paid_start_and_reaches_the_journal(tmp_path):
     port = Platform()
     s = service(tmp_path, port)
@@ -162,4 +177,17 @@ def test_the_start_moment_is_saved_before_the_paid_start_and_reaches_the_journal
         out = wait(s)
         assert out['status'] == 'completed'
         assert isinstance(out['started_at'], float) and port.started_at == out['started_at']
+    finally: s.close()
+
+
+def test_no_launch_is_used_while_no_operator_account_is_connected(tmp_path):
+    port = Platform()
+    port.ready = lambda: False
+    s = service(tmp_path, port)
+    s.max_requests = 2
+    try:
+        with pytest.raises(InputError) as refused:
+            submit(s, 'one')
+        assert refused.value.code == 'pipeline_auth_required'
+        assert s.remaining() == 2 and port.creates == 0
     finally: s.close()

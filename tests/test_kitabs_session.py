@@ -77,3 +77,52 @@ def test_completed_b_carries_the_processing_journal_from_platform_records():
     assert journal['text_sha256'] == text_hash('Translation B.')
     # Without a known start the time stays unknown; the edits are still recorded.
     assert port.completed('j', text_hash('source'))['processing']['timing_complete'] is False
+
+
+def test_renewal_keeps_who_connected_the_session(tmp_path):
+    from independent_judge.infrastructure.kitabs_session import KitabsSession
+    path = tmp_path / 'session.json'
+    path.write_text(json.dumps({'refreshToken': 'refresh-1', 'email': 'admin@kitabs.ai', 'userId': 'u1'}))
+    KitabsSession(path).save('refresh-2')
+    assert json.loads(path.read_text()) == {'refreshToken': 'refresh-2', 'email': 'admin@kitabs.ai', 'userId': 'u1'}
+
+
+def test_a_disconnected_operator_stops_launches_at_once(tmp_path):
+    """The admin removes the session file: a cached access token must not keep working."""
+    from independent_judge.infrastructure.kitabs_session import KitabsSession
+    store = KitabsSession(tmp_path / 'session.json')
+    store.save('refresh-1')
+    calls = []
+    def handle(request):
+        calls.append(request.url.path)
+        if request.url.path == '/api/auth/refresh':
+            return httpx.Response(200, json={'accessToken': 'access-2', 'refreshToken': 'refresh-2'})
+        return httpx.Response(200, json={'job': {'id': 'j', 'status': 'running'}})
+    port = pipeline(handle, store)
+    assert port.ready() is True
+    port.status('j')
+    (tmp_path / 'session.json').unlink()
+    assert port.ready() is False
+    with pytest.raises(InputError) as error:
+        port.status('j')
+    assert error.value.code == 'pipeline_auth_required'
+    assert calls == ['/api/auth/refresh', '/api/pipeline/jobs/j']
+
+
+def test_a_new_operator_session_replaces_the_cached_access_token(tmp_path):
+    from independent_judge.infrastructure.kitabs_session import KitabsSession
+    store = KitabsSession(tmp_path / 'session.json')
+    store.save('refresh-1')
+    seen = []
+    def handle(request):
+        seen.append(request.headers.get('authorization'))
+        if request.url.path == '/api/auth/refresh':
+            old = json.loads(request.content)['refreshToken'] == 'refresh-1'
+            pair = ('access-1', 'refresh-1b') if old else ('access-new', 'refresh-new-b')
+            return httpx.Response(200, json={'accessToken': pair[0], 'refreshToken': pair[1]})
+        return httpx.Response(200, json={'job': {'id': 'j', 'status': 'running'}})
+    port = pipeline(handle, store)
+    port.status('j')
+    store.save('refresh-new')  # The admin connected another account.
+    port.status('j')
+    assert seen[-1] == 'Bearer access-new'

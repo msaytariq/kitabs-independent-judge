@@ -26,6 +26,21 @@ class KitabsPipeline:
             raise ValueError('Explicit HTTPS API origin is required.')
         self.origin, self.token, self.transport = api_origin.rstrip('/'), token, transport
         self.session = session  # Access tokens expire; a session renews them with the refresh token.
+        self._issued_by = None  # The refresh token that gave self.token; its successor is in the file.
+
+    def ready(self) -> bool:
+        """A session deployment is ready only while the admin keeps an operator account connected."""
+        return bool(self.session.load()) if self.session else bool(self.token)
+
+    def _current(self):
+        """Drop the cached access token when the admin disconnected or connected another account."""
+        if not self.session:
+            return
+        refresh = self.session.load()
+        if not refresh:
+            self.token = ''
+        elif self._issued_by is not None and refresh != self._issued_by:
+            self.token = ''
 
     def _renew(self) -> bool:
         refresh = self.session.load() if self.session else ''
@@ -39,12 +54,14 @@ class KitabsPipeline:
             pair = response.json()
             self.token = pair['accessToken']
             self.session.save(pair['refreshToken'])
+            self._issued_by = pair['refreshToken']
             return True
         except (httpx.HTTPError, ValueError, KeyError, TypeError):
             return False
 
     def _authorized(self, action):
         """Run action(client); renew an expired token once. A 401 means the platform did nothing."""
+        self._current()
         if not self.token and not self._renew():
             raise InputError('pipeline_auth_required', 'Pipeline authorization is required.')
         for attempt in (1, 2):
