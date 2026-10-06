@@ -78,9 +78,11 @@ collection such as "Narrated by Muslim", or a hadith number such as "al-Nasa'i
 - The source gives the references to deliver: each verse that it quotes, each
   collection that it names and each hadith number that it gives.
 - A reference is correct when the translation gives the same reference.
-- A reference is wrong when the source does not quote that verse, when the
-  hadith under that number is not in the source, or when the source does not
-  name that collection.
+- A reference is wrong when the source does not quote that verse or when the
+  hadith under that number is not in the source.
+- A collection that the source does not name is correct only when the code finds
+  a hadith of the source in it. Otherwise it stays unchecked: a source can retell
+  a hadith in its own words, and the code cannot prove such a reference wrong.
 - The code opens each hadith number in the library and compares the hadith text
   with the source. A number from a collection that no open library has (for
   example Musnad Ahmad) stays unchecked.

@@ -5,7 +5,6 @@ SOURCE = ('قال رسول الله ﷺ «الجنة تحت أقدام الأم�
           'وروى مسلم عن أبي هريرة رضي الله عنه حديثا. وقال: «خيركم خيركم لأهله» رواه الترمذي. '
           'والطفل المسلم يتعلم. ﴿وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم﴾ [الروم: ٣٠/٢١]')
 VERSES = ['30:21']
-LIBRARIES = {'bukhari', 'muslim', 'abudawud', 'tirmidhi', 'nasai', 'ibnmajah', 'malik'}
 LIBRARY = {('nasai', 3053): ['الجنة تحت أقدام الأمهات فالزمها'],
            ('bukhari', 5971): ['من أحق الناس بحسن صحابتي قال أمك'],
            ('tirmidhi', 3895): ['خيركم خيركم لأهله وأنا خيركم لأهلي']}
@@ -42,15 +41,16 @@ def test_correct_wrong_and_missing_references_are_counted():
             'Narrated by al-Tirmidhi. And among His signs (30:21).')
     bad = ('Narrated by al-Bukhari (5971). Narrated by Muslim. And among His signs (Quran 16:42). '
            'Recorded by Abu Dawud.')
-    result = takhrij_check(SOURCE, {'a': bad, 'b': good}, VERSES, lookup, libraries=LIBRARIES, found_in={'muslim'})
+    result = takhrij_check(SOURCE, {'a': bad, 'b': good}, VERSES, lookup, found_in={'muslim'})
     assert result['total'] == 6  # 1 verse + 4 collections + 1 numbered hadith
     b = result['b']
     assert (b['delivered'], b['wrong']) == (6, 0)
     a = result['a']
     # Muslim is right. Wrong: a number of a hadith that is not in the source (its collection is
-    # judged by the number, not twice), a verse that the source does not quote, and a collection
-    # that the source does not name.
-    assert (a['delivered'], a['wrong']) == (1, 3)
+    # judged by the number, not twice) and a verse that the source does not quote. Abu Dawud, which
+    # the source does not name, stays unchecked: the code cannot prove it wrong.
+    assert (a['delivered'], a['wrong']) == (1, 2)
+    assert ('Sunan Abi Dawud', 'unchecked') in {(i['reference'], i['status']) for i in a['items']}
     statuses = {(i['reference'], i['status']) for i in a['items']}
     assert ('Sahih al-Bukhari 5971', 'wrong') in statuses
     assert ('Quran 16:42', 'wrong') in statuses
@@ -99,7 +99,7 @@ def test_nadwa_style_references_are_read_and_a_surah_is_not_a_hadith_collection(
 def test_an_added_collection_is_checked_in_the_library():
     source = 'قال رسول الله ﷺ «إنما الأعمال بالنيات»'
     text = 'Narrated by al-Bukhari. Narrated by Abu Dawud. Narrated by Ahmad.'
-    result = takhrij_check(source, {'a': text, 'b': ''}, ['1:1'], lookup, libraries=LIBRARIES, found_in={'bukhari'})
+    result = takhrij_check(source, {'a': text, 'b': ''}, ['1:1'], lookup, found_in={'bukhari'})
     statuses = {(i['reference'], i['status']) for i in result['a']['items']}
-    assert {('Sahih al-Bukhari', 'correct'), ('Sunan Abi Dawud', 'wrong'), ('Musnad Ahmad', 'unchecked')} <= statuses
-    assert (result['a']['delivered'], result['a']['wrong']) == (0, 1)
+    assert {('Sahih al-Bukhari', 'correct'), ('Sunan Abi Dawud', 'unchecked'), ('Musnad Ahmad', 'unchecked')} <= statuses
+    assert (result['a']['delivered'], result['a']['wrong']) == (0, 0)
