@@ -114,3 +114,16 @@ def test_view_adds_the_takhrij_row_from_the_saved_reference_check():
     assert view['takhrij'] == takhrij
     assert [r['key'] for r in view['jury']['rows']][-1] == 'takhrij'
     assert view['effort_reduction']['a']['references'] == 6
+
+
+def test_a_newer_check_without_takhrij_keeps_the_saved_takhrij_of_the_same_texts():
+    from independent_judge.application.comparison_view import ComparisonViewService
+    takhrij = {'version': 'takhrij-v1', 'total': 1, 'a': {'delivered': 0, 'wrong': 0, 'items': []},
+               'b': {'delivered': 1, 'wrong': 0, 'items': []}}
+    saved = record() | {'hadith': {'status': 'checked', 'takhrij': takhrij}}
+
+    class Jobs:
+        def reference(self, key): return {'status': 'checked', 'quran': {'found': 2}}
+
+    view = ComparisonViewService(None, None, renderer=str, jobs=Jobs()).project(saved)
+    assert view['hadith']['quran'] == {'found': 2} and view['takhrij'] == takhrij

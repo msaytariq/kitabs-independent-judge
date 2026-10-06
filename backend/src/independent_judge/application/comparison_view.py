@@ -70,6 +70,11 @@ class ComparisonViewService:
     def project(self, record):
         newer = self.jobs.reference(reference_key(record['scope'])) if self.jobs else None
         if newer or 'hadith' not in record:
+            # The reference key covers the texts, so a takhrij saved for them stays valid
+            # when a newer check from an earlier code version has none.
+            saved = (record.get('hadith') or {}).get('takhrij')
+            if newer and saved and not newer.get('takhrij'):
+                newer = newer | {'takhrij': saved}
             record = record | {'hadith': newer}
         return _view(record)
 
