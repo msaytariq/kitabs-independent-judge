@@ -10,7 +10,7 @@ Link: <https://app.kitabs.ai/judge>
 ## Use a saved example (no upload, no cost)
 
 1. Open the link. Click **Example**.
-2. Select one of the two examples. Click **Show comparison**.
+2. Select an example. Click **Show comparison**.
 3. Read the table from top to bottom (see "What the screen shows").
 
 Each example has an Arabic source of about 5 pages with Quran verses and hadith.
@@ -20,10 +20,6 @@ Kitabs.ai pipeline (Autopilot, no manual edits).
 | Example | Source | A | Total A | Total B | Winner (judge 1 / judge 2) |
 |---|---|---|---:|---:|---|
 | 1 | Islamic child education, chapter 5 | Gemini | 28 | 77 | B / B |
-| 2 | al-Ghazali, *Ihya*, Book of Death, chapter 8 | Claude | 100 | 66 | A / A |
-
-Example 2 shows that the judge does not favour Kitabs.ai: the judge found that
-the Kitabs pipeline moved a paragraph of the author into footnote [4].
 
 ## Use your own texts
 
@@ -85,7 +81,7 @@ assumptions, not a time measurement of a human editor.
 Judge 1 is Gemini 3.8 Flash (Google). Judge 2 is Grok 4.1 Fast (xAI). The
 translations B use Anthropic, OpenAI and DeepSeek models, so neither judge
 family made translation B. Both judges receive the texts as "A" and "B",
-without vendor or model names. In the two examples, both judges selected the
+without vendor or model names. In the saved example, both judges selected the
 same winner.
 
 ## Limits
