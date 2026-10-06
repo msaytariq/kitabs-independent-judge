@@ -119,7 +119,9 @@ model takes part:
 - Headings, quotations, lists, notes, page numbers and the apparatus sections
   are not prose and are not counted.
 
-Row points = joins without a break / all joins. In example 2, nadwa.ai breaks
+Row points = joins without a break / all joins. The breaks also cap the judge's
+level of **Seamless assembly**: 1 break allows at most level 4, 2–3 breaks
+level 3, more breaks level 2. In example 2, nadwa.ai breaks
 2 sentences of 28 joins, for example "…from the end of the night," followed
 by a new paragraph "And if he reads…". Kitabs has no break in 30 joins. The
 Kitabs pipeline joins its fragments at assembly and bridges each seam.

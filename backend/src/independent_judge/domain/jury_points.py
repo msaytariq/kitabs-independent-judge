@@ -58,6 +58,20 @@ def _reference_groups(takhrij: dict | None) -> list[tuple[str, dict]]:
     return [(key, group) for key, group in groups if group and group.get('total')]
 
 
+def seam_cap(seams: dict | None) -> dict:
+    """Highest judge level of seamless assembly that the breaks found by the code allow.
+
+    A sentence broken at a join is a seam defect: the judge cannot grade it as flawless.
+    1 break -> level 4; 2-3 -> level 3; more -> level 2.
+    """
+    caps = {}
+    for side in ('a', 'b'):
+        broken = ((seams or {}).get(side) or {}).get('broken') or 0
+        if broken:
+            caps[side] = 4 if broken == 1 else 3 if broken <= 3 else 2
+    return caps
+
+
 def sides_without_notes(structural: dict | None, takhrij: dict | None) -> set:
     """Sides that give no scholarly apparatus although the source gives references.
 
@@ -83,6 +97,10 @@ def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None 
         if name in indexed:
             levels = {s: indexed[name][s]['score'] for s in ('a', 'b')}
             row = {'key': name, 'kind': 'criterion'}
+            if name == 'seamlessness' and seam_cap(seams):
+                caps = seam_cap(seams)
+                levels |= {s: min(levels[s], cap) for s, cap in caps.items() if levels[s] is not None}
+                row['seam_breaks'] = {s: seams[s]['broken'] for s in caps}
             if name == 'apparatus' and without_notes:
                 # No notes: the lowest level, whatever the judge wrote.
                 levels |= {s: 1 for s in without_notes}
@@ -183,12 +201,19 @@ def jury_summary(table: dict | None) -> dict | None:
 
 
 def second_opinion(rubric: dict | None, model: str, second: dict | None,
-                   without_notes: set | frozenset = frozenset()) -> dict | None:
+                   without_notes: set | frozenset = frozenset(), seams: dict | None = None) -> dict | None:
     """Two judges of different families on the same criteria; quotation counts are not repeated."""
     if not rubric or not second or not second.get('rubric'):
         return None
-    tables = {'first': jury_table(rubric, None, without_notes=without_notes),
-              'second': jury_table(second['rubric'], None, without_notes=without_notes)}
+    tables = {'first': jury_table(rubric, None, without_notes=without_notes, seams=seams),
+              'second': jury_table(second['rubric'], None, without_notes=without_notes, seams=seams)}
+    # The second opinion compares the judges' criteria; the code row of seams stays out of it.
+    for table in tables.values():
+        table['rows'] = [r for r in table['rows'] if r['kind'] == 'criterion']
+        both = [r for r in table['rows'] if r['a'] is not None and r['b'] is not None]
+        table['totals'] = {s: _round(sum(r[s] for r in both) / len(both)) if both else None for s in ('a', 'b')}
+        table['winner'] = (None if not both else 'tie' if table['totals']['a'] == table['totals']['b']
+                           else 'a' if table['totals']['a'] > table['totals']['b'] else 'b')
     second_rows = {r['key']: r for r in tables['second']['rows']}
     rows = [{'key': r['key'], 'first': {'a': r['a'], 'b': r['b']},
              'second': {'a': second_rows[r['key']]['a'], 'b': second_rows[r['key']]['b']}}

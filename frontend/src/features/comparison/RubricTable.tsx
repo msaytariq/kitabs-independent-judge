@@ -31,6 +31,7 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
     const source=indexed[row.key]?.[side];const level=row.level?.[side];
     return <td key={side}>{points(row[side])}{level!=null&&<><br/><small>{t(`level ${level} of 5`,`уровень ${level} из 5`)}</small></>}
       {row.no_notes?.includes(side)&&<><br/><small>{t('No apparatus','Аппарата нет')}</small></>}
+      {row.seam_breaks?.[side]?<><br/><small>{t(`broken sentences: ${row.seam_breaks[side]}`,`разорванных фраз: ${row.seam_breaks[side]}`)}</small></>:null}
       {source&&row[side]!==null&&evidence(source,side)}</td>;
   };
   return <section className="panel"><h2>{jury.winner?winners[jury.winner]:t('The assessment did not finish.','Оценка не завершена.')}</h2>

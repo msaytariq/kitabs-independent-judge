@@ -252,3 +252,14 @@ def test_a_glossary_or_person_index_is_an_apparatus_even_without_notes():
     verses = {'total': 0, 'a': {'delivered': 0, 'wrong': 0}, 'b': {'delivered': 0, 'wrong': 0},
               'verses': {'total': 2, 'a': {'delivered': 0, 'wrong': 0}, 'b': {'delivered': 2, 'wrong': 0}}}
     assert sides_without_notes(structural, verses) == {'a'}
+
+
+def test_breaks_found_by_the_code_cap_the_judge_level_of_seamless_assembly():
+    from independent_judge.domain.jury_points import seam_cap
+    seams = {'version': 'seams-v1', 'a': {'joins': 17, 'broken': 3, 'items': []},
+             'b': {'joins': 14, 'broken': 0, 'items': []}}
+    assert seam_cap(seams) == {'a': 3}
+    assert seam_cap({'a': {'joins': 9, 'broken': 1}, 'b': {'joins': 9, 'broken': 5}}) == {'a': 4, 'b': 2}
+    table = jury_table(rubric({'seamlessness': (5, 5)}), None, seams=seams)
+    row = next(r for r in table['rows'] if r['key'] == 'seamlessness')
+    assert (row['a'], row['b'], row['level']['a'], row['seam_breaks']) == (50, 100, 3, {'a': 3})

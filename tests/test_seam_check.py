@@ -37,3 +37,8 @@ def test_a_plain_heading_line_is_not_a_broken_seam():
             'The strong take their provisions from the end of the night,\nAnd if he reads, he gains.')
     result = seam_check({'source': '', 'a': text, 'b': KITABS})
     assert (result['a']['joins'], result['a']['broken']) == (2, 1)
+
+
+def test_a_horizontal_rule_is_not_a_paragraph():
+    text = 'They carry them\n\n---\n\n## Glossary\n\n*taqlid* — imitation'
+    assert seam_check({'source': '', 'a': text, 'b': KITABS})['a']['broken'] == 0

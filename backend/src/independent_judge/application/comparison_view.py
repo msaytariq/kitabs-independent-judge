@@ -55,7 +55,7 @@ def _view(record: dict) -> dict:
         'jury_summary': jury_summary(jury),
         'case_study': case_study(rubric, processing),
         'second_judge': second_opinion(rubric, ', '.join(manifest.get('actual_models', [])), record.get('second_judge'),
-                                       without_notes),
+                                       without_notes, seams),
         'structural': run.get('structural') if run else None,
         'hadith': record.get('hadith'),
         'generated_apparatus': apparatus_evidence(record.get('capability_evidence'), record['scope']),

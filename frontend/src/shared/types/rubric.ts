@@ -10,7 +10,7 @@ export type ProcessingEffort={sides:Record<'a'|'b',ProcessingSide>;version:strin
 export type ReferenceCoverage=Record<'quran'|'hadith',{total:number;a:number;b:number}>;
 export type JuryRow={key:string;kind:'criterion'|'coverage'|'takhrij'|'editing'|'seams';a:number|null;b:number|null;
   level?:Record<'a'|'b',number|null>;found?:Record<'a'|'b',number>;total?:number;
-  delivered?:Record<'a'|'b',number>;wrong?:Record<'a'|'b',number>;no_notes?:('a'|'b')[];done?:Record<'a'|'b',number>;remaining?:Record<'a'|'b',number>;
+  delivered?:Record<'a'|'b',number>;wrong?:Record<'a'|'b',number>;no_notes?:('a'|'b')[];seam_breaks?:Partial<Record<'a'|'b',number>>;done?:Record<'a'|'b',number>;remaining?:Record<'a'|'b',number>;
   joins?:Record<'a'|'b',number>;broken?:Record<'a'|'b',number>};
 export type JuryTable={version:string;rows:JuryRow[];totals:Record<'a'|'b',number|null>;winner:'a'|'b'|'tie'|null};
 export type EffortSide={edits:number;defects:number;missing_quotations:number;references?:number;review_minutes:number;minutes:number;done_edits?:number;done_minutes?:number};

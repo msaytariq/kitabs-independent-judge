@@ -12,7 +12,7 @@ from independent_judge.domain.apparatus_inventory import HEADINGS
 VERSION = 'seams-v1'
 HEADING_WORDS = 15
 _SENTENCE_END = re.compile(r'[.!?…:;؟»"”’\')\]*_]\s*$')
-_NOT_PROSE = re.compile(r'^(?:#|>|\||\[|[-*•]\s|\d+[.)]\s|\d+\s*$|﴿)')
+_NOT_PROSE = re.compile(r'^(?:#|>|\||\[|[-*•]\s|\d+[.)]\s|\d+\s*$|﴿|[-*_]{3,}\s*$)')
 _ENTRY = re.compile(r'^[^\n.]{1,80}\s—\s')  # "Name — description" entries of a person index or glossary
 
 

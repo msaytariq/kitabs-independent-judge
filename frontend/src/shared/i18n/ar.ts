@@ -258,6 +258,7 @@ export const AR: Record<string, string> = {
 export const AR_PATTERNS: [RegExp, string][] = [
   [/^wrong: (\d+)$/, 'خاطئة: {0}'],
   [/^done: (\d+)$/, 'منجزة: {0}'],
+  [/^broken sentences: (\d+)$/, 'جمل مقطوعة: {0}'],
   [/^Fragment (\d+) of (\d+)$/, 'الجزء {0} من {1}'],
   [/^breaks: (\d+) of (\d+)$/, 'انقطاعات: {0} من {1}'],
   [/^remaining: (\d+)$/, 'متبقية: {0}'],
