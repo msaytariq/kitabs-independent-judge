@@ -2,6 +2,8 @@
 // A missing key falls back to English; tests/arabic.test.mjs keeps the table complete.
 export const AR: Record<string, string> = {
   "Hadith takhrij check": "فحص تخريج الأحاديث",
+  "Editing: the part of the editing work that is done": "التحرير: نسبة العمل التحريري المنجز",
+  "The editing row: applied audit and editor edits with receipts, as a part of all edits (done and still needed). An editor makes the remaining edits: errors with quotations, missing quotations and references.": "صف التحرير: تعديلات التدقيق والتحرير المطبَّقة (بإيصالات) بوصفها نسبة من كل التعديلات المنجزة والمطلوبة. يُجري المحرِّر التعديلات الباقية: الأخطاء ذات الاقتباسات، والاقتباسات والإحالات الناقصة.",
   "Verse reference check": "فحص الإحالات إلى الآيات",
   "Hadith takhrij: collections and hadith numbers": "تخريج الأحاديث: الكتب وأرقام الأحاديث",
   "Verse references: surah and verse numbers": "الإحالات إلى الآيات: أرقام السور والآيات",
@@ -227,6 +229,8 @@ export const AR: Record<string, string> = {
 // Texts with values: the English pattern and its Arabic form; {0}, {1} keep their order.
 export const AR_PATTERNS: [RegExp, string][] = [
   [/^wrong: (\d+)$/, 'خاطئة: {0}'],
+  [/^done: (\d+)$/, 'منجزة: {0}'],
+  [/^remaining: (\d+)$/, 'متبقية: {0}'],
   [/^(\d+) of the demonstration launches remain\.$/, 'التشغيلات المتبقية للعرض: {0}.'],
   [/^(\S+) of (\S+)$/, '{0} من {1}'],
   [/^(\S+) has no errors with quotations\.$/, 'لا أخطاء مع اقتباسات في {0}.'],

@@ -29,7 +29,8 @@ def _view(record: dict) -> dict:
     processing = processing_effort(record)
     takhrij = (record.get('hadith') or {}).get('takhrij')
     without_notes = sides_without_notes(run.get('structural') if run else None, takhrij)
-    jury = jury_table(rubric, coverage, takhrij, without_notes)
+    effort = effort_reduction(rubric, coverage, processing, takhrij)
+    jury = jury_table(rubric, coverage, takhrij, without_notes, effort)
     return {key: record.get(key) for key in (
         'id', 'title', 'description', 'scope', 'provenance', 'boundary_review',
         'apparatus', 'references', 'matched_example_id')} | {
@@ -43,7 +44,7 @@ def _view(record: dict) -> dict:
         'rubric_protocol': rubric_protocol,
         'reference_coverage': coverage,
         'jury': jury,
-        'effort_reduction': effort_reduction(rubric, coverage, processing, takhrij),
+        'effort_reduction': effort,
         'takhrij': takhrij,
         'jury_summary': jury_summary(jury),
         'case_study': case_study(rubric, processing),

@@ -199,3 +199,25 @@ def test_verse_references_alone_make_the_notes_due():
     from independent_judge.domain.jury_points import sides_without_notes
     structural = {'a': {'inventory': {'notes': 0}}, 'b': {'inventory': {'notes': 2}}}
     assert sides_without_notes(structural, SPLIT | {'total': 0}) == {'a'}
+
+
+def test_the_editing_row_shows_the_part_of_the_editing_work_that_is_done():
+    effort = {'a': {'edits': 41, 'done_edits': 0}, 'b': {'edits': 6, 'done_edits': 69}}
+    table = jury_table(rubric({'accuracy': (2, 4)}), None, editing=effort)
+    row = next(r for r in table['rows'] if r['key'] == 'editing')
+    # Done / (done + remaining): A 0 of 41, B 69 of 75.
+    assert row == {'key': 'editing', 'kind': 'editing', 'a': 0, 'b': 92,
+                   'done': {'a': 0, 'b': 69}, 'remaining': {'a': 41, 'b': 6}}
+    assert table['totals'] == {'a': 13, 'b': 84}  # (25 + 0) / 2 and (75 + 92) / 2
+    # A text that needs no edit is ready: 100 points without a pipeline.
+    ready = jury_table(rubric({'accuracy': (5, 5)}), None,
+                       editing={'a': {'edits': 0, 'done_edits': 0}, 'b': {'edits': 0, 'done_edits': 3}})
+    assert [(r['a'], r['b']) for r in ready['rows'] if r['key'] == 'editing'] == [(100, 100)]
+    summary = jury_summary(table)
+    assert summary['ru'][1] == 'B лучше в: точность (+50), редактура (+92).'
+
+
+def test_no_editing_row_without_measured_editing_work():
+    effort = {'a': {'edits': 4, 'done_edits': 0}, 'b': {'edits': 2, 'done_edits': 0}}
+    table = jury_table(rubric({'accuracy': (3, 4)}), None, editing=effort)
+    assert 'editing' not in [r['key'] for r in table['rows']]

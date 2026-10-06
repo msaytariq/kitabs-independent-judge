@@ -136,3 +136,12 @@ def test_report_shows_the_takhrij_row():
                'b': {'delivered': 4, 'wrong': 0, 'items': []}}
     html = rubric_html(_view(rubric_record() | {'hadith': {'status': 'checked', 'takhrij': takhrij}}))
     assert 'Тахридж' in html and 'верных 1 из 4, неверных 2' in html
+
+
+def test_report_shows_the_editing_row():
+    from independent_judge.infrastructure.rubric_report import rubric_html
+    view = _view(rubric_record())
+    view['jury']['rows'].append({'key': 'editing', 'kind': 'editing', 'a': 0, 'b': 92,
+                                 'done': {'a': 0, 'b': 69}, 'remaining': {'a': 41, 'b': 6}})
+    html = rubric_html(view)
+    assert 'Редактура: доля выполненной правки' in html and 'сделано 69, осталось 6' in html

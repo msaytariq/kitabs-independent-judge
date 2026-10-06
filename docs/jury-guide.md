@@ -20,8 +20,8 @@ published competitor translation (example 2).
 
 | Example | Source | A | Total A | Total B | Winner (judge 1 / judge 2) |
 |---|---|---|---:|---:|---|
-| 1 | Islamic child education, chapter 5 | Gemini | 34 | 81 | B / B |
-| 2 | Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai | 47 | 97 | B / B |
+| 1 | Islamic child education, chapter 5 | Gemini | 31 | 82 | B / B |
+| 2 | Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai | 43 | 98 | B / B |
 
 Example 2 takes the Arabic text and translation A from the same pages (104–120)
 of the public nadwa.ai EPUB of *Qut al-Qulub*. In this passage nadwa.ai gives 12
@@ -134,6 +134,13 @@ missing or wrong references.
 We assume 3 minutes for one edit by an editor. For B we also count 5 seconds to
 accept each edit that the Kitabs pipeline has already applied. These numbers are
 assumptions, not a time measurement of a human editor.
+
+The jury table has the row **Editing**: the applied audit and editor edits as a
+part of all edits, done and still needed. Points = done / (done + remaining).
+A text that needs no edit gets 100 points. The row is shown when a translation
+has applied edits with receipts. In the saved examples: example 1, A 0 (0 done,
+41 remaining), B 92 (69 done, 6 remaining); example 2, A 0 (0 done, 25
+remaining), B 100 (135 done, 0 remaining).
 
 The section also shows the editing work that the pipeline has already done:
 the applied audit and editor edits, times 3 minutes. Each edit has a receipt

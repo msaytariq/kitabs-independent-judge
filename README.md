@@ -19,7 +19,7 @@ or the user can start the Kitabs.ai pipeline from the Judge screen.
 
 | Measure | Screen section |
 |---|---|
-| Quality | A table of six criteria (accuracy, completeness, terminology, readability, assembly integrity, scholarly apparatus) with points 0–100 for A and B, a total and a winner |
+| Quality | A table of six criteria (accuracy, completeness, terminology, readability, assembly integrity, scholarly apparatus) and the rows for quotations, references and editing, with points 0–100 for A and B, a total and a winner |
 | Text accuracy | Rows "Quran verses in the translation", "Hadith in the translation", "Hadith takhrij" and "Verse references"; the sections "Hadith takhrij check", "Verse reference check" and "Sources in the original" |
 | Effort reduction | "Editing to publication": edits that remain, editor minutes and the saving in percent |
 | Bias mitigation | "Second judge": a model of a different family grades the same criteria |
@@ -32,8 +32,8 @@ A quoted error counts only when the code finds the exact quotation in the text.
 
 | Example | Translation A | Total A | Total B (Kitabs.ai) | Winner, judge 1 / judge 2 |
 |---|---|---:|---:|---|
-| Islamic child education, chapter 5 | Gemini | 34 | 81 | B / B |
-| Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai (published translation) | 47 | 97 | B / B |
+| Islamic child education, chapter 5 | Gemini | 31 | 82 | B / B |
+| Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai (published translation) | 43 | 98 | B / B |
 
 Judge 1: Gemini 3.8 Flash. Judge 2: Grok 4.1 Fast.
 

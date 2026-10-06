@@ -14,15 +14,15 @@ LABELS = {
     'en': {'accuracy': 'accuracy', 'completeness': 'completeness', 'terminology': 'terminology',
            'readability': 'readability', 'seamlessness': 'assembly integrity',
            'apparatus': 'scholarly apparatus', 'quran': 'Quran verses', 'hadith': 'hadith',
-           'takhrij': 'hadith takhrij', 'verse_refs': 'verse references'},
+           'takhrij': 'hadith takhrij', 'verse_refs': 'verse references', 'editing': 'editing'},
     'ru': {'accuracy': 'точность', 'completeness': 'полнота', 'terminology': 'терминология',
            'readability': 'читаемость', 'seamlessness': 'целостность сборки',
            'apparatus': 'научный аппарат', 'quran': 'аяты Корана', 'hadith': 'хадисы',
-           'takhrij': 'тахридж хадисов', 'verse_refs': 'ссылки на аяты'},
+           'takhrij': 'тахридж хадисов', 'verse_refs': 'ссылки на аяты', 'editing': 'редактура'},
     'ar': {'accuracy': 'الدقة', 'completeness': 'الاكتمال', 'terminology': 'المصطلحات',
            'readability': 'سهولة القراءة', 'seamlessness': 'سلامة التجميع',
            'apparatus': 'الجهاز العلمي', 'quran': 'آيات القرآن', 'hadith': 'الأحاديث',
-           'takhrij': 'تخريج الأحاديث', 'verse_refs': 'الإحالات إلى الآيات'},
+           'takhrij': 'تخريج الأحاديث', 'verse_refs': 'الإحالات إلى الآيات', 'editing': 'التحرير'},
 }
 PHRASES = {
     'en': {'tie': 'The translations are equal: {a} points each.',
@@ -70,7 +70,7 @@ def sides_without_notes(structural: dict | None, takhrij: dict | None) -> set:
 
 
 def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None = None,
-               without_notes: set | frozenset = frozenset()) -> dict | None:
+               without_notes: set | frozenset = frozenset(), editing: dict | None = None) -> dict | None:
     if not rubric:
         return None
     indexed = {row['criterion']: row for row in rubric['criteria']}
@@ -97,6 +97,17 @@ def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None 
                         for s in ('a', 'b')},
                      'delivered': {s: group[s]['delivered'] for s in ('a', 'b')},
                      'wrong': {s: group[s]['wrong'] for s in ('a', 'b')}, 'total': group['total']})
+    if editing and any(editing[s].get('done_edits') for s in ('a', 'b')):
+        # Only when a side has measured editing work; without receipts the row tells nothing new.
+        # Editing: the part of the whole editing work that is done before the reader gets the text.
+        # Done = applied audit and editor edits with receipts; remaining = edits that an editor still
+        # has to make (errors with quotations, missing quotations and references).
+        done = {s: editing[s].get('done_edits') or 0 for s in ('a', 'b')}
+        remaining = {s: editing[s]['edits'] for s in ('a', 'b')}
+        rows.append({'key': 'editing', 'kind': 'editing',
+                     **{s: _percent(done[s], done[s] + remaining[s]) if done[s] + remaining[s] else 100
+                        for s in ('a', 'b')},
+                     'done': done, 'remaining': remaining})
     # The total compares like with like: only rows with a value for both sides.
     both = [r for r in rows if r['a'] is not None and r['b'] is not None]
     totals = {s: _round(sum(r[s] for r in both) / len(both)) if both else None for s in ('a', 'b')}

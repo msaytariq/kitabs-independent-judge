@@ -99,6 +99,10 @@ def rubric_html(view: dict) -> str:
             rows += (f'<tr><th>{title}</th>' + ''.join(
                 f'<td><b>{row[s]}</b><br>верных {row["delivered"][s]} из {row["total"]}, неверных {row["wrong"][s]}</td>'
                 for s in ('a', 'b')) + '</tr>')
+        elif row['kind'] == 'editing':
+            rows += ('<tr><th>Редактура: доля выполненной правки</th>' + ''.join(
+                f'<td><b>{row[s]}</b><br>сделано {row["done"][s]}, осталось {row["remaining"][s]}</td>'
+                for s in ('a', 'b')) + '</tr>')
         else:
             rows += (f'<tr><th>{COVERAGE_LABELS[row["key"]]}</th>' + ''.join(
                 f'<td><b>{row[s]}</b><br>{row["found"][s]} из {row["total"]}</td>' for s in ('a', 'b')) + '</tr>')

@@ -34,3 +34,13 @@ test('the takhrij row shows correct and wrong references',()=>{
   const arabicHtml=page('ar',React.createElement(RubricTable,{result,jury}));
   assert.ok(arabicHtml.includes('خاطئة: 1'));
 });
+
+test('the editing row shows done and remaining edits',()=>{
+  const {RubricTable}=require('../src/features/comparison/RubricTable.tsx');
+  const result={version:'rubric-v1',winner:'b',totals:{a:2,b:4},unique_defects:{a:0,b:0},criteria:[]};
+  const jury={version:'points-v1',winner:'b',totals:{a:0,b:92},rows:[{key:'editing',kind:'editing',a:0,b:92,
+    done:{a:0,b:69},remaining:{a:41,b:6}}]};
+  const html=page('ru',React.createElement(RubricTable,{result,jury}));
+  assert.ok(html.includes('Редактура: доля выполненной правки') && html.includes('сделано: 69') && html.includes('осталось: 6'));
+  assert.ok(page('ar',React.createElement(RubricTable,{result,jury})).includes('منجزة: 69'));
+});
