@@ -1,6 +1,6 @@
 import type {InputMethod} from '../types/comparison';
 import {apiUrl} from './base';
-export type PipelineState={id:string;status:string;source:string;source_sha256:string;job_id:string|null;error:string|null;
+export type PipelineState={id:string;status:string;source:string|null;source_sha256:string|null;job_id:string|null;error:string|null;
   result:{text:string;sha256:string;source_sha256:string}|null};
 export type PipelineSource={method:InputMethod;value:string;file?:File;source_language:string;target_language:string};
 // The server answered with a refusal: nothing was started for this request.

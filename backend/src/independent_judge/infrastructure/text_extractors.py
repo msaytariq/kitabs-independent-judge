@@ -9,7 +9,7 @@ from independent_judge.infrastructure.formats.pdf import extract_pdf
 
 
 class LocalTextExtractor:
-    def extract(self, content: bytes, filename: str, content_type: str) -> ExtractedText:
+    def extract(self, content: bytes, filename: str, content_type: str, check_order: bool = True) -> ExtractedText:
         extension = Path(filename).suffix.lower()
         if extension in (".txt", ".md"):
             try:
@@ -24,5 +24,5 @@ class LocalTextExtractor:
         if extension == ".docx":
             return extract_docx(content)
         if extension == ".pdf":
-            return extract_pdf(content)
+            return extract_pdf(content, check_order)
         raise InputError("unsupported_format", "Use UTF-8 TXT/MD, DOCX, or a PDF with selectable text.")

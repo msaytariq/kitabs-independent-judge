@@ -91,11 +91,18 @@ class KitabsPipeline:
         except (httpx.HTTPError, ValueError) as exc:
             raise InputError('pipeline_unavailable', 'Platform response is uncertain. Do not replay this request.') from None
 
-    def upload(self, source, source_language, target_language):
-        response = self._post('documents', {'title': 'Judge comparison', 'sourceFormat': 'txt',
-            'sourceLang': source_language, 'targetLang': target_language, 'isScannedPdf': False,
-            'file': {'fileName': 'judge-source.txt', 'contentType': 'text/plain',
-                     'dataBase64': base64.b64encode(source.encode()).decode()}})
+    def upload(self, source, source_language, target_language, original=None):
+        # An original PDF or DOCX goes to the same intake as an upload on the Kitabs desk.
+        if original is not None:
+            file = {'fileName': original['filename'], 'contentType': original['content_type'],
+                    'dataBase64': base64.b64encode(original['content']).decode()}
+            source_format = original['filename'].rsplit('.', 1)[-1].lower()
+        else:
+            file = {'fileName': 'judge-source.txt', 'contentType': 'text/plain',
+                    'dataBase64': base64.b64encode(source.encode()).decode()}
+            source_format = 'txt'
+        response = self._post('documents', {'title': 'Judge comparison', 'sourceFormat': source_format,
+            'sourceLang': source_language, 'targetLang': target_language, 'isScannedPdf': False, 'file': file})
         return response['document']['id']
 
     def create(self, document_id):
@@ -130,7 +137,7 @@ class KitabsPipeline:
         if not re.fullmatch(r'[A-Za-z0-9_-]{1,100}', job_id):
             raise InputError('invalid_job_id', 'Invalid pipeline job identifier.')
 
-    def completed(self, job_id: str, source_sha256: str, started_at: float | None = None) -> dict:
+    def completed(self, job_id: str, source_sha256: str | None, started_at: float | None = None) -> dict:
         if not re.fullmatch(r'[A-Za-z0-9_-]{1,100}', job_id):
             raise InputError('invalid_job_id', 'Invalid pipeline job identifier.')
         def read(client):
@@ -199,7 +206,10 @@ def _result(response, job_id, source_sha256):
     if any(len(items) != 1 for items in groups.values()):
         raise InputError('pipeline_contract_incomplete', 'Need one source, chunk inventory and completed assembly.')
     source = groups['source_text'][0]['payload']['text']
-    if text_hash(source) != source_sha256:
+    # None: the judge sent the original file, and the Kitabs reading of it is the source.
+    if source_sha256 is None:
+        source_sha256 = text_hash(source)
+    elif text_hash(source) != source_sha256:
         raise InputError('pipeline_source_mismatch', 'Platform source differs from the selected source; review extraction boundaries.')
     assembly = groups['assembled_document'][0]
     payload = assembly['payload']
@@ -215,7 +225,7 @@ def _result(response, job_id, source_sha256):
             or not assembly.get('hash')):
         raise InputError('pipeline_incomplete_assembly', 'The assembly is partial or references stale artifacts.')
     return {'job_id': job_id, 'text': payload['body'], 'sha256': text_hash(payload['body']),
-            'source_sha256': source_sha256, 'platform_artifact_id': assembly['id'],
+            'source': source, 'source_sha256': source_sha256, 'platform_artifact_id': assembly['id'],
             'platform_artifact_hash': assembly['hash'], 'human_work': None,
             'mode': 'unverified', 'state': 'completed',
             'processing': response.get('processingMeasurements'),

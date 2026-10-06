@@ -22,7 +22,8 @@ class PipelineJobs:
             row = db.execute('SELECT packet FROM pipeline_jobs WHERE id=?', (request_id,)).fetchone()
             if row:
                 old = json.loads(row[0])
-                if any(old[k] != packet[k] for k in ('source_sha256', 'source_language', 'target_language')):
+                if any(old.get(k) != packet.get(k)
+                       for k in ('source_sha256', 'original_sha256', 'source_language', 'target_language')):
                     raise InputError('pipeline_source_mismatch', 'This launch ID belongs to different material.')
                 return old, False
             # The count and the insert share one transaction: two visitors cannot both take the last launch.

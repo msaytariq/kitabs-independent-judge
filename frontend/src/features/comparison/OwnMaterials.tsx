@@ -36,7 +36,7 @@ export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
         setMethod={v=>{if(role==='b')setBKitabs(v==='kitabs');if(v!=='kitabs')setMethods({...methods,[role]:v});}}
         setValue={v=>setInputs({...inputs,[role]:v})} setFile={v=>setFiles({...files,[role]:v})}
         kitabs={role==='b'?<KitabsAction busy={busy} source={{method:methods.source,value:inputs.source,file:files.source,source_language:inputs.source_language,target_language:inputs.target_language}}
-          onReady={job=>{if(job.result){setInputs(current=>({...current,source:job.source,b:job.result!.text}));
+          onReady={job=>{if(job.result&&job.source){const source=job.source;setInputs(current=>({...current,source,b:job.result!.text}));
             setMethods(current=>({...current,source:'text',b:'text'}));setBKitabs(false);setPipelineRequestId(job.id);}}}/>:undefined}/>)}</div>
       <details><summary>{t('Languages and review profile','Языки и профиль проверки')}</summary><div className="row">
         <label>{t('Source language','Язык оригинала')}<input required value={inputs.source_language} onChange={e=>setInputs({...inputs,source_language:e.target.value})}/></label>

@@ -32,7 +32,7 @@ def _page_text(page) -> str:
     return page.get_text("text", sort=False)
 
 
-def extract_pdf(content: bytes) -> ExtractedText:
+def extract_pdf(content: bytes, check_order: bool = True) -> ExtractedText:
     try:
         with pymupdf.open(stream=content, filetype="pdf") as pdf:
             if pdf.needs_pass:
@@ -50,7 +50,7 @@ def extract_pdf(content: bytes) -> ExtractedText:
             "No selectable text on PDF pages " + ", ".join(missing) +
             ". Review these pages: export text after handling scans or blank pages. No partial extraction was saved."
         ))
-    if any(damaged_arabic_order(page) for page in pages):
+    if check_order and any(damaged_arabic_order(page) for page in pages):
         raise InputError("pdf_arabic_order_damaged", (
             "The PDF text layer stores Arabic letters in the wrong order (for example \u0647\u0644\u0644\u0627). "
             "Upload DOCX or TXT, or a PDF with a correct text layer. Nothing was saved."))

@@ -5,9 +5,14 @@ from independent_judge.domain.scope import text_hash
 from independent_judge.pipeline_ports import PipelineResultReader
 from independent_judge.pipeline_ports import PipelinePort
 from concurrent.futures import ThreadPoolExecutor
+from hashlib import sha256
+from pathlib import Path
 import base64
 import re
 import time
+
+# Kitabs reads these files with its production intake (Arabic text layer repair, OCR), as on its desk.
+PLATFORM_READS = ('.pdf', '.docx')
 
 
 def handoff(source: str, mode: str, web_origin: str) -> dict:
@@ -54,11 +59,18 @@ class PipelineBService:
             raise InputError('language_mismatch', 'Embedded translation currently supports Arabic to English.')
         if len(upload.content) > 20 * 1024 * 1024:
             raise InputError('file_too_large', 'File exceeds 20 MiB.')
-        extracted = self.extractor.extract(upload.content, upload.filename, upload.content_type)
+        platform_reads = Path(upload.filename).suffix.lower() in PLATFORM_READS
+        # For a file that Kitabs reads, the judge's own reader only measures the limits. It does not
+        # refuse a text layer that Kitabs repairs (the legacy Allah glyph reads "هللا").
+        extracted = (self.extractor.extract(upload.content, upload.filename, upload.content_type, check_order=False)
+                     if platform_reads else self.extractor.extract(upload.content, upload.filename, upload.content_type))
         source = extracted.text
         if not source.strip() or len(source) > 18000 or (extracted.page_count or 0) > 10:
             raise InputError('scope_too_large', 'Use a nonempty source of at most 18000 characters and 10 PDF pages.')
-        packet = {'id': request_id, 'source': source, 'source_sha256': text_hash(source),
+        # The Kitabs source text replaces None when B is ready: B and the source then come from one reading.
+        packet = {'id': request_id, 'source': None if platform_reads else source,
+                  'source_sha256': None if platform_reads else text_hash(source),
+                  'original_sha256': sha256(upload.content).hexdigest(),
                   'source_language': source_language, 'target_language': target_language,
                   'original': {'filename': upload.filename, 'content_type': upload.content_type,
                                'content_base64': base64.b64encode(upload.content).decode()},
@@ -73,7 +85,13 @@ class PipelineBService:
         key = packet['id']
         try:
             self.jobs.update(key, status='uploading')
-            doc = self.platform.upload(packet['source'], packet['source_language'], packet['target_language'])
+            if packet['source'] is None:
+                original = packet['original']
+                doc = self.platform.upload(None, packet['source_language'], packet['target_language'], original={
+                    'filename': original['filename'], 'content_type': original['content_type'],
+                    'content': base64.b64decode(original['content_base64'])})
+            else:
+                doc = self.platform.upload(packet['source'], packet['source_language'], packet['target_language'])
             self.jobs.update(key, status='creating', document_id=doc)
             job = self.platform.create(doc)
             # Commit the known job and the start moment before the only paid start attempt.
@@ -92,7 +110,9 @@ class PipelineBService:
                 if job['status'] == 'completed':
                     result = self.platform.completed(packet['job_id'], packet['source_sha256'],
                                                      started_at=packet.get('started_at'))
-                    self.jobs.update(request_id, status='completed', result=result, error=None)
+                    source = {} if packet['source'] is not None else {
+                        'source': result['source'], 'source_sha256': result['source_sha256']}
+                    self.jobs.update(request_id, status='completed', result=result, error=None, **source)
                 elif job['status'] in ('failed', 'cancelled', 'paused', 'waiting_review'):
                     self.jobs.update(request_id, status='failed', error='pipeline_' + job['status'])
             except InputError:

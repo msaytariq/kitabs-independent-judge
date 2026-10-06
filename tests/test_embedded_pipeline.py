@@ -191,3 +191,55 @@ def test_no_launch_is_used_while_no_operator_account_is_connected(tmp_path):
         assert refused.value.code == 'pipeline_auth_required'
         assert s.remaining() == 2 and port.creates == 0
     finally: s.close()
+
+
+class PlatformSource(Platform):
+    """Kitabs reads the original file itself and returns its own source text with B."""
+    def upload(self, source, source_language, target_language, original=None):
+        self.source, self.original = source, original
+        return 'doc'
+
+    def completed(self, job_id, source_sha256, started_at=None):
+        assert source_sha256 is None  # the platform text is the source of this comparison
+        return {'job_id': job_id, 'text': 'Translation B', 'sha256': text_hash('Translation B'),
+                'source': 'الله أكبر', 'source_sha256': text_hash('الله أكبر'), 'state': 'completed',
+                'processing': None}
+
+
+class OrderDamagedPdf:
+    """A PDF text layer with the legacy Allah glyph: the judge's own reader refuses it."""
+    def extract(self, content, filename, content_type, check_order=True):
+        from independent_judge.domain.inputs import ExtractedText
+        if check_order:
+            raise InputError('pdf_arabic_order_damaged', 'wrong order')
+        return ExtractedText('هللا أكبر' * int(content.decode()), (), page_count=2)
+
+
+def pdf_service(tmp_path, port):
+    cls = importlib.import_module('independent_judge.application.pipeline_b').PipelineBService
+    repo = importlib.import_module('independent_judge.infrastructure.pipeline_jobs').PipelineJobs(tmp_path)
+    return cls(repo, port, OrderDamagedPdf())
+
+
+def test_a_pdf_source_goes_to_kitabs_as_a_file_and_kitabs_text_becomes_the_source(tmp_path):
+    port = PlatformSource()
+    s = pdf_service(tmp_path, port)
+    try:
+        out = s.submit('pdf', Upload(b'1', 'book.pdf', 'application/pdf'), 'ar', 'en')
+        assert out['source'] is None and out['source_sha256'] is None
+        done = wait(s, 'pdf')
+        assert port.source is None
+        assert port.original == {'filename': 'book.pdf', 'content_type': 'application/pdf', 'content': b'1'}
+        assert done['status'] == 'completed'
+        assert done['source'] == 'الله أكبر' and done['source_sha256'] == text_hash('الله أكبر')
+    finally: s.close()
+
+
+def test_the_source_limits_apply_to_a_pdf_before_any_paid_work(tmp_path):
+    port = PlatformSource()
+    s = pdf_service(tmp_path, port)
+    try:
+        with pytest.raises(InputError) as caught:
+            s.submit('big', Upload(b'3000', 'book.pdf', 'application/pdf'), 'ar', 'en')
+        assert caught.value.code == 'scope_too_large' and port.creates == port.starts == 0
+    finally: s.close()

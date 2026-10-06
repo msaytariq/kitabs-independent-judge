@@ -113,3 +113,21 @@ def test_embedded_adapter_uses_platform_upload_and_autopilot_stream():
     port.start('job')
     assert port.status('job')['status'] == 'completed'
     assert len(calls) == 4
+
+
+def test_a_file_source_is_sent_as_the_original_file_and_kitabs_text_is_the_source():
+    import json
+    import base64
+    from independent_judge.infrastructure.kitabs_pipeline import KitabsPipeline
+    sent = {}
+    def handle(request):
+        sent.update(json.loads(request.content))
+        return httpx.Response(201, json={'document': {'id': 'doc'}})
+    port = KitabsPipeline('https://platform.example/api', 'test-only', transport=httpx.MockTransport(handle))
+    port.upload(None, 'ar', 'en', original={'filename': 'book.pdf', 'content_type': 'application/pdf',
+                                            'content': b'%PDF-1.7'})
+    assert sent['sourceFormat'] == 'pdf' and sent['isScannedPdf'] is False
+    assert sent['file']['fileName'] == 'book.pdf' and base64.b64decode(sent['file']['dataBase64']) == b'%PDF-1.7'
+    # Without a judge source, the platform source text of the job is the source of the comparison.
+    result = adapter(packets()).completed('j', None)
+    assert result['source'] == 'source' and result['source_sha256'] == text_hash('source')
