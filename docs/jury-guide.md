@@ -128,6 +128,12 @@ We assume 3 minutes for one edit by an editor. For B we also count 5 seconds to
 accept each edit that the Kitabs pipeline has already applied. These numbers are
 assumptions, not a time measurement of a human editor.
 
+The section also shows the editing work that the pipeline has already done:
+the applied audit and editor edits, times 3 minutes. Each edit has a receipt
+with the text before and after (section **Processing time**). The judge grades
+the text after these edits. In the saved examples B has 69 and 135 applied
+edits (207 and 405 minutes); A has none.
+
 ### Second judge
 
 Judge 1 is Gemini 3.8 Flash (Google). Judge 2 is Grok 4.1 Fast (xAI). The

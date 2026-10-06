@@ -113,8 +113,11 @@ def effort_reduction(rubric: dict | None, coverage: dict | None, processing: dic
         # Each reference that is missing or wrong is one edit: the editor adds or corrects it.
         references = (takhrij['total'] - takhrij[side]['delivered'] + takhrij[side]['wrong']) if takhrij else 0
         edits = defects + missing + references
+        # Applied audit and editor edits with receipts: work that an editor does not have to do.
+        done = (measured.get('audit_operations') or 0) + (measured.get('editor_operations') or 0)
         sides[side] = {'edits': edits, 'defects': defects, 'missing_quotations': missing, 'references': references,
-                       'review_minutes': review, 'minutes': _round(edits * MINUTES_PER_EDIT + review_seconds / 60)}
+                       'review_minutes': review, 'minutes': _round(edits * MINUTES_PER_EDIT + review_seconds / 60),
+                       'done_edits': done, 'done_minutes': done * MINUTES_PER_EDIT}
     a, b = sides['a']['minutes'], sides['b']['minutes']
     return sides | {'reduction_percent': _round(100 * (1 - b / a)) if a else None,
                     'minutes_per_edit': MINUTES_PER_EDIT, 'version': EFFORT_VERSION}

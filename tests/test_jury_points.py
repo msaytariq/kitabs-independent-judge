@@ -53,9 +53,9 @@ def test_effort_counts_defects_and_missing_quotations_and_the_kitabs_review_time
     # A: 6 defects + 3 missing verses = 9 edits x 3 min = 27 min.
     # B: 1 defect = 3 min, plus 120 s of accepting Kitabs edits = 5 min.
     assert result['a'] == {'edits': 9, 'defects': 6, 'missing_quotations': 3, 'references': 0,
-                           'review_minutes': 0, 'minutes': 27}
+                           'review_minutes': 0, 'minutes': 27, 'done_edits': 0, 'done_minutes': 0}
     assert result['b'] == {'edits': 1, 'defects': 1, 'missing_quotations': 0, 'references': 0,
-                           'review_minutes': 2, 'minutes': 5}
+                           'review_minutes': 2, 'minutes': 5, 'done_edits': 0, 'done_minutes': 0}
     assert result['reduction_percent'] == 81  # 1 - 5/27
     assert result['minutes_per_edit'] == 3 and result['version'] == 'effort-v2'
 
@@ -164,3 +164,12 @@ def test_the_second_judge_uses_the_same_notes_rule():
     view = second_opinion(first, 'y', second, without_notes={'a'})
     assert view['first']['totals'] == {'a': 25, 'b': 88}
     assert view['second']['totals'] == {'a': 38, 'b': 100}
+
+
+def test_the_edits_that_kitabs_already_applied_count_as_editor_work_done():
+    effort = {'sides': {'a': {'audit_operations': None, 'editor_operations': None, 'simulated_seconds': None},
+                        'b': {'audit_operations': 7, 'editor_operations': 62, 'simulated_seconds': 345}}}
+    result = effort_reduction(rubric(PAIRS, defects=(6, 1)), None, effort)
+    # 69 applied edits x 3 minutes: an editor does not have to make them.
+    assert (result['b']['done_edits'], result['b']['done_minutes']) == (69, 207)
+    assert (result['a']['done_edits'], result['a']['done_minutes']) == (0, 0)

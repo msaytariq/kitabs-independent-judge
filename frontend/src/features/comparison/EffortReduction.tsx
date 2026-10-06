@@ -18,6 +18,14 @@ export function EffortReduction({effort}:{effort?:Effort|null}) {
     <p><strong>{a>b&&percent!==null?t(`B saves ${percent}% of the editing time`,`Экономия времени с B: ${percent}%`)
       :a<b?t(`A needs less editing time: ${a} against ${b} minutes`,`A требует меньше редактуры: ${a} против ${b} минут`)
       :t('The editing time is equal','Время редактуры одинаково')}</strong></p>
+    {effort.b.done_edits!==undefined&&(effort.a.done_edits||effort.b.done_edits)?<>
+      <h3>{t('Editing work that the pipeline has already done','Редактура, которую пайплайн уже сделал')}</h3>
+      <table><thead><tr><th>{t('Measure','Показатель')}</th><th>A</th><th>B</th></tr></thead><tbody>
+        <tr><th scope="row">{t('Applied audit and editor edits','Применённые правки аудита и редактора')}</th><td>{effort.a.done_edits}</td><td>{effort.b.done_edits}</td></tr>
+        <tr><th scope="row">{t('Editor time saved, minutes','Сэкономлено времени редактора, минуты')}</th><td>{effort.a.done_minutes}</td><td>{effort.b.done_minutes}</td></tr>
+      </tbody></table>
+      <p className="muted">{t('Each edit has a receipt with the text before and after (section Processing time). The judge grades the text after these edits.',
+        'У каждой правки есть квитанция с текстом до и после (раздел «Время обработки»). Судья оценивает текст уже после этих правок.')}</p></>:null}
     <p className="muted">{t(`Assumption: ${effort.minutes_per_edit} minutes for one edit by an editor; 5 seconds to accept one edit that Kitabs has already applied.`,
       `Допущение: ${effort.minutes_per_edit} минуты на одну правку редактора; 5 секунд на принятие одной правки, которую Kitabs уже применил.`)}</p>
   </section>;

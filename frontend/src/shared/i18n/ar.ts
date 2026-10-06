@@ -163,6 +163,11 @@ export const AR: Record<string, string> = {
   'The AI judge reads the source and two anonymous translations once and grades six criteria.':
     'يقرأ المحكِّم الآلي الأصل وترجمتين مجهولتي المصدر مرة واحدة ويقيِّم ستة معايير.',
   'The assessment did not finish.': 'لم يكتمل التقييم.',
+  'Editing work that the pipeline has already done': 'التحرير الذي أنجزه خط المعالجة بالفعل',
+  'Applied audit and editor edits': 'تعديلات التدقيق والتحرير المطبَّقة',
+  'Editor time saved, minutes': 'وقت المحرِّر الموفَّر، بالدقائق',
+  'Each edit has a receipt with the text before and after (section Processing time). The judge grades the text after these edits.':
+    'لكل تعديل إيصال بالنص قبله وبعده (قسم زمن المعالجة). يقيِّم المحكِّم النص بعد هذه التعديلات.',
   'No notes': 'لا حواشي',
   'Scholarly apparatus: the source gives references, and a translation without anchored notes gets 0 points. The code counts the notes.':
     'الجهاز العلمي: في الأصل إحالات، والترجمة التي لا حواشي فيها تنال 0 نقطة. يعدّ البرنامج الحواشي.',
