@@ -117,6 +117,8 @@ class PipelineBService:
                         text = self.repair(result['source']) if self.repair else result['source']
                         result = result | {'source': text, 'source_sha256': text_hash(text),
                                            'platform_source_sha256': result['source_sha256']}
+                        if result.get('processing'):  # the edit journal follows the source of the comparison
+                            result['processing'] = result['processing'] | {'source_sha256': result['source_sha256']}
                         source = {'source': text, 'source_sha256': result['source_sha256']}
                     self.jobs.update(request_id, status='completed', result=result, error=None, **source)
                 elif job['status'] in ('failed', 'cancelled', 'paused', 'waiting_review'):

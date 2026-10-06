@@ -203,7 +203,7 @@ class PlatformSource(Platform):
         assert source_sha256 is None  # the platform text is the source of this comparison
         return {'job_id': job_id, 'text': 'Translation B', 'sha256': text_hash('Translation B'),
                 'source': 'الله أكبر', 'source_sha256': text_hash('الله أكبر'), 'state': 'completed',
-                'processing': None}
+                'processing': {'job_id': job_id, 'source_sha256': text_hash('الله أكبر'), 'operations': []}}
 
 
 class OrderDamagedPdf:
@@ -279,4 +279,6 @@ def test_the_kitabs_source_is_repaired_and_b_stays_bound_to_the_repaired_source(
         assert done['source'] == 'لله أكبر' and done['source_sha256'] == text_hash('لله أكبر')
         assert done['result']['source_sha256'] == text_hash('لله أكبر')
         assert done['result']['platform_source_sha256'] == text_hash('الله أكبر')
+        # The edit journal of the launch belongs to the same repaired source.
+        assert done['result']['processing']['source_sha256'] == text_hash('لله أكبر')
     finally: s.close()
