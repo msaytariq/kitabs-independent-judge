@@ -4,7 +4,8 @@ Independent Judge compares two English translations of the same Arabic source.
 It gives each translation points from 0 to 100 on the same criteria, shows the
 errors it found with quotations, checks the Quran verses and hadith of the
 source against public reference texts, and calculates how much editing work
-each translation needs before publication.
+each translation needs before publication. It counts the critical errors of
+each translation and shows where each text comes from.
 
 - Live demonstration: <https://app.kitabs.ai/judge>
 - Guide for the jury: [docs/jury-guide.md](docs/jury-guide.md)
@@ -20,6 +21,9 @@ or the user can start the Kitabs.ai pipeline from the Judge screen.
 | Measure | Screen section |
 |---|---|
 | Quality | A table of six criteria (accuracy, completeness, terminology, readability, seamless assembly, scholarly apparatus) and the rows for quotations, references, seams and editing, with points 0–100 for A and B, a total and a winner |
+| Critical errors | The row "Critical errors, count": reversed meaning, invented content, omitted text, a changed verse or hadith, a wrong attribution or reference. An error counts only when the code finds both quotes. The count is not part of the total |
+| Edition | "Readiness for publication": footnotes, glossary and persons counted by the code, and the typeset book B (PDF) |
+| Provenance | Under the example title: where translation A and translation B come from, in the interface language |
 | Text accuracy | Rows "Quran verses in the translation", "Hadith in the translation", "Hadith takhrij" and "Verse references"; the sections "Hadith takhrij check", "Verse reference check" and "Sources in the original" |
 | Effort reduction | "Editing to publication": edits that remain, editor minutes and the saving in percent |
 | Bias mitigation | "Second judge": a model of a different family grades the same criteria |
@@ -30,12 +34,14 @@ A quoted error counts only when the code finds the exact quotation in the text.
 
 ## Saved examples
 
-| Example | Translation A | Total A | Total B (Kitabs.ai) | Winner, judge 1 / judge 2 |
-|---|---|---:|---:|---|
-| Islamic child education, chapter 5 | Gemini | 37 | 84 | B / B |
-| Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai (published translation) | 47 | 98 | B / B |
+| Example | Translation A | Total A | Total B (Kitabs.ai) | Critical errors A / B | Winner, judge 1 / judge 2 |
+|---|---|---:|---:|---:|---|
+| Islamic child education: love and patience in upbringing | Gemini chat | 36 | 94 | 2 / 0 | B / B |
+| Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai (published translation) | 42 | 100 | 2 / 0 | B / B |
 
-Judge 1: Gemini 3.8 Flash. Judge 2: Grok 4.1 Fast.
+Translation B of both examples was produced on 6 October 2026 through the
+Kitabs.ai production server, with no manual edits. Judge 1: Gemini 3.8 Flash.
+Judge 2: Grok 4.1 Fast.
 
 ## Run it locally
 

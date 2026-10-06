@@ -20,8 +20,12 @@ published competitor translation (example 2).
 
 | Example | Source | A | Total A | Total B | Winner (judge 1 / judge 2) |
 |---|---|---|---:|---:|---|
-| 1 | Islamic child education, chapter 5 | Gemini | 37 | 84 | B / B |
-| 2 | Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai | 47 | 98 | B / B |
+| 1 | Islamic child education: love and patience in upbringing | Gemini chat | 36 | 94 | B / B |
+| 2 | Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai | 42 | 100 | B / B |
+
+Translation B of both examples was produced on 6 October 2026 through the
+Kitabs.ai production server, with no manual edits. The row "Critical errors,
+count" shows 2 for A and 0 for B in both examples.
 
 Example 2 takes the Arabic text and translation A from the same pages (104–120)
 of the public nadwa.ai EPUB of *Qut al-Qulub*. In this passage nadwa.ai gives 12
@@ -72,6 +76,16 @@ The verse and hadith rows show the part of the source quotations that the
 translation contains. A quotation counts only when the judge gives the exact
 sentence and the code finds this sentence in the translation. The total is the
 mean of all rows.
+
+### Critical errors
+
+The judge lists the critical errors of each translation apart from the
+criteria: reversed meaning, invented content, omitted text, a changed verse or
+hadith, a wrong attribution or reference. The code counts an error only when it
+finds the exact quote in the source and in the translation. The count is not
+part of the total. Open "Which errors" under the number to read each error with
+its quotes. In Kitabs.ai a person corrects each critical error: the audit and
+the editor propose an edit, and the person accepts or rejects it.
 
 ### Scholarly apparatus
 
