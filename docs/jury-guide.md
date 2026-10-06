@@ -13,13 +13,22 @@ Link: <https://app.kitabs.ai/judge>
 2. Select an example. Click **Show comparison**.
 3. Read the table from top to bottom (see "What the screen shows").
 
-Each example has an Arabic source of about 5 pages with Quran verses and hadith.
-Translation A comes from a general chat model. Translation B comes from the
-Kitabs.ai pipeline (Autopilot, no manual edits).
+Each example has an Arabic source of about 5 to 7 pages with Quran verses and
+hadith. Translation B comes from the Kitabs.ai pipeline (Autopilot, no manual
+edits). Translation A comes from a general chat model (example 1) or from a
+published competitor translation (example 2).
 
 | Example | Source | A | Total A | Total B | Winner (judge 1 / judge 2) |
 |---|---|---|---:|---:|---|
 | 1 | Islamic child education, chapter 5 | Gemini | 31 | 78 | B / B |
+| 2 | Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai | 41 | 92 | B / B |
+
+Example 2 takes the Arabic text and translation A from the same pages (104–120)
+of the public nadwa.ai EPUB of *Qut al-Qulub*. In this passage nadwa.ai gives 12
+verse references; the code finds 10 of them wrong, for example "Adh-Duha (92): 2"
+for 93:2 and "Surah Al-'Aaliyah (1): 1" for 87:1. The edition itself prints most
+verse numbers with swapped digits ("الإسراء: 97" for 17:79); nadwa.ai copies them,
+and the section **Sources in the original** shows each one.
 
 ## Use your own texts
 
