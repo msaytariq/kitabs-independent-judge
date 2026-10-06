@@ -20,8 +20,8 @@ published competitor translation (example 2).
 
 | Example | Source | A | Total A | Total B | Winner (judge 1 / judge 2) |
 |---|---|---|---:|---:|---|
-| 1 | Islamic child education, chapter 5 | Gemini | 31 | 78 | B / B |
-| 2 | Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai | 41 | 92 | B / B |
+| 1 | Islamic child education, chapter 5 | Gemini | 36 | 81 | B / B |
+| 2 | Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai | 53 | 97 | B / B |
 
 Example 2 takes the Arabic text and translation A from the same pages (104–120)
 of the public nadwa.ai EPUB of *Qut al-Qulub*. In this passage nadwa.ai gives 12
