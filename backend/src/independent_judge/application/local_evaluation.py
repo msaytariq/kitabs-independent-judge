@@ -23,6 +23,8 @@ class EvaluationRuntime:
     reports: RunPort
     code_sha: str
     protocol: str = 'blind-3pass-exact-consensus-v1'
+    # A judge of another family grades the same criteria (bias check); None keeps one judge.
+    second_config: JudgeConfig | None = None
 
 
 def reference_key(scope: dict) -> str:
@@ -81,6 +83,20 @@ class LocalEvaluation:
         if self.scopes.get(scope_id) is None: raise InputError('scope_not_found', 'Материалы не найдены.')
         return {k: v for k, v in self.jobs.get(scope_id).items() if k != 'report'}
 
+    def _second_judge(self, scope, run_id: str) -> dict | None:
+        """The second judge's grades; a response off the schema gets one more own run, never the first's."""
+        runtime = self.runtime
+        for attempt in ('', '-retry'):
+            second_id = f'{run_id}-second{attempt}'
+            report = run_comparison(scope, runtime.second_config, runtime.judge, runtime.budget, runtime.reports,
+                                    run_id=second_id, code_sha=runtime.code_sha, protocol=runtime.protocol)
+            if report['status'] == 'completed' and report.get('rubric'):
+                return {'model': ', '.join(report['manifest'].get('actual_models', [])), 'run_id': second_id,
+                        'rubric': report['rubric'], 'cost': report.get('cost')}
+            if report['status'] == 'budget_stopped':
+                return None
+        return None
+
     def _execute(self, scope_id: str, stored: dict, run_id: str):
         self.jobs.update(scope_id, 'running')
         try:
@@ -89,6 +105,8 @@ class LocalEvaluation:
             report = run_comparison(scope, runtime.config, runtime.judge, runtime.budget,
                                     runtime.reports, run_id=run_id, code_sha=runtime.code_sha,
                                     protocol=runtime.protocol)
+            if report['status'] == 'completed' and runtime.second_config is not None:
+                report = report | {'second_judge': self._second_judge(scope, run_id)}
             self.jobs.update(scope_id, 'checking_references', report=report,
                              error=report.get('error', {}).get('code'))
             if scope.profile == 'islamic-scholarly':

@@ -148,3 +148,24 @@ def test_finished_judge_is_persisted_while_references_are_pending(tmp_path):
     finally:
         release.set(); future.result(); runner.close()
     assert jobs.get(scope_id)['status'] == 'completed'
+
+
+def test_a_live_run_adds_the_second_judge_of_another_family(tmp_path):
+    from pathlib import Path
+    from independent_judge.application.local_evaluation import EvaluationRuntime
+    from independent_judge.operator_config import load_judge_config
+    from test_rubric_comparison import Judge
+    judge = Judge()
+    first = JudgeConfig()
+    grok = load_judge_config(Path(__file__).parents[1] / 'config' / 'judge-grok-4.1-fast.json')
+    rt = EvaluationRuntime(first, judge, BudgetLedger(tmp_path, total_usd=Decimal('3'), per_run_usd=Decimal('1')),
+                           RunRepository(tmp_path), 'a' * 40, protocol='rubric-v1',
+                           second_config=grok)
+    with TestClient(create_app(tmp_path, evaluation=rt)) as client:
+        scope = prepare(client)
+        client.post(f'/api/scopes/{scope}/run')
+        assert wait_done(client, scope)['status'] == 'completed'
+        view = client.get(f'/api/scopes/{scope}/comparison').json()
+    second = view['second_judge']
+    assert second['second']['model'] == grok.model and second['agree'] is True
+    assert len(judge.calls) == 4  # rubric and coverage of each judge

@@ -131,7 +131,7 @@ class ComparisonViewService:
                   'typeset': self._typeset(scope.get('pipeline_request_id'))}
         job = self.jobs.get(scope_id) if self.jobs else None
         if job and job['report']:
-            return self.project(record | {'run': job['report']})
+            return self.project(record | {'run': job['report'], 'second_judge': job['report'].get('second_judge')})
         if scope['status'] == 'ready':
             for saved in self.catalog.records():
                 if saved.get('run') and all(scope[key] == saved['scope'][key] for key in (
