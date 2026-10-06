@@ -133,7 +133,9 @@ test('the critical error row shows a count in each cell, the errors and who corr
   assert.ok(ru.includes('В итог не входит') && ru.includes('аудит и редактор предлагают правку, человек принимает или отклоняет её'));
   assert.ok(ru.includes('>25<') && ru.includes('>75<'));
   const en=show('RubricTable',{result,jury},'en');
+  assert.ok(ru.includes('У чата и других сервисов ИИ перевода без участия человека такого шага нет.') && !ru.includes('исправить вручную'));
   assert.ok(en.includes('Critical errors, count') && en.includes('In Kitabs.ai, a person corrects each critical error'));
+  assert.ok(en.includes('Chat and other AI translation services that work without a person do not have this step.'));
   const plain=show('RubricTable',{result,jury:{...jury,rows:[jury.rows[0]]}},'en');
   assert.ok(!plain.includes('Critical errors'));
   const opinion={first:{model:'m1',totals:{a:25,b:75},winner:'b'},second:{model:'m2',totals:{a:50,b:75},winner:'b'},agree:true,

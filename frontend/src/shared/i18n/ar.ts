@@ -243,8 +243,8 @@ export const AR: Record<string, string> = {
   'Omitted text': 'نص محذوف',
   'Verse or hadith changed': 'تحريف آية أو حديث',
   'Wrong attribution or reference': 'نسبة أو إحالة خاطئة',
-  'Critical errors: the judge lists them, and the code counts an error only when it finds both quotes. The count is not part of the total. In Kitabs.ai, a person corrects each critical error: the audit and the editor propose an edit, and the person accepts or rejects it. A chat and other translation services do not give this step: you must find and correct each error manually.':
-    'الأخطاء الجسيمة: يذكرها المحكِّم، ولا يحسب البرنامج الخطأ إلا إذا وجد الاقتباسين كليهما. لا يدخل هذا العدد في المجموع. في Kitabs.ai يصحّح إنسانٌ كل خطأ جسيم: يقترح التدقيق والمحرِّر تعديلًا، والإنسان يقبله أو يرفضه. لا تقدّم المحادثة ولا خدمات الترجمة الأخرى هذه الخطوة: عليك أن تجد كل خطأ وتصحّحه يدويًا.',
+  'Critical errors: the judge lists them, and the code counts an error only when it finds both quotes. The count is not part of the total. In Kitabs.ai, a person corrects each critical error: the audit and the editor propose an edit, and the person accepts or rejects it. Chat and other AI translation services that work without a person do not have this step.':
+    'الأخطاء الجسيمة: يذكرها المحكِّم، ولا يحسب البرنامج الخطأ إلا إذا وجد الاقتباسين كليهما. لا يدخل هذا العدد في المجموع. في Kitabs.ai يصحّح إنسانٌ كل خطأ جسيم: يقترح التدقيق والمحرِّر تعديلًا، والإنسان يقبله أو يرفضه. لا توجد هذه الخطوة في المحادثة ولا في خدمات الترجمة الآلية الأخرى التي تعمل دون إنسان.',
   'Work': 'العمل',
   'Work estimate — assuming 5 seconds per decision': 'تقدير العمل — بافتراض 5 ثوانٍ لكل قرار',
   'Your materials': 'موادك',

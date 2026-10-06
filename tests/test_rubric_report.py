@@ -158,5 +158,7 @@ def test_html_export_shows_the_critical_errors_and_who_corrects_them():
     assert 'Смысл перевёрнут.' in html
     assert 'В итог не входит' in html
     assert 'аудит и редактор предлагают правку, человек принимает или отклоняет её' in html
+    assert 'У чата и других сервисов ИИ перевода без участия человека такого шага нет.' in html
+    assert 'исправить вручную' not in html
     # The total stays the mean of the points rows.
     assert '<b>38</b>' in html
