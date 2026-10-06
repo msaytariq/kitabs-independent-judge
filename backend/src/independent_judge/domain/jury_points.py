@@ -17,6 +17,20 @@ LABELS = {
     'ru': {'accuracy': 'точность', 'completeness': 'полнота', 'terminology': 'терминология',
            'readability': 'читаемость', 'seamlessness': 'целостность сборки',
            'apparatus': 'научный аппарат', 'quran': 'аяты Корана', 'hadith': 'хадисы'},
+    'ar': {'accuracy': 'الدقة', 'completeness': 'الاكتمال', 'terminology': 'المصطلحات',
+           'readability': 'سهولة القراءة', 'seamlessness': 'سلامة التجميع',
+           'apparatus': 'الجهاز العلمي', 'quran': 'آيات القرآن', 'hadith': 'الأحاديث'},
+}
+PHRASES = {
+    'en': {'tie': 'The translations are equal: {a} points each.',
+           'win': 'Translation {win} is better: {high} against {low} points.',
+           'better': '{side} is better in: ', 'equal': 'Equal in: ', 'comma': ', '},
+    'ru': {'tie': 'Переводы равны: итог {a} из 100 у каждого.',
+           'win': 'Перевод {win} лучше: {high} против {low} баллов.',
+           'better': '{side} лучше в: ', 'equal': 'Одинаково: ', 'comma': ', '},
+    'ar': {'tie': 'الترجمتان متساويتان: {a} نقطة لكل منهما.',
+           'win': 'الترجمة {win} أفضل: {high} مقابل {low} نقطة.',
+           'better': '{side} أفضل في: ', 'equal': 'متساويتان في: ', 'comma': '، '},
 }
 
 
@@ -89,22 +103,19 @@ def jury_summary(table: dict | None) -> dict | None:
         gap = row['b'] - row['a']
         (better['b'] if gap > 0 else better['a'] if gap < 0 else equal).append((row['key'], abs(gap)))
     text = {}
-    for lang in ('en', 'ru'):
-        label = LABELS[lang]
-        listed = lambda items: ', '.join(f'{label[k]} (+{gap})' for k, gap in items)
+    for lang, phrase in PHRASES.items():
+        label, comma = LABELS[lang], phrase['comma']
+        listed = lambda items: comma.join(f'{label[k]} (+{gap})' for k, gap in items)
         if table['winner'] == 'tie':
-            lines = [f'The translations are equal: {totals["a"]} points each.' if lang == 'en'
-                     else f'Переводы равны: итог {totals["a"]} из 100 у каждого.']
+            lines = [phrase['tie'].format(a=totals['a'])]
         else:
             win, lose = table['winner'], 'a' if table['winner'] == 'b' else 'b'
-            lines = [f'Translation {win.upper()} is better: {totals[win]} against {totals[lose]} points.' if lang == 'en'
-                     else f'Перевод {win.upper()} лучше: {totals[win]} против {totals[lose]} баллов.']
+            lines = [phrase['win'].format(win=win.upper(), high=totals[win], low=totals[lose])]
         for side in ('b', 'a'):
             if better[side]:
-                lines.append((f'{side.upper()} is better in: ' if lang == 'en' else f'{side.upper()} лучше в: ')
-                             + listed(better[side]) + '.')
+                lines.append(phrase['better'].format(side=side.upper()) + listed(better[side]) + '.')
         if equal:
-            lines.append(('Equal in: ' if lang == 'en' else 'Одинаково: ') + ', '.join(label[k] for k, _ in equal) + '.')
+            lines.append(phrase['equal'] + comma.join(label[k] for k, _ in equal) + '.')
         text[lang] = lines
     return text
 

@@ -28,7 +28,7 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
       {jury.rows.map(row=><tr key={row.key}><th scope="row">{labels[row.key]||row.key}</th>{cell(row,'a')}{cell(row,'b')}</tr>)}
       <tr><th scope="row">{t('Total, 0–100','Итог, 0–100')}</th><td>{points(jury.totals.a)}</td><td>{points(jury.totals.b)}</td></tr>
     </tbody></table>
-    {summary&&<ul className="jury-summary">{(locale==='ru'?summary.ru:summary.en).map(line=><li key={line}>{line}</li>)}</ul>}
+    {summary&&<ul className="jury-summary">{(locale==='ru'?summary.ru:locale==='ar'?(summary.ar??summary.en):summary.en).map(line=><li key={line}>{line}</li>)}</ul>}
     <p className="muted">{t('Errors with quotations','Ошибки с цитатами')}: A — {result.unique_defects.a}; B — {result.unique_defects.b}.</p>
     <p className="muted">{t('100 — no defects; 75 — small local defects; 50 — notable defects; 25 — many substantive errors; 0 — meaning is systematically distorted.',
       '100 — замечаний нет; 75 — мелкие местные дефекты; 50 — заметные дефекты; 25 — много существенных ошибок; 0 — смысл систематически искажён.')}</p>

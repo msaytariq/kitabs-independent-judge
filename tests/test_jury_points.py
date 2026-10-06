@@ -100,3 +100,14 @@ def test_second_opinion_compares_criteria_of_two_judges_and_names_agreement():
 
 def test_half_points_round_up():
     assert jury_table(rubric({'accuracy': (4, 4), 'completeness': (3, 3)}), None)['totals'] == {'a': 63, 'b': 63}
+
+
+def test_summary_has_arabic_lines():
+    summary = jury_summary(jury_table(rubric(PAIRS), COVERAGE))
+    assert summary['ar'] == [
+        'الترجمة B أفضل: 85 مقابل 55 نقطة.',
+        'B أفضل في: الدقة (+25)، الاكتمال (+75)، آيات القرآن (+75).',
+        'A أفضل في: سهولة القراءة (+25).',
+        'متساويتان في: المصطلحات.']
+    tie = jury_summary(jury_table(rubric({'accuracy': (4, 4)}), None))
+    assert tie['ar'][0] == 'الترجمتان متساويتان: 75 نقطة لكل منهما.'
