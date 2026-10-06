@@ -32,7 +32,6 @@ A quoted error counts only when the code finds the exact quotation in the text.
 
 | Example | Translation A | Total A | Total B (Kitabs.ai) | Winner, judge 1 / judge 2 |
 |---|---|---:|---:|---|
-| an-Nawawi, *Riyad as-Salihin*, chapter on patience | ChatGPT | 91 | 91 | tie / tie |
 | Islamic child education, chapter 5 | Gemini | 28 | 77 | B / B |
 | al-Ghazali, *Ihya*, Book of Death, chapter 8 | Claude | 100 | 66 | A / A |
 
