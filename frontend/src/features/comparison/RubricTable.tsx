@@ -24,6 +24,7 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
       <br/><small>{t(`wrong: ${row.wrong?.[side]}`,`неверных: ${row.wrong?.[side]}`)}</small></td>;
     const source=indexed[row.key]?.[side];const level=row.level?.[side];
     return <td key={side}>{points(row[side])}{level!=null&&<><br/><small>{t(`level ${level} of 5`,`уровень ${level} из 5`)}</small></>}
+      {row.no_notes?.includes(side)&&<><br/><small>{t('No notes','Сносок нет')}</small></>}
       {source&&row[side]!==null&&evidence(source,side)}</td>;
   };
   return <section className="panel"><h2>{jury.winner?winners[jury.winner]:t('The assessment did not finish.','Оценка не завершена.')}</h2>
@@ -37,6 +38,8 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
       '100 — замечаний нет; 75 — мелкие местные дефекты; 50 — заметные дефекты; 25 — много существенных ошибок; 0 — смысл систематически искажён.')}</p>
     <p className="muted">{t('An AI judge gives levels 1–5 with the same criteria for A and B: 1 = 0, 2 = 25, 3 = 50, 4 = 75, 5 = 100 points. The verse and hadith rows show the part of the source quotations found in the translation. The total is the mean of all rows.',
       'ИИ-судья выставляет уровни 1–5 по одинаковым критериям для A и B: 1 = 0, 2 = 25, 3 = 50, 4 = 75, 5 = 100 баллов. Строки аятов и хадисов — доля цитат оригинала, найденных в переводе. Итог — среднее всех строк.')}</p>
+    {jury.rows.some(row=>row.no_notes?.length)&&<p className="muted">{t('Scholarly apparatus: the source gives references, and a translation without anchored notes gets 0 points. The code counts the notes.',
+      'Научный аппарат: в оригинале есть ссылки, и перевод без сносок получает 0 баллов. Сноски считает код.')}</p>}
     {jury.rows.some(row=>row.kind==='takhrij')&&<p className="muted">{t('The takhrij row: correct references less wrong references, as a part of the references in the source.',
       'Строка тахриджа: верные ссылки минус неверные, как доля ссылок оригинала.')}</p>}
   </section>;

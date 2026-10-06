@@ -163,6 +163,9 @@ export const AR: Record<string, string> = {
   'The AI judge reads the source and two anonymous translations once and grades six criteria.':
     'يقرأ المحكِّم الآلي الأصل وترجمتين مجهولتي المصدر مرة واحدة ويقيِّم ستة معايير.',
   'The assessment did not finish.': 'لم يكتمل التقييم.',
+  'No notes': 'لا حواشي',
+  'Scholarly apparatus: the source gives references, and a translation without anchored notes gets 0 points. The code counts the notes.':
+    'الجهاز العلمي: في الأصل إحالات، والترجمة التي لا حواشي فيها تنال 0 نقطة. يعدّ البرنامج الحواشي.',
   'The displayed indices are equal.': 'المؤشرات المعروضة متساوية.',
   'The editing time is equal': 'زمن التحرير متساوٍ',
   'The operator has not enabled the pipeline connection. You can upload any completed B.':

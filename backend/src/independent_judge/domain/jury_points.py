@@ -50,7 +50,19 @@ def _percent(found: int, total: int) -> int:
     return _round(100 * found / total)
 
 
-def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None = None) -> dict | None:
+def sides_without_notes(structural: dict | None, takhrij: dict | None) -> set:
+    """Sides that give no anchored note although the source gives references to deliver.
+
+    The code counts the notes (apparatus_inventory); no model takes part. References
+    inside the author's sentences are not an apparatus.
+    """
+    if not structural or not takhrij or not takhrij.get('total'):
+        return set()
+    return {s for s in ('a', 'b') if not ((structural.get(s) or {}).get('inventory') or {}).get('notes')}
+
+
+def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None = None,
+               without_notes: set | frozenset = frozenset()) -> dict | None:
     if not rubric:
         return None
     indexed = {row['criterion']: row for row in rubric['criteria']}
@@ -58,8 +70,12 @@ def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None 
     for name in RUBRIC:
         if name in indexed:
             levels = {s: indexed[name][s]['score'] for s in ('a', 'b')}
-            rows.append({'key': name, 'kind': 'criterion', 'a': points(levels['a']), 'b': points(levels['b']),
-                         'level': levels})
+            row = {'key': name, 'kind': 'criterion'}
+            if name == 'apparatus' and without_notes:
+                # No notes: the lowest level, whatever the judge wrote.
+                levels |= {s: 1 for s in without_notes}
+                row['no_notes'] = sorted(without_notes)
+            rows.append(row | {'a': points(levels['a']), 'b': points(levels['b']), 'level': levels})
     for key in COVERAGE_KEYS:
         counts = (coverage or {}).get(key)
         if counts and counts['total']:
@@ -133,11 +149,13 @@ def jury_summary(table: dict | None) -> dict | None:
     return text
 
 
-def second_opinion(rubric: dict | None, model: str, second: dict | None) -> dict | None:
+def second_opinion(rubric: dict | None, model: str, second: dict | None,
+                   without_notes: set | frozenset = frozenset()) -> dict | None:
     """Two judges of different families on the same criteria; quotation counts are not repeated."""
     if not rubric or not second or not second.get('rubric'):
         return None
-    tables = {'first': jury_table(rubric, None), 'second': jury_table(second['rubric'], None)}
+    tables = {'first': jury_table(rubric, None, without_notes=without_notes),
+              'second': jury_table(second['rubric'], None, without_notes=without_notes)}
     second_rows = {r['key']: r for r in tables['second']['rows']}
     rows = [{'key': r['key'], 'first': {'a': r['a'], 'b': r['b']},
              'second': {'a': second_rows[r['key']]['a'], 'b': second_rows[r['key']]['b']}}

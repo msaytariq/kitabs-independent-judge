@@ -138,3 +138,29 @@ def test_takhrij_label_is_in_every_summary_language():
     assert summary['en'][1] == 'B is better in: takhrij references (+70).'
     assert summary['ru'][1] == 'B лучше в: тахридж (+70).'
     assert summary['ar'][1] == 'B أفضل في: التخريج (+70).'
+
+
+def test_a_translation_without_notes_gets_no_apparatus_points():
+    from independent_judge.domain.jury_points import sides_without_notes
+    structural = {'a': {'inventory': {'notes': 0}}, 'b': {'inventory': {'notes': 13}}}
+    takhrij = {'total': 6, 'a': {'delivered': 0, 'wrong': 0}, 'b': {'delivered': 6, 'wrong': 0}}
+    assert sides_without_notes(structural, takhrij) == {'a'}
+    # The source gives no references: notes are not due, and the judge level stays.
+    assert sides_without_notes(structural, None) == set()
+    assert sides_without_notes(None, takhrij) == set()
+    graded = rubric({'accuracy': (3, 4), 'apparatus': (3, 5)})
+    table = jury_table(graded, None, without_notes={'a'})
+    row = next(r for r in table['rows'] if r['key'] == 'apparatus')
+    assert (row['a'], row['b'], row['level']['a'], row['no_notes']) == (0, 100, 1, ['a'])
+    # Also when the judge calls the apparatus not applicable for a side without notes.
+    table = jury_table(rubric({'apparatus': (None, 5)}), None, without_notes={'a'})
+    assert table['totals'] == {'a': 0, 'b': 100}
+
+
+def test_the_second_judge_uses_the_same_notes_rule():
+    from independent_judge.domain.jury_points import second_opinion
+    first = rubric({'accuracy': (3, 4), 'apparatus': (3, 5)})
+    second = {'model': 'x', 'rubric': rubric({'accuracy': (4, 5), 'apparatus': (3, 5)})}
+    view = second_opinion(first, 'y', second, without_notes={'a'})
+    assert view['first']['totals'] == {'a': 25, 'b': 88}
+    assert view['second']['totals'] == {'a': 38, 'b': 100}

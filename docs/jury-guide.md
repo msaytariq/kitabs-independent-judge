@@ -20,8 +20,8 @@ published competitor translation (example 2).
 
 | Example | Source | A | Total A | Total B | Winner (judge 1 / judge 2) |
 |---|---|---|---:|---:|---|
-| 1 | Islamic child education, chapter 5 | Gemini | 36 | 81 | B / B |
-| 2 | Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai | 53 | 97 | B / B |
+| 1 | Islamic child education, chapter 5 | Gemini | 34 | 81 | B / B |
+| 2 | Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai | 47 | 97 | B / B |
 
 Example 2 takes the Arabic text and translation A from the same pages (104–120)
 of the public nadwa.ai EPUB of *Qut al-Qulub*. In this passage nadwa.ai gives 12
@@ -77,6 +77,9 @@ A and B, and the judge does not know which system made each translation.
 
 - Level 5 needs all notes of the source, separate from the author's text as
   anchored notes, each note at the correct place.
+- When the source gives references, a translation without anchored notes gets
+  0 points. The code counts the notes; no model takes part. The same rule
+  applies to the first and the second judge.
 - Notes that stay inside the author's text get level 3 or lower. A note that
   interrupts an author's sentence is also a readability defect.
 - Takhrij and editor notes that the source prints inside the text are notes,

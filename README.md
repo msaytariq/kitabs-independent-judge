@@ -32,8 +32,8 @@ A quoted error counts only when the code finds the exact quotation in the text.
 
 | Example | Translation A | Total A | Total B (Kitabs.ai) | Winner, judge 1 / judge 2 |
 |---|---|---:|---:|---|
-| Islamic child education, chapter 5 | Gemini | 36 | 81 | B / B |
-| Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai (published translation) | 53 | 97 | B / B |
+| Islamic child education, chapter 5 | Gemini | 34 | 81 | B / B |
+| Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai (published translation) | 47 | 97 | B / B |
 
 Judge 1: Gemini 3.8 Flash. Judge 2: Grok 4.1 Fast.
 
