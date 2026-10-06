@@ -8,6 +8,7 @@ import {SecondJudge} from './SecondJudge';
 import {ProcessingTime} from './ProcessingTime';
 import {ReferenceEvidence} from './ReferenceEvidence';
 import {TakhrijCheck} from './TakhrijCheck';
+import {EditionReadiness} from './EditionReadiness';
 import {Findings} from './Findings';
 export function JuryResult({view}:{view:ComparisonView}) {
   const {t,locale}=useJudgeLocale();
@@ -18,6 +19,7 @@ export function JuryResult({view}:{view:ComparisonView}) {
     <CaseStudy study={view.case_study}/>
     <SecondJudge opinion={view.second_judge}/>
     <EffortReduction effort={view.effort_reduction}/>
+    <EditionReadiness edition={view.edition}/>
     <ProcessingTime effort={view.processing_effort}/>
     {!view.rubric&&!view.rubric_protocol&&<details className="panel"><summary>{t('Evidence and explanations','Доказательства и пояснения')}</summary>
       <Findings findings={view.summary.findings}/></details>}

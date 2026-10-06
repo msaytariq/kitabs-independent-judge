@@ -145,3 +145,24 @@ def test_progress_reads_the_job_and_its_artifacts_without_payloads_in_the_answer
     progress = port.progress('job')
     assert (progress['chunk'], progress['chunks'], progress['stage']) == (1, 2, 'audit')
     assert progress['percent'] == 17  # 1 preparation + 1 stage of 12 steps
+
+
+def test_typeset_orders_a_pdf_of_the_assembled_book_and_reads_it():
+    import json
+    from independent_judge.infrastructure.kitabs_pipeline import KitabsPipeline
+    sent = []
+    def handle(request):
+        sent.append((request.method, request.url.path))
+        if request.method == 'POST':
+            body = json.loads(request.content)
+            assert body['jobId'] == 'job' and body['formats'] == ['pdf'] and body['trimWidthMm'] == 148
+            return httpx.Response(201, json={'exportId': 'export_1', 'status': 'queued'})
+        if request.url.path.endswith('/download/pdf'):
+            return httpx.Response(200, content=b'%PDF-1.7 book')
+        return httpx.Response(200, json={'exportId': 'export_1', 'status': 'done', 'progress': 100})
+    port = KitabsPipeline('https://platform.example/api', 'test-only', transport=httpx.MockTransport(handle))
+    assert port.typeset('job') == 'export_1'
+    assert port.typeset_status('export_1') == 'done'
+    assert port.typeset_file('export_1') == b'%PDF-1.7 book'
+    assert sent == [('POST', '/api/exports'), ('GET', '/api/exports/export_1'),
+                    ('GET', '/api/exports/export_1/download/pdf')]

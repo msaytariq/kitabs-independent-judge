@@ -1,6 +1,7 @@
 """Local embedded pipeline launch and polling; credentials never reach the browser."""
 from typing import Annotated
 from fastapi import APIRouter, File, Form, UploadFile
+from fastapi.responses import Response
 from starlette.concurrency import run_in_threadpool
 from independent_judge.api.uploads import read_upload
 from independent_judge.application.intake import Upload
@@ -21,7 +22,8 @@ def build_pipeline_router(service, retriever):
         if source_kind == 'file' and source:
             upload = await read_upload(source)
         elif source_kind == 'text':
-            upload = Upload(source_value.encode(), 'source.txt', 'text/plain')
+            # A browser sends form line breaks as CRLF; the comparison keeps the LF of the screen.
+            upload = Upload(source_value.replace('\r\n', '\n').encode(), 'source.txt', 'text/plain')
         elif source_kind == 'url':
             remote = await run_in_threadpool(retriever.fetch, source_value)
             upload = Upload(remote.content, remote.filename, remote.content_type, remote.provenance)
@@ -32,5 +34,11 @@ def build_pipeline_router(service, retriever):
     @router.get('/{request_id}')
     def status(request_id: str):
         return service.status(request_id)
+
+    @router.get('/{request_id}/typeset.pdf')
+    def typeset(request_id: str):
+        content = service.typeset_file(request_id)
+        return Response(content, media_type='application/pdf',
+                        headers={'Content-Disposition': 'attachment; filename="kitabs-b-typeset.pdf"'})
 
     return router

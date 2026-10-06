@@ -2,6 +2,17 @@
 // A missing key falls back to English; tests/arabic.test.mjs keeps the table complete.
 export const AR: Record<string, string> = {
   "Hadith takhrij check": "فحص تخريج الأحاديث",
+  "Notes moved out of the author text": "حواشٍ مفصولة عن نص المؤلف",
+  "Glossary entries": "مداخل المسرد",
+  "Person index entries": "مداخل الأعلام",
+  "Typeset book (PDF)": "الكتاب المصفوف (PDF)",
+  "ready": "جاهز",
+  "failed": "تعذّر",
+  "typesetting…": "جارٍ الصف…",
+  "Readiness for publication": "الجاهزية للنشر",
+  "Part of the edition": "جزء الطبعة",
+  "Download the typeset book B (PDF)": "تنزيل الكتاب المصفوف B (PDF)",
+  "A separate block: it is not part of the translation quality total. The code counts the notes, glossary and person entries in each text; Kitabs.ai typesets book B after the autopilot.": "قسم مستقل لا يدخل في مجموع جودة الترجمة. يعدّ البرنامج الحواشي ومداخل المسرد والأعلام في كل نص، ويصفّ Kitabs.ai الكتاب B بعد الطيار الآلي.",
   "translation": "الترجمة",
   "audit": "التدقيق",
   "editing": "التحرير",

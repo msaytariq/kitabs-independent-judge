@@ -141,3 +141,21 @@ def test_a_cached_check_of_an_earlier_takhrij_version_keeps_the_saved_current_on
 
     view = ComparisonViewService(None, None, renderer=str, jobs=Jobs()).project(saved)
     assert view['takhrij'] == saved_takhrij
+
+
+def test_the_view_shows_the_edition_block_with_the_typeset_book_of_the_launch():
+    from independent_judge.application.comparison_view import ComparisonViewService
+    from independent_judge.domain.scope import text_hash
+    TEXTS = {'source': 'نص', 'a': 'A.', 'b': 'B.[1]\n\n[1] Note.'}
+    class Scopes:
+        def get(self, scope_id):
+            return {'id': scope_id, 'status': 'ready', 'pipeline_request_id': 'r', 'processing': None,
+                    'texts': TEXTS, 'hashes': {k: text_hash(v) for k, v in TEXTS.items()}}
+    class Catalog:
+        def records(self): return []
+    class Pipeline:
+        def get(self, request_id): return {'typeset': {'export_id': 'e', 'status': 'done'}}
+    service = ComparisonViewService(Catalog(), Scopes(), renderer=str)
+    service.pipeline_jobs = Pipeline()
+    edition = service.scope('s')['edition']
+    assert edition['download'] == '/api/pipeline-b/r/typeset.pdf' and edition['checks'] == {'a': 0, 'b': 2}

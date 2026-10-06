@@ -24,6 +24,8 @@ export type SecondOpinion={first:JudgeTotals;second:JudgeTotals;agree:boolean;
 export type TakhrijItem={kind:'quran'|'hadith'|'collection';reference:string;
   status:'correct'|'wrong'|'missing'|'as_in_source'|'unchecked'};
 export type TakhrijSide={delivered:number;wrong:number;items:TakhrijItem[]};
+export type Edition={rows:{key:string;a:number|string|null;b:number|string|null}[];checks:Record<'a'|'b',number>;
+  total:number;in_total:boolean;download:string|null};
 export type ReferenceCounts={delivered:number;wrong:number};
 export type TakhrijCheck={version:string;total:number;a:TakhrijSide;b:TakhrijSide;
   verses?:{total:number;a:ReferenceCounts;b:ReferenceCounts}};

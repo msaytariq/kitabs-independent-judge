@@ -86,3 +86,14 @@ test('a running Kitabs launch shows a progress bar with the fragment, stage and 
   assert.ok(html.includes('role="progressbar"') && html.includes('aria-valuenow="35"') && html.includes('width:35%'));
   assert.ok(html.includes('Фрагмент 2 из 3 · аудит') && html.includes('✓ Подготовка') && html.includes('● Фрагменты'));
 });
+
+test('the edition block shows the parts of each edition and the typeset download apart from the total',()=>{
+  const {EditionReadiness}=require('../src/features/comparison/EditionReadiness.tsx');
+  const {JudgeLocale}=require('../src/features/comparison/JudgeLocale.tsx');
+  const edition={rows:[{key:'notes',a:0,b:13},{key:'glossary',a:0,b:9},{key:'persons',a:0,b:5},{key:'typeset',a:null,b:'done'},
+    {key:'edits',a:0,b:135}],checks:{a:0,b:4},total:4,in_total:false,download:'/api/pipeline-b/r/typeset.pdf'};
+  const html=render(React.createElement(JudgeLocale,{initial:'ru'},React.createElement(EditionReadiness,{edition})));
+  assert.ok(html.includes('Готовность к изданию') && html.includes('B: 4 из 4') && html.includes('A: 0 из 4'));
+  assert.ok(html.includes('Скачать свёрстанную книгу B (PDF)') && html.includes('/api/pipeline-b/r/typeset.pdf'));
+  assert.ok(html.includes('в итог качества перевода не входит'));
+});

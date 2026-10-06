@@ -282,3 +282,42 @@ def test_the_kitabs_source_is_repaired_and_b_stays_bound_to_the_repaired_source(
         # The edit journal of the launch belongs to the same repaired source.
         assert done['result']['processing']['source_sha256'] == text_hash('لله أكبر')
     finally: s.close()
+
+
+class PlatformWithTypeset(Platform):
+    def __init__(self): super().__init__(); self.orders = 0
+    def typeset(self, job_id): self.orders += 1; return 'export_1'
+    def typeset_status(self, export_id): return 'done'
+
+
+def test_a_completed_launch_orders_one_typeset_pdf_and_follows_it(tmp_path):
+    port = PlatformWithTypeset()
+    s = service(tmp_path, port)
+    try:
+        submit(s)
+        done = wait(s)
+        assert done['status'] == 'completed'
+        assert s.status('r')['typeset'] == {'export_id': 'export_1', 'status': 'done'}
+        s.status('r')
+        assert port.orders == 1
+    finally: s.close()
+
+
+def test_the_typeset_pdf_is_served_and_pasted_text_keeps_screen_line_breaks(tmp_path):
+    from fastapi.testclient import TestClient
+    from independent_judge.api.app import create_app
+    class Port(PlatformWithTypeset):
+        def typeset_file(self, export_id): return b'%PDF-1.7 book'
+        def upload(self, source, source_language, target_language, original=None):
+            self.source = source; return 'doc'
+    port = Port()
+    s = service(tmp_path, port)
+    with TestClient(create_app(tmp_path, pipeline=s)) as client:
+        assert client.get('/api/pipeline-b/none/typeset.pdf').status_code == 422
+        client.post('/api/pipeline-b', data={'request_id': 'web', 'source_kind': 'text', 'source_value': 'سطر\r\nسطر',
+                                             'source_language': 'ar', 'target_language': 'en'})
+        wait(s, 'web'); s.status('web')
+        pdf = client.get('/api/pipeline-b/web/typeset.pdf')
+        assert pdf.status_code == 200 and pdf.content == b'%PDF-1.7 book'
+        assert pdf.headers['content-type'] == 'application/pdf'
+    assert port.source == 'سطر\nسطر'

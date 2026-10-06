@@ -138,6 +138,40 @@ class KitabsPipeline:
             raise InputError('pipeline_unavailable', 'Cannot read platform progress.') from None
         return pipeline_progress(job['status'], job.get('currentStage'), artifacts)
 
+    def typeset(self, job_id):
+        """Order the typeset PDF of the assembled book B (A5 page); the platform renders it without a model."""
+        self._valid_id(job_id)
+        answer = self._post('exports', {'jobId': job_id, 'trimWidthMm': 148, 'trimHeightMm': 210,
+                                        'formats': ['pdf']})
+        return answer['exportId']
+
+    def typeset_status(self, export_id):
+        self._valid_id(export_id)
+        return self._read(lambda client: self._get(client, f'exports/{export_id}')['status'])
+
+    def typeset_file(self, export_id):
+        self._valid_id(export_id)
+        def read(client):
+            with client.stream('GET', f'exports/{export_id}/download/pdf') as response:
+                if response.status_code in (401, 403):
+                    raise InputError('pipeline_auth_required', 'KITABS authorization is required.')
+                response.raise_for_status()
+                content = bytearray()
+                for block in response.iter_bytes():
+                    content.extend(block)
+                    if len(content) > 50 * 1024 * 1024:
+                        raise InputError('file_too_large', 'The typeset book is too large.')
+                return bytes(content)
+        return self._read(read)
+
+    def _read(self, action):
+        try:
+            return self._authorized(action)
+        except InputError:
+            raise
+        except (httpx.HTTPError, ValueError, KeyError, TypeError):
+            raise InputError('pipeline_unavailable', 'Cannot read the typeset book.') from None
+
     def start(self, job_id):
         self._valid_id(job_id)
         def run(client):

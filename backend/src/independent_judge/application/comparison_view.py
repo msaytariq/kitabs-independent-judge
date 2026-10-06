@@ -13,6 +13,7 @@ from independent_judge.domain.rubric_result import VERSION as RUBRIC_VERSION
 from independent_judge.domain.reference_coverage import coverage_counts
 from independent_judge.domain.case_study import case_study
 from independent_judge.domain.seam_check import seam_check
+from independent_judge.domain.edition import edition_readiness
 from independent_judge.domain.takhrij_check import VERSION as TAKHRIJ_VERSION
 from independent_judge.domain.jury_points import (effort_reduction, jury_summary, jury_table, second_opinion,
                                                   sides_without_notes)
@@ -50,6 +51,7 @@ def _view(record: dict) -> dict:
         'effort_reduction': effort,
         'takhrij': takhrij,
         'seams': seams,
+        'edition': _edition(record, texts, processing),
         'jury_summary': jury_summary(jury),
         'case_study': case_study(rubric, processing),
         'second_judge': second_opinion(rubric, ', '.join(manifest.get('actual_models', [])), record.get('second_judge'),
@@ -71,10 +73,20 @@ def _view(record: dict) -> dict:
     }
 
 
+def _edition(record, texts, processing):
+    if not {'a', 'b'} <= set(texts):
+        return None
+    sides = (processing or {}).get('sides') or {}
+    done = {s: ((sides.get(s) or {}).get('audit_operations') or 0) + ((sides.get(s) or {}).get('editor_operations') or 0)
+            for s in ('a', 'b')}
+    return edition_readiness(texts, done_edits=done, typeset=record.get('typeset'))
+
+
 class ComparisonViewService:
     def __init__(self, catalog: ComparisonCatalog, scopes: ScopeRepository, renderer: ComparisonRenderer, jobs=None):
         self.catalog, self.scopes, self.renderer = catalog, scopes, renderer
         self.jobs = jobs
+        self.pipeline_jobs = None  # the Kitabs launches: their typeset book joins the edition block
 
     def project(self, record):
         newer = self.jobs.reference(reference_key(record['scope'])) if self.jobs else None
@@ -100,13 +112,23 @@ class ComparisonViewService:
         if record is None: raise InputError('example_not_found', 'Пример не найден.')
         return self.project(record)
 
+    def _typeset(self, request_id):
+        if not request_id or not self.pipeline_jobs:
+            return None
+        try:
+            typeset = self.pipeline_jobs.get(request_id).get('typeset')
+        except InputError:
+            return None
+        return typeset and typeset | {'url': f'/api/pipeline-b/{request_id}/typeset.pdf'}
+
     def scope(self, scope_id: str) -> dict:
         scope = self.scopes.get(scope_id)
         if scope is None: raise InputError('scope_not_found', 'Материалы не найдены.')
         record = {'id': scope_id, 'scope': scope, 'title': 'Ваши материалы',
                   'description': 'Оригинал и два перевода сохранены локально.',
                   'provenance': {'a': 'Перевод A', 'b': 'Перевод B'},
-                  'apparatus': {'a': [], 'b': []}, 'processing': scope.get('processing'), 'run': None}
+                  'apparatus': {'a': [], 'b': []}, 'processing': scope.get('processing'), 'run': None,
+                  'typeset': self._typeset(scope.get('pipeline_request_id'))}
         job = self.jobs.get(scope_id) if self.jobs else None
         if job and job['report']:
             return self.project(record | {'run': job['report']})

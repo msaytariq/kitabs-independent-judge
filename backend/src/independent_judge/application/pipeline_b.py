@@ -14,6 +14,7 @@ import time
 # Kitabs reads these files with its production intake (Arabic text layer repair, OCR), as on its desk.
 PLATFORM_READS = ('.pdf', '.docx')
 PROGRESS_SECONDS = 10
+TYPESET_SECONDS = 5
 
 
 def handoff(source: str, mode: str, web_origin: str) -> dict:
@@ -121,13 +122,41 @@ class PipelineBService:
                             result['processing'] = result['processing'] | {'source_sha256': result['source_sha256']}
                         source = {'source': text, 'source_sha256': result['source_sha256']}
                     self.jobs.update(request_id, status='completed', result=result, error=None, **source)
+                    packet = self.jobs.get(request_id)
                 elif job['status'] in ('failed', 'cancelled', 'paused', 'waiting_review'):
                     self.jobs.update(request_id, status='failed', error='pipeline_' + job['status'])
                 else:
                     self._progress(request_id, packet)
             except InputError:
                 pass
+        if packet['status'] == 'completed':
+            self._typeset(request_id, packet)
         return self._public(self.jobs.get(request_id))
+
+    def _typeset(self, request_id, packet):
+        """One typeset PDF of B for the edition block; it never changes B or the comparison."""
+        if not hasattr(self.platform, 'typeset') or not packet.get('job_id'):
+            return
+        typeset = packet.get('typeset') or {}
+        if typeset.get('status') in ('done', 'error'):
+            return
+        if time.time() - packet.get('typeset_at', 0) < TYPESET_SECONDS:
+            return
+        try:
+            if not typeset:
+                typeset = {'export_id': self.platform.typeset(packet['job_id']), 'status': 'queued'}
+            typeset = typeset | {'status': self.platform.typeset_status(typeset['export_id'])}
+        except InputError:
+            typeset = typeset | {'status': 'error'} if typeset else {'status': 'error'}
+        # A completed packet accepts only completed updates; the typeset keeps it completed.
+        self.jobs.update(request_id, status='completed', typeset=typeset, typeset_at=time.time())
+
+    def typeset_file(self, request_id):
+        packet = self.jobs.get(request_id)
+        typeset = packet.get('typeset') or {}
+        if not self.platform or typeset.get('status') != 'done':
+            raise InputError('typeset_not_ready', 'The typeset book is not ready.')
+        return self.platform.typeset_file(typeset['export_id'])
 
     def _progress(self, request_id, packet):
         """Finished steps of the running job; read at most every 10 seconds, never needed for the result."""
@@ -141,4 +170,4 @@ class PipelineBService:
 
     @staticmethod
     def _public(packet):
-        return {k: v for k, v in packet.items() if k not in ('original', 'progress_at')}
+        return {k: v for k, v in packet.items() if k not in ('original', 'progress_at', 'typeset_at')}

@@ -57,6 +57,7 @@ def create_app(data_dir: Path | None = None, *, evaluation=None, retriever=None,
     app.include_router(build_router(intake))
     scopes = build_scope(data_dir)
     scopes.pipeline_jobs = pipeline.jobs
+    view.pipeline_jobs = pipeline.jobs
     app.include_router(build_scope_router(scopes))
     app.include_router(build_pipeline_router(pipeline, retriever or UrlRetriever()))
     app.state.editorial=build_editorial(data_dir)
