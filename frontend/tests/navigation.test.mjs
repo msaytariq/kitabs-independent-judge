@@ -25,8 +25,9 @@ const edition={rows:[{key:'typeset',a:null,b:'done'}],checks:{a:0,b:1},total:1,i
 test('the header shows the Kitabs.ai logo, the site link and the contact email',()=>{
   const html=show('JudgeHeader',{});
   assert.match(html,/<img[^>]+src="\/kitabs-logo\.png"[^>]+alt="Kitabs\.ai"/);
-  assert.ok(html.includes('href="https://kitabs.ai"') && html.includes('>kitabs.ai<'));
-  assert.ok(html.includes('href="mailto:m.sayfuddin@kitabs.ai"') && html.includes('>m.sayfuddin@kitabs.ai<'));
+  assert.ok(html.includes('<a href="https://kitabs.ai">https://kitabs.ai</a>'));
+  // The email is in regular weight, apart from the bold site link.
+  assert.ok(html.includes('<a class="contact-email" href="mailto:m.sayfuddin@kitabs.ai">m.sayfuddin@kitabs.ai</a>'));
   assert.ok(html.includes('Independent Judge') && html.includes('عربي'));
   assert.ok(show('JudgeHeader',{},'ar').includes('المحكِّم المستقل'));
 });

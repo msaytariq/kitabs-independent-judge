@@ -78,6 +78,7 @@
 .comparison-screen .judge-name{display:block;padding-inline-start:12px;border-inline-start:1px solid var(--line);font-size:17px;line-height:1.2}
 .comparison-screen .judge-contacts{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;font-size:14px}
 .comparison-screen .judge-contacts a{color:var(--green);font-weight:600;text-decoration:none;overflow-wrap:anywhere}
+.comparison-screen .judge-contacts a.contact-email{font-weight:400}
 .comparison-screen .judge-contacts a:hover,.comparison-screen .judge-contacts a:focus-visible{text-decoration:underline}
 .comparison-screen a.button.primary{background:var(--green);border-color:var(--green);color:#fff;font-size:14px;padding:12px 18px}
 .comparison-screen th,.comparison-screen td{text-align:start}

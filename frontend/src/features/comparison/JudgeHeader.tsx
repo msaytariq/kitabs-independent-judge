@@ -10,8 +10,8 @@ export function JudgeHeader(){
       <span className="judge-name">{t('Independent Judge','Независимый судья')}<small>{t('TRANSLATION COMPARISON','СРАВНЕНИЕ ПЕРЕВОДОВ')}</small></span>
     </div>
     <div className="judge-contacts">
-      <a href="https://kitabs.ai">kitabs.ai</a>
-      <a href="mailto:m.sayfuddin@kitabs.ai">m.sayfuddin@kitabs.ai</a>
+      <a href="https://kitabs.ai">https://kitabs.ai</a>
+      <a className="contact-email" href="mailto:m.sayfuddin@kitabs.ai">m.sayfuddin@kitabs.ai</a>
       <LanguageSwitch/>
     </div>
   </header>;
