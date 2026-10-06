@@ -14,6 +14,8 @@ SURAHS = ('الفاتحة البقرة آل_عمران النساء المائد
 SURAHS = [name.replace('_', ' ') for name in SURAHS]
 _BY_NAME = {folded(name): number for number, name in enumerate(SURAHS, 1)}
 LABEL = re.compile(r'[﴾}»"”]?\s*\(\(?\s*([^():\d]{1,30}?)\s*:\s*(\d{1,3})\s*\)\)?')
+# Some editions print the label without brackets after the verse: (...) الإسراء: 79
+BARE_LABEL = re.compile(r'\)?\s*\[?\s*([^():\[\]\d\s،,.]{2,20}(?:\s[^():\[\]\d\s،,.]{2,20})?)\s*:\s*([0-9٠-٩]{1,3})')
 MIN_WORDS = 3
 
 
@@ -66,7 +68,11 @@ def label_check(source: str, end: int, located: dict | None) -> dict:
     """Compare an explicit (Surah : ayah) label that follows the quotation."""
     match = LABEL.match(source, end)
     if not match:
-        return {'label': None, 'label_status': 'no_label'}
+        bare = BARE_LABEL.match(source, end)
+        # Without brackets only a real surah name makes a label; "رواه البخاري: 1" is not one.
+        if not bare or folded(bare.group(1).strip()) not in _BY_NAME:
+            return {'label': None, 'label_status': 'no_label'}
+        match = bare
     name, number = match.group(1).strip(), int(match.group(2))
     label = f'{name} : {number}'
     surah = _BY_NAME.get(folded(name))
@@ -89,3 +95,9 @@ def verse_quoted(index: QuranIndex, source: str):
         return bool(words) and any(' ' + ' '.join(words[i:i + size]) + ' ' in padded
                                    for i in range(len(words) - size + 1))
     return quoted
+
+
+def surah_label_follows(source: str, end: int) -> bool:
+    """Is the text after a bracketed quotation a surah label such as الإسراء: 79?"""
+    bare = BARE_LABEL.match(source, end)
+    return bool(bare) and folded(bare.group(1).strip()) in _BY_NAME

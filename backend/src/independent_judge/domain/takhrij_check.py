@@ -46,7 +46,8 @@ _APPARATUS = re.compile(r'^\s*#{1,6}\s*(?:persons|people|glossary|index|biograph
 _QURAN_CONTEXT = re.compile(r"(?:qur-?an|surah?|surat|ayah?|verse|\bq\b)[^\d\n]{0,40}$")
 _QURAN_REF = re.compile(r'\b(\d{1,3})\s*:\s*(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?\b')
 MAX_RANGE = 40
-_QURAN_NAMED = re.compile(r'\((\d{1,3})\)\s*[:,]?\s*(?:ayah|ayat|verse)s?\s*(\d{1,3})')
+_QURAN_NAMED = re.compile(r'\((\d{1,3})\)\s*[:,]?\s*(?:(?:ayah|ayat|verse)s?\s*)?(\d{1,3})\b')
+_QURAN_WORDS = re.compile(r'\b(?:surah?|surat|ayah?|ayat|verse|qur-?an)\b')
 
 
 def _ascii(text: str) -> str:
@@ -98,7 +99,8 @@ def translation_takhrij(text: str) -> dict:
         attributed = attributed or bool(_EN_AFTER.match(plain, match.end()))
         number = _EN_NUMBER.match(plain, match.end())
         between = plain[match.end():number.start(1)] if number else ''
-        if number and not re.search(r'\bvol|\bbook\b', between) and not _EN_NAME.search(between):
+        if number and not re.search(r'\bvol|\bbook\b', between) and not _EN_NAME.search(between) \
+                and not _QURAN_WORDS.search(between):
             numbered.append({'collection': key, 'number': int(number.group(1)),
                              'quote': plain[match.start():number.end()]})
             collections.add(key)
@@ -133,7 +135,7 @@ def _verse_units(verses: list[str]) -> list[tuple[int, int, int, str]]:
     return list(dict.fromkeys(units))
 
 
-def _side(source_refs: dict, verses: list, quotes: list[str], text: str, lookup, quoted) -> dict:
+def _side(source_refs: dict, verses: list, quotes: list[str], text: str, lookup, quoted, libraries, found_in) -> dict:
     found = translation_takhrij(text)
     items, delivered, wrong = [], 0, 0
     cited = [(r['surah'], r['ayah']) for r in found['quran']]
@@ -172,17 +174,24 @@ def _side(source_refs: dict, verses: list, quotes: list[str], text: str, lookup,
         delivered += hit
         items.append({'kind': 'collection', 'reference': NAMES[key], 'status': 'correct' if hit else 'missing'})
     for key in found['collections']:
-        if key not in source_refs['collections'] and key not in judged:
-            wrong += 1
-            items.append({'kind': 'collection', 'reference': NAMES[key], 'status': 'wrong'})
+        if key in source_refs['collections'] or key in judged:
+            continue
+        # A collection that the source does not name: the library decides whether a hadith of the
+        # source is in it. It adds no delivered reference, but a wrong one counts.
+        status = 'correct' if key in found_in else 'wrong' if key in libraries else 'unchecked'
+        wrong += status == 'wrong'
+        items.append({'kind': 'collection', 'reference': NAMES[key], 'status': status})
     return {'delivered': delivered, 'wrong': wrong, 'items': items}
 
 
-def takhrij_check(source: str, translations: dict[str, str], verses: list[str], lookup, quoted=None) -> dict | None:
+def takhrij_check(source: str, translations: dict[str, str], verses: list[str], lookup, quoted=None,
+                  libraries=frozenset(), found_in=frozenset()) -> dict | None:
     """lookup(collection, number) -> Arabic texts of that hadith, [] if absent, None if no library has it.
 
     verses are the verses that the code located in the source; quoted(surah, ayah) tells whether the
-    source quotes a verse that the location missed, such as the rest of a passage (12:84-87)."""
+    source quotes a verse that the location missed, such as the rest of a passage (12:84-87).
+    libraries are the collections that the libraries hold; found_in are those in which the code
+    found a hadith of the source."""
     quoted = quoted or (lambda surah, ayah: False)
     source_refs = source_takhrij(source)
     units = _verse_units(verses)
@@ -191,4 +200,4 @@ def takhrij_check(source: str, translations: dict[str, str], verses: list[str], 
         return None
     quotes = [r['quote'] for r in detect_references(source) if r['kind'] != 'quran']
     return {'version': VERSION, 'total': total,
-            **{side: _side(source_refs, units, quotes, translations.get(side, ''), lookup, quoted) for side in ('a', 'b')}}
+            **{side: _side(source_refs, units, quotes, translations.get(side, ''), lookup, quoted, libraries, found_in) for side in ('a', 'b')}}

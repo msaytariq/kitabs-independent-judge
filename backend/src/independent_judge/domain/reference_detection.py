@@ -1,6 +1,7 @@
 """Find Quran and hadith quotations in an Arabic source; every span keeps its coordinates."""
 import re
 from independent_judge.domain.arabic_text import folded
+from independent_judge.domain.quran_matching import surah_label_follows
 
 _ARABIC = re.compile(r'[ء-ي]')
 _PROPHET = r'(?:صلى الله عليه وسلم|ﷺ)'
@@ -47,6 +48,7 @@ def detect_references(source: str) -> list[dict]:
             sentence = max(source.rfind('\n', 0, start), source.rfind('.', 0, start), start - 120, -1) + 1
             if kind == 'quoted' and not (_CONTEXT_BEFORE.search(source, sentence, start)
                                          or _CONTEXT_AFTER.search(source, end, end + 60)
+                                         or surah_label_follows(source, end)
                                          or re.search(r'تعالى|عز وجل|سبحانه', source[max(0, start - 60):start])):
                 continue  # an ordinary quotation, neither attributed to the Prophet nor to the Quran
             if any(s <= start < e for s, e in taken):

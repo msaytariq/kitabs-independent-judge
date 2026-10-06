@@ -125,3 +125,17 @@ def test_translation_references_are_checked_against_the_source():
     assert {('Sahih Muslim', 'correct'), ('Quran 2:155', 'correct'), ('Quran 9:1', 'wrong'),
             ("Jami' at-Tirmidhi", 'missing')} <= statuses
     assert result['b']['delivered'] == 0
+
+
+def test_a_verse_in_round_brackets_with_a_surah_label_after_it_is_found_and_its_label_checked():
+    verse = {'chapter': 17, 'verse': 79, 'text': 'وَمِنَ اللَّيْلِ فَتَهَجَّدْ بِهِ نَافِلَةً لَكَ عَسَىٰ أَنْ يَبْعَثَكَ رَبُّكَ مَقَامًا مَحْمُودًا'}
+    source = 'وهو التهجد الذي ذكره الله في قوله: (وَمِنَ الليلِ فَتَهَجَّدْ بِهِ نَافِلَةً لَّكَ) الإسراء: 97 ولا يكون التهجد إلا بعد النوم'
+    result = verify_references({'source': source, 'a': '', 'b': ''}, Library(VERSES + [verse]), Library(HADITH))
+    item = result['quran']['items'][0]
+    assert (item['ayah'], item['label'], item['label_status']) == ('17:79', 'الإسراء : 97', 'label_differs')
+
+
+def test_an_ordinary_bracket_followed_by_a_number_is_not_a_surah_label():
+    source = 'قال رسول الله ﷺ (إنما الأعمال بالنيات وإنما لكل امرئ ما نوى) رواه البخاري: 1'
+    result = verify_references({'source': source, 'a': '', 'b': ''}, Library(VERSES), Library(HADITH))
+    assert all(i.get('label_status') != 'label_differs' for i in result['quran']['items'])

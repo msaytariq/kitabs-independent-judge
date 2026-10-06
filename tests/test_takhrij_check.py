@@ -5,6 +5,7 @@ SOURCE = ('قال رسول الله ﷺ «الجنة تحت أقدام الأم�
           'وروى مسلم عن أبي هريرة رضي الله عنه حديثا. وقال: «خيركم خيركم لأهله» رواه الترمذي. '
           'والطفل المسلم يتعلم. ﴿وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم﴾ [الروم: ٣٠/٢١]')
 VERSES = ['30:21']
+LIBRARIES = {'bukhari', 'muslim', 'abudawud', 'tirmidhi', 'nasai', 'ibnmajah', 'malik'}
 LIBRARY = {('nasai', 3053): ['الجنة تحت أقدام الأمهات فالزمها'],
            ('bukhari', 5971): ['من أحق الناس بحسن صحابتي قال أمك'],
            ('tirmidhi', 3895): ['خيركم خيركم لأهله وأنا خيركم لأهلي']}
@@ -41,7 +42,7 @@ def test_correct_wrong_and_missing_references_are_counted():
             'Narrated by al-Tirmidhi. And among His signs (30:21).')
     bad = ('Narrated by al-Bukhari (5971). Narrated by Muslim. And among His signs (Quran 16:42). '
            'Recorded by Abu Dawud.')
-    result = takhrij_check(SOURCE, {'a': bad, 'b': good}, VERSES, lookup)
+    result = takhrij_check(SOURCE, {'a': bad, 'b': good}, VERSES, lookup, libraries=LIBRARIES, found_in={'muslim'})
     assert result['total'] == 6  # 1 verse + 4 collections + 1 numbered hadith
     b = result['b']
     assert (b['delivered'], b['wrong']) == (6, 0)
@@ -85,3 +86,20 @@ def test_a_verse_of_a_quoted_passage_is_not_wrong_when_the_source_quotes_it():
 def test_a_range_cites_every_verse_in_it():
     found = translation_takhrij('Luqman advised his son (31:13–15).')
     assert [(r['surah'], r['ayah']) for r in found['quran']] == [(31, 13), (31, 14), (31, 15)]
+
+
+def test_nadwa_style_references_are_read_and_a_surah_is_not_a_hadith_collection():
+    text = ("(And the night when it stills.) [Adh-Duha (92): 2]. Surah As-Sajdah (32): verse 16. "
+            "He recited 'Takbar al-Malik' (Sura Al-Baqarah: 285-286) every night.")
+    found = translation_takhrij(text)
+    assert [(r['surah'], r['ayah']) for r in found['quran']] == [(92, 2), (32, 16)]
+    assert found['numbered'] == [] and found['collections'] == []
+
+
+def test_an_added_collection_is_checked_in_the_library():
+    source = 'قال رسول الله ﷺ «إنما الأعمال بالنيات»'
+    text = 'Narrated by al-Bukhari. Narrated by Abu Dawud. Narrated by Ahmad.'
+    result = takhrij_check(source, {'a': text, 'b': ''}, ['1:1'], lookup, libraries=LIBRARIES, found_in={'bukhari'})
+    statuses = {(i['reference'], i['status']) for i in result['a']['items']}
+    assert {('Sahih al-Bukhari', 'correct'), ('Sunan Abi Dawud', 'wrong'), ('Musnad Ahmad', 'unchecked')} <= statuses
+    assert (result['a']['delivered'], result['a']['wrong']) == (0, 1)

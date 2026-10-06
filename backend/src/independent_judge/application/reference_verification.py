@@ -40,8 +40,10 @@ def verify_references(texts: dict[str, str], quran_library, hadith_library, *, q
         else:
             reports.append({k: item[k] for k in ('quote', 'start', 'end')} | hadith.match(item['quote']))
     found = [r for r in reports if r['status'] in FOUND]
+    found_in = {c['id'].split(':', 1)[0] for r in found for c in r['candidates'] if ':' in str(c.get('id'))}
     takhrij = takhrij_check(source, texts, [a['ayah'] for a in ayat if a['status'] == 'found'],
-                            _lookup(hadith_library), verse_quoted(quran, source))
+                            _lookup(hadith_library), verse_quoted(quran, source),
+                            libraries=frozenset(getattr(hadith_library, 'collections', ())), found_in=found_in)
     by_collection = {}
     for report in found:
         name = report['candidates'][0].get('collection', '')
