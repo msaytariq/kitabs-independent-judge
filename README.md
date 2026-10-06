@@ -9,6 +9,7 @@ each translation and shows where each text comes from.
 
 - Live demonstration: <https://app.kitabs.ai/judge>
 - Guide for the jury: [docs/jury-guide.md](docs/jury-guide.md)
+- How the points are made (criteria, levels 1–5, total): [docs/rating-method.md](docs/rating-method.md)
 - Competition description: [docs/competition-description.md](docs/competition-description.md)
 - License: [MIT](LICENSE)
 
