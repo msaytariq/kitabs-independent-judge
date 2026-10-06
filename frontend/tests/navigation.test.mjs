@@ -96,3 +96,10 @@ test('the public screen opens on the Example tab with the Kitabs.ai header',()=>
   assert.ok(html.indexOf('>Example</button>')<html.indexOf('>Your materials</button>'));
   assert.ok(!html.includes('brand-mark'));
 });
+
+test('a select list draws its arrow away from the edge, on the left side in Arabic',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const css=readFileSync(new URL('../src/features/comparison/comparison.css',import.meta.url),'utf8');
+  assert.match(css,/\.comparison-screen select\{[^}]*appearance:none[^}]*padding-inline-end:44px[^}]*background-position:right 16px center/);
+  assert.match(css,/:root\[dir=rtl\] \.comparison-screen select\{background-position:left 16px center\}/);
+});
