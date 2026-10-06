@@ -4,6 +4,7 @@ from pathlib import Path
 
 from independent_judge.application.intake import IntakeService
 from independent_judge.infrastructure.sqlite_repository import SqliteComparisonRepository
+from independent_judge.infrastructure.arabic_lexicon import ArabicLexicon
 from independent_judge.infrastructure.text_extractors import LocalTextExtractor
 from independent_judge.application.prepare_scope import ScopeService
 from independent_judge.infrastructure.scope_repository import SqliteScopeRepository
@@ -20,7 +21,8 @@ def data_directory(data_dir: Path | None = None) -> Path:
 
 
 def build_intake(data_dir: Path | None = None) -> IntakeService:
-    return IntakeService(LocalTextExtractor(), SqliteComparisonRepository(data_directory(data_dir)))
+    directory = data_directory(data_dir)
+    return IntakeService(LocalTextExtractor(ArabicLexicon(directory).repair), SqliteComparisonRepository(directory))
 
 
 def build_scope(data_dir: Path | None = None) -> ScopeService:

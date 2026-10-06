@@ -9,6 +9,9 @@ from independent_judge.infrastructure.formats.pdf import extract_pdf
 
 
 class LocalTextExtractor:
+    def __init__(self, repair=None):
+        self.repair = repair  # repair(text) -> text with the lam-alef pairs in reading order
+
     def extract(self, content: bytes, filename: str, content_type: str, check_order: bool = True) -> ExtractedText:
         extension = Path(filename).suffix.lower()
         if extension in (".txt", ".md"):
@@ -24,5 +27,5 @@ class LocalTextExtractor:
         if extension == ".docx":
             return extract_docx(content)
         if extension == ".pdf":
-            return extract_pdf(content, check_order)
+            return extract_pdf(content, check_order, self.repair)
         raise InputError("unsupported_format", "Use UTF-8 TXT/MD, DOCX, or a PDF with selectable text.")

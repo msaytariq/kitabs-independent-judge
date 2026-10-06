@@ -33,8 +33,9 @@ def completed_b(reader: PipelineResultReader, job_id: str, source_sha256: str) -
 
 
 class PipelineBService:
-    def __init__(self, jobs, platform: PipelinePort | None, extractor, max_requests: int | None = None):
+    def __init__(self, jobs, platform: PipelinePort | None, extractor, max_requests: int | None = None, repair=None):
         self.jobs, self.platform, self.extractor = jobs, platform, extractor
+        self.repair = repair  # the Kitabs text keeps reversed lam-alef pairs of a PDF; the comparison reads them repaired
         self.max_requests = max_requests
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='pipeline-b')
 
@@ -111,8 +112,12 @@ class PipelineBService:
                 if job['status'] == 'completed':
                     result = self.platform.completed(packet['job_id'], packet['source_sha256'],
                                                      started_at=packet.get('started_at'))
-                    source = {} if packet['source'] is not None else {
-                        'source': result['source'], 'source_sha256': result['source_sha256']}
+                    source = {}
+                    if packet['source'] is None:
+                        text = self.repair(result['source']) if self.repair else result['source']
+                        result = result | {'source': text, 'source_sha256': text_hash(text),
+                                           'platform_source_sha256': result['source_sha256']}
+                        source = {'source': text, 'source_sha256': result['source_sha256']}
                     self.jobs.update(request_id, status='completed', result=result, error=None, **source)
                 elif job['status'] in ('failed', 'cancelled', 'paused', 'waiting_review'):
                     self.jobs.update(request_id, status='failed', error='pipeline_' + job['status'])

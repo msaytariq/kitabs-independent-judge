@@ -4,6 +4,7 @@ from independent_judge.application.pipeline_b import PipelineBService
 from independent_judge.infrastructure.pipeline_jobs import PipelineJobs
 from independent_judge.infrastructure.kitabs_pipeline import KitabsPipeline
 from independent_judge.infrastructure.kitabs_session import KitabsSession
+from independent_judge.infrastructure.arabic_lexicon import ArabicLexicon
 from independent_judge.infrastructure.text_extractors import LocalTextExtractor
 
 
@@ -22,4 +23,5 @@ def configured_pipeline(directory):
                               session=KitabsSession(session_file) if session_file else None)
         # Each launch is paid from the operator account; the limit bounds a public demonstration.
         limit = int(os.environ.get('JUDGE_PIPELINE_MAX_REQUESTS', '10'))
-    return PipelineBService(PipelineJobs(directory), port, LocalTextExtractor(), limit)
+    lexicon = ArabicLexicon(directory)
+    return PipelineBService(PipelineJobs(directory), port, LocalTextExtractor(lexicon.repair), limit, lexicon.repair)

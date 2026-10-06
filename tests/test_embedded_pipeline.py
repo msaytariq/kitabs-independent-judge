@@ -266,3 +266,17 @@ def test_a_running_launch_shows_the_kitabs_progress_and_reads_it_at_most_every_1
         s.status('r')
         assert port.reads == 1
     finally: s.close()
+
+
+def test_the_kitabs_source_is_repaired_and_b_stays_bound_to_the_repaired_source(tmp_path):
+    cls = importlib.import_module('independent_judge.application.pipeline_b').PipelineBService
+    repo = importlib.import_module('independent_judge.infrastructure.pipeline_jobs').PipelineJobs(tmp_path)
+    port = PlatformSource()
+    s = cls(repo, port, OrderDamagedPdf(), None, lambda text: text.replace('الله', 'لله'))
+    try:
+        s.submit('pdf', Upload(b'1', 'book.pdf', 'application/pdf'), 'ar', 'en')
+        done = wait(s, 'pdf')
+        assert done['source'] == 'لله أكبر' and done['source_sha256'] == text_hash('لله أكبر')
+        assert done['result']['source_sha256'] == text_hash('لله أكبر')
+        assert done['result']['platform_source_sha256'] == text_hash('الله أكبر')
+    finally: s.close()
