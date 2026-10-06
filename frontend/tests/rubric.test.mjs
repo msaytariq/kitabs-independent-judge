@@ -142,3 +142,13 @@ test('the critical error row shows a count in each cell, the errors and who corr
     rows:[{key:'critical',first:{a:1,b:0},second:{a:2,b:0}}]};
   assert.ok(show('SecondJudge',{opinion}).includes('Критические ошибки, число'));
 });
+test('the example provenance shows where A and B come from in every locale',()=>{
+  const provenance={a:'Gemini chat translation made by the owner.',b:'Kitabs.ai autopilot on the production server (engine 16c995ec), no manual edits.'};
+  const en=show('ExampleProvenance',{description:'Arabic → English, 9,189 characters.',provenance},'en');
+  assert.ok(en.includes('Arabic → English, 9,189 characters.') && en.includes('Translation A: Gemini chat translation') && en.includes('Translation B: Kitabs.ai autopilot on the production server'));
+  const ru=show('ExampleProvenance',{description:'',provenance});
+  assert.ok(ru.includes('Перевод B: Kitabs.ai autopilot') && !ru.includes('Translation B'));
+  const ar=show('ExampleProvenance',{description:null,provenance},'ar');
+  assert.ok(ar.includes('الترجمة B') && ar.includes('engine 16c995ec'));
+  assert.equal(show('ExampleProvenance',{description:null,provenance:null},'en'),'');
+});

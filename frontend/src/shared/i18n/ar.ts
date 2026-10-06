@@ -236,6 +236,8 @@ export const AR: Record<string, string> = {
   'What the Kitabs audit corrected on the way to B': 'ما صحَّحه تدقيق Kitabs في الطريق إلى B',
   'What the judge caught': 'ما رصده المحكِّم',
   'Why': 'لماذا',
+  'Translation A': 'الترجمة A',
+  'Translation B': 'الترجمة B',
   'Critical errors, count': 'الأخطاء الجسيمة، العدد',
   'Which errors': 'أيّ الأخطاء',
   'Meaning reversed': 'انعكاس المعنى',
