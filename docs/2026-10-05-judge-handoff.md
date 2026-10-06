@@ -16,7 +16,7 @@ A future international standard is an ambition, not a validated status of this p
 
 1. Load an Arabic source fragment of at most 10 pages.
 2. Load English Text A by file, pasted text, or URL.
-3. Load English Text B by the same methods, or select “Обработать на Kitabs.ai”.
+3. Load English Text B by the same methods, or select “Process B on Kitabs.ai”.
 4. For KITABS processing, select automatic or manual mode before starting.
 5. In manual mode, review suggestions from audit, editor, and proofreader stages.
 6. Compare the final A and B texts against the same source fragment.
@@ -116,7 +116,7 @@ Existing unrelated changes to preserve:
 - Untracked `docs/first-editorial-measurement-2026-10-04.md`.
 - Untracked `frontend/src/features/comparison/useComparisonReveal.ts`.
 
-Local start/check instructions: `docs/local-comparison.md`.
+Local start/check instructions: `README.md` (Run it locally).
 Last preview ports: frontend 3015, backend 8775, loopback only; recheck process state.
 Private `.judge-data` examples are not included in a clean clone.
 Prepare licensed or synthetic offline fixtures for public reproducibility.

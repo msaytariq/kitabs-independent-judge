@@ -64,7 +64,7 @@ Test automatic/manual selection, missing authorization, job failure, and an unfi
 Test duplicate start prevention, reconnect behavior, and final source/artifact hash matching.
 Test that manual-mode provenance requires actual human event records.
 The standalone backend must never access the platform database directly.
-Add the “Обработать на Kitabs.ai” action inside B's input area with a compact status display.
+Add the “Process B on Kitabs.ai” action inside B's input area with a compact status display.
 Reuse the platform's existing review workflow where its contract permits it.
 Preserve the upload-B path when KITABS credentials are absent.
 Offline adapter tests prove the contract handling, not a live end-to-end run.

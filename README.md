@@ -1,129 +1,111 @@
-# Независимый судья / Independent Judge
+# Independent Judge
 
-Оригинал + два перевода одного фрагмента → сравнение → количество и типы
-кандидатов на исправление, цитаты, обоснования и научный аппарат.
+Independent Judge compares two English translations of the same Arabic source.
+It gives each translation points from 0 to 100 on the same criteria, shows the
+errors it found with quotations, checks the Quran verses and hadith of the
+source against public reference texts, and calculates how much editing work
+each translation needs before publication.
 
-Основной сценарий на русском: **Готовый пример** или **Свои материалы**.
-Оценивается количество оставшихся необходимых правок. Сохранённые машинные
-находки и спорные замечания отделены от подтверждённых человеком исправлений.
-Подтверждённое число правок в нынешнем пилоте **не установлено**.
+- Live demonstration: <https://app.kitabs.ai/judge>
+- Guide for the jury: [docs/jury-guide.md](docs/jury-guide.md)
+- License: [MIT](LICENSE)
 
-Генерация научного аппарата показана как самостоятельная возможность Kitabs:
-в сохранённом результате — 25 примечаний к хадисам, 19 справочных записей о
-персоналиях и 13 словарных статей, с проверяемыми примерами. Эти записи
-демонстрируют уже выполненную платформой работу; точность содержания и
-необходимые дополнения оцениваются отдельно.
+Independent Judge is the competition entry of [Kitabs.ai](https://kitabs.ai).
+It is a separate, standalone module: it does not import the Kitabs.ai code and
+it does not use the Kitabs.ai database. Translation B can come from any vendor,
+or the user can start the Kitabs.ai pipeline from the Judge screen.
 
-Таймер и ручное создание заданий не входят в основной сценарий. Старый
-редакторский экран, его API и данные сохранены по `/editorial`.
-[Предыдущий README](docs/readme-editorial-history-2026-10-04.md) — история этапа.
+## What the screen shows
 
-## Локальный запуск
+| Measure | Screen section |
+|---|---|
+| Quality | A table of six criteria (accuracy, completeness, terminology, readability, assembly integrity, scholarly apparatus) with points 0–100 for A and B, a total and a winner |
+| Text accuracy | Rows "Quran verses in the translation" and "Hadith in the translation", and the section "Sources in the original" |
+| Effort reduction | "Editing to publication": edits that remain, editor minutes and the saving in percent |
+| Bias mitigation | "Second judge": a model of a different family grades the same criteria |
+| Case study | "What the judge caught": source quote, translation quote and explanation |
 
-Из корня этого отдельного репозитория, Python 3.12+:
+The judge receives the texts as "A" and "B", without vendor or model names.
+A quoted error counts only when the code finds the exact quotation in the text.
+
+## Saved examples
+
+| Example | Translation A | Total A | Total B (Kitabs.ai) | Winner, judge 1 / judge 2 |
+|---|---|---:|---:|---|
+| an-Nawawi, *Riyad as-Salihin*, chapter on patience | ChatGPT | 91 | 91 | tie / tie |
+| Islamic child education, chapter 5 | Gemini | 28 | 77 | B / B |
+| al-Ghazali, *Ihya*, Book of Death, chapter 8 | Claude | 100 | 66 | A / A |
+
+Judge 1: Gemini 3.8 Flash. Judge 2: Grok 4.1 Fast.
+
+## Run it locally
+
+Python 3.12 or later:
 
 ```sh
 python3.12 -m venv .venv
 .venv/bin/python -m pip install -r backend/requirements.lock.txt
 .venv/bin/python -m pip install --no-build-isolation --no-deps -e backend
-JUDGE_DATA_DIR="$PWD/.judge-data/editorial-stand-2026-10-04" .venv/bin/python -m uvicorn independent_judge.api.app:create_app --factory --host 127.0.0.1 --port 8766
+JUDGE_DATA_DIR="$PWD/.judge-data/local" .venv/bin/python -m uvicorn \
+  independent_judge.api.app:create_app --factory --host 127.0.0.1 --port 8766
 ```
 
-В другом терминале, Node.js 22+:
+In a second terminal, Node.js 22 or later:
 
 ```sh
 cd frontend
 npm ci --ignore-scripts
-NEXT_TELEMETRY_DISABLED=1 JUDGE_API_ORIGIN=http://127.0.0.1:8766 npm run build
-NEXT_TELEMETRY_DISABLED=1 npm start
+JUDGE_API_ORIGIN=http://127.0.0.1:8766 npm run dev
 ```
 
-Откройте <http://127.0.0.1:3005>. `JUDGE_API_ORIGIN` задаётся при сборке.
-`GET /health`: `stage: comparison`, `live_enabled: false`.
+Open <http://127.0.0.1:3005>. Without operator settings the stand makes no
+model calls. A clean clone has no saved examples: the corpus is not part of
+the repository.
 
-Новый экран не делает LLM-запросов. Он открывает сохранённые результаты и
-принимает TXT, MD, DOCX, текстовый PDF либо вставленный текст. После предпросмотра
-нужно подтвердить совпадение смысловых границ. Автоматической обрезки нет.
-Если сохранённый результат точно совпадает по трём текстам, языкам и профилю,
-он переиспользуется. Иначе выводится «количество правок пока неизвестно».
-Для возвращения к загруженным материалам сохраните адрес страницы с `#scope=`.
+To let the stand call the judge model, set `JUDGE_ENABLE_LIVE=1`,
+`JUDGE_CONFIG_PATH` (for example `config/judge-gemini-3.8-flash.json`),
+`AI_GATEWAY_API_KEY`, `JUDGE_BUDGET_TOTAL_USD` and `JUDGE_BUDGET_RUN_USD`.
+Each call is reserved in a budget ledger before it starts.
 
-Реальный корпус и отчёты находятся в приватном `JUDGE_DATA_DIR/comparison-catalog`,
-исключённом из Git. В чистом клоне каталог пуст: материалы не публикуются вместе
-с кодом. Русская инструкция и паспорт: [comparison-guide-ru.md](docs/comparison-guide-ru.md).
-Стенд слушает только loopback. Публичный доступ жюри, аутентификация, лицензии
-корпуса и конкурсный релиз пока не подготовлены.
+## Public deployment
 
-## Try three documents
+- `scripts/build_public_frontend.sh /judge <out>` builds the screen as static
+  files under a path prefix, from a commit (never from uncommitted work).
+- `JUDGE_PUBLIC_HOSTS` names the public host names. Other hosts and cross-site
+  writes are refused.
+- `JUDGE_PIPELINE_MAX_REQUESTS` limits Kitabs.ai launches paid by the operator.
 
-```sh
-curl --fail-with-body http://127.0.0.1:8765/api/comparisons \
-  -F 'source=@original.txt' \
-  -F 'a=@version-a.txt' \
-  -F 'b=@version-b.txt' \
-  -F 'source_language=ar' \
-  -F 'target_language=en'
+## Architecture
+
+```text
+api/            HTTP routes and request limits
+application/    use cases: intake, scope, judge runs, reference checks, views
+domain/         rules: rubric, points, coverage, Quran and hadith matching
+infrastructure/ adapters: gateway, SQLite, file formats, reference libraries, reports
+frontend/       Next.js screen
 ```
 
-The response contains an ID, `draft` status and extracted text for each role.
-Retrieve it with `GET /api/comparisons/{id}`. Pasted text uses
-`POST /api/comparisons/text` with JSON fields `source`, `a`, `b`,
-`source_language` and `target_language`.
+All model calls go through the Vercel AI Gateway. Reference texts:
+[fawazahmed0/quran-api](https://github.com/fawazahmed0/quran-api) (edition
+ara-quransimple) and [fawazahmed0/hadith-api](https://github.com/fawazahmed0/hadith-api)
+(al-Bukhari, Muslim, Abu Dawud, at-Tirmidhi, an-Nasa'i, Ibn Majah, Malik).
 
-Supported inputs: UTF-8 TXT/MD, DOCX and PDF with a selectable text layer.
-Each input is limited to 20 MiB; the entire HTTP request is limited to 61 MiB.
-No OCR, translation or external network request is triggered by upload.
+More: [architecture](docs/architecture.md), [evaluation protocol](docs/evaluation-protocol.md),
+[rating method](docs/rating-method.md), [reference sources](docs/reference-sources.md).
 
-Always inspect the extracted text. PDF layout/reading order can differ from the
-page. A PDF page without text requires manual review; even an intentionally blank
-page needs handling before this version accepts the PDF. DOCX paragraphs, table
-paragraphs, footnotes and endnotes are supported; headers, footers, comments and
-text inside images are excluded and reported as extraction warnings. Resolve
-tracked text revisions before uploading DOCX. Expanded DOCX size is limited to
-80 MiB.
-
-## Verify
+## Tests
 
 ```sh
 .venv/bin/python -m pytest -q
-npm --prefix frontend test
-npm --prefix frontend run typecheck
-NEXT_TELEMETRY_DISABLED=1 npm --prefix frontend run build
-git diff --check
+cd frontend && npm test && npm run typecheck
 ```
 
-The tests cover persistence across restarts, original byte/text hashes, parser
-errors, size limits, notes, missing PDF text pages and intake with outbound
-connections disabled. Test fixtures are engineering controls, not a showcase
-or evidence of translation quality.
+Each change in the Git history is one commit with its tests.
 
-See [architecture](docs/architecture.md), [baseline](BASELINE.md) and the
-[intake verification](docs/intake-verification-2026-10-04.md) and
-[editorial verification](docs/editorial-verification-2026-10-04.md).
+## Limits
 
-## Bounded evaluation pilot
-
-Create a confirmed scope with `POST /api/comparisons/{id}/scopes` (see
-[scope contract](docs/scope-verification-2026-10-04.md)). Offsets are Unicode code
-points, not UTF-16 browser offsets. Each range includes the entire input text hash.
-Check the three previews before setting `confirmed: true`.
-
-```sh
-.venv/bin/python -m independent_judge.cli --scope-id SCOPE_ID --run-id UNIQUE_RUN_ID
-```
-
-This preflight makes no model call. To run, supply `AI_GATEWAY_API_KEY`,
-`JUDGE_BUDGET_TOTAL_USD` and `JUDGE_BUDGET_RUN_USD` securely in the process environment,
-then add `--live`. An explicit example budget is total `3`, per-run `1` USD.
-`--translator-a-vendor` / `--translator-b-vendor` record known model families;
-omitted provenance remains unknown. Use the same data directory for all budgeted
-runs. Changing the data directory creates a different ledger; this operator CLI
-is not a multi-tenant billing boundary.
-
-Live runs require a clean committed checkout. Failed/uncertain calls are not
-silently retried; unresolved cost reservations stay held. Duplicate run IDs cannot
-trigger another request. Reports and raw receipts stay in the private data
-folder, never Git. An incomplete run has no final scores. See
-[protocol and limitations](docs/evaluation-protocol.md).
-
-A [real Sonnet 5.5 pilot](docs/sonnet-pilot-2026-10-04.md) completed on 4 October: 15 calls in the full protocol, status `needs_review`. All attempts cost $0.313172. Findings require review; this is not a validated platform ranking.
+- The grades are a machine assessment. An expert review is still necessary.
+- The editing time uses assumptions (3 minutes for one edit by an editor,
+  5 seconds to accept one edit that Kitabs.ai has already applied), not a
+  measurement of a human editor.
+- The judge does not check the takhrij in the footnotes of a translation.
