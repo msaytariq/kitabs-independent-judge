@@ -85,7 +85,8 @@ def test_html_export_shows_source_reference_counts_and_wrong_labels():
                 {'id': 'muslim:1', 'collection': 'Sahih Muslim', 'number': 1, 'url': 'https://example.org/1'}]}]}}
     html = comparison_html(_view(data))
     assert 'Аяты Корана: найдено 5 из 5' in html
-    assert 'Ошибка ссылки в оригинале: «محمد : 31», в Коране — 2:153' in html
+    assert 'В издании напечатано: «محمد : 31» — в Коране: 2:153' in html
+    assert 'Издание печатает эти ссылки с ошибкой.' in html and 'Ошибка ссылки' not in html
     assert 'Хадисы: найдено 2 из 3' in html and 'Sahih Muslim — 2' in html
 
 

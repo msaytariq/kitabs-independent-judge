@@ -13,9 +13,12 @@ def reference_html(result) -> str:
     quran, hadith = result['quran'], result['hadith']
     content = '<h2>Источники в оригинале</h2>'
     content += f'<p><b>Аяты Корана: найдено {quran["found"]} из {quran["total"]}</b></p>'
-    for item in quran['items']:
-        if item.get('label_status') == 'label_differs':
-            content += f'<p>Ошибка ссылки в оригинале: «{e(item["label"])}», в Коране — {e(item["ayah"])}</p>'
+    wrong = [item for item in quran['items'] if item.get('label_status') == 'label_differs']
+    if wrong:
+        content += ('<p>Издание печатает эти ссылки с ошибкой. Код нашёл каждый аят по тексту и указывает '
+                    'его настоящее место в Коране.</p>')
+    for item in wrong:
+        content += f'<p>В издании напечатано: «{e(item["label"])}» — в Коране: {e(item["ayah"])}</p>'
     collections = ', '.join(f'{e(name)} — {n}' for name, n in hadith['by_collection'].items())
     content += f'<p><b>Хадисы: найдено {hadith["found"]} из {hadith["total"]}</b>{" · " + collections if collections else ""}</p>'
     content += '<details><summary>Аяты и хадисы по отдельности</summary>'

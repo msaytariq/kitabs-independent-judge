@@ -80,10 +80,14 @@ test('source references show found counts, wrong labels and collections in both 
   assert.ok(ru.includes('Аяты Корана: найдено 5 из 5'));
   assert.ok(ru.includes('Хадисы: найдено 20 из 20'));
   assert.ok(ru.includes('Sahih al-Bukhari — 12'));
-  assert.ok(ru.includes('Ошибка ссылки в оригинале: «محمد : 31», в Коране — 2:153'));
+  assert.ok(ru.includes('В издании напечатано: «محمد : 31» — в Коране: 2:153'));
+  assert.ok(ru.includes('Издание печатает эти ссылки с ошибкой.') && !ru.includes('Ошибка ссылки'));
   assert.ok(!ru.includes('Sunnah.com'));
   const en=show('ReferenceEvidence',{result},'en');
   assert.ok(en.includes('Quran verses: 5 of 5 found') && en.includes('Hadith: 20 of 20 found'));
+  assert.ok(en.includes('Printed in the edition: &quot;محمد : 31&quot; — in the Quran: 2:153') && en.includes('The edition prints these references with an error.'));
+  const ar=show('ReferenceEvidence',{result},'ar');
+  assert.ok(ar.includes('المطبوع في الطبعة: «محمد : 31» — في القرآن: 2:153') && ar.includes('تطبع هذه الطبعة هذه الإحالات بخطأ'));
   assert.ok(show('ReferenceEvidence',{result:null}).includes('Сверка источников ещё не выполнена'));
 });
 test('case study shows caught errors and Kitabs corrections in both locales',()=>{

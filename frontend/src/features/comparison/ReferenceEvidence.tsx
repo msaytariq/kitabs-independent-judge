@@ -14,7 +14,9 @@ export function ReferenceEvidence({result}:{result:ReferenceResult|null}) {
   const record=(c:HadithCandidate)=><p key={c.id}><a href={c.url} target="_blank" rel="noreferrer">{c.collection} {c.number}</a></p>;
   return <section className="panel"><h2>{t('Sources in the original','Источники в оригинале')}</h2>
     <p><strong>{t(`Quran verses: ${quran.found} of ${quran.total} found`,`Аяты Корана: найдено ${quran.found} из ${quran.total}`)}</strong></p>
-    {wrong.map((i,n)=><p key={n} className="notice">{t(`Wrong reference in the original: "${i.label}", the Quran has ${i.ayah}`,`Ошибка ссылки в оригинале: «${i.label}», в Коране — ${i.ayah}`)}</p>)}
+    {wrong.length>0&&<p className="muted">{t('The edition prints these references with an error. The code found each verse by its text and gives its real place in the Quran.',
+      'Издание печатает эти ссылки с ошибкой. Код нашёл каждый аят по тексту и указывает его настоящее место в Коране.')}</p>}
+    {wrong.map((i,n)=><p key={n} className="notice">{t(`Printed in the edition: "${i.label}" — in the Quran: ${i.ayah}`,`В издании напечатано: «${i.label}» — в Коране: ${i.ayah}`)}</p>)}
     <p><strong>{t(`Hadith: ${hadith.found} of ${hadith.total} found`,`Хадисы: найдено ${hadith.found} из ${hadith.total}`)}</strong>{collections&&<> · {collections}</>}</p>
     <details><summary>{t('Verses and hadith one by one','Аяты и хадисы по отдельности')}</summary>
       {quran.items.map((i,n)=><article key={`q${n}`}><blockquote dir="auto">{i.quote}</blockquote>

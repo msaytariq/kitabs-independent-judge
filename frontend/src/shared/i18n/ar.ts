@@ -176,6 +176,8 @@ export const AR: Record<string, string> = {
   'Source exceeds 18,000 characters.': 'يتجاوز الأصل 18000 حرف.',
   'Source language': 'لغة الأصل',
   'Sources in the original': 'المصادر في الأصل',
+  'The edition prints these references with an error. The code found each verse by its text and gives its real place in the Quran.':
+    'تطبع هذه الطبعة هذه الإحالات بخطأ. وجد البرنامج كل آية بنصّها ويبيّن موضعها الصحيح في القرآن.',
   'Start processing on Kitabs.ai (Autopilot)': 'ابدأ المعالجة على Kitabs.ai (الطيار الآلي)',
   'Start the comparison to get grades.': 'ابدأ المقارنة للحصول على الدرجات.',
   'Structural apparatus': 'الجهاز البنيوي',
@@ -285,7 +287,7 @@ export const AR_PATTERNS: [RegExp, string][] = [
   [/^Quran verses: (\d+) of (\d+) found$/, 'آيات القرآن: عُثر على {0} من {1}'],
   [/^Same winner: (.+)$/, 'الفائز نفسه: {0}'],
   [/^Translation (\S+)$/, 'الترجمة {0}'],
-  [/^Wrong reference in the original: "(.*)", the Quran has (.+)$/, 'إحالة خاطئة في الأصل: «{0}»، وفي القرآن: {1}'],
+  [/^Printed in the edition: "(.*)" — in the Quran: (.+)$/, 'المطبوع في الطبعة: «{0}» — في القرآن: {1}'],
   [/^level (\d+) of 5$/, 'المستوى {0} من 5'],
 ];
 
