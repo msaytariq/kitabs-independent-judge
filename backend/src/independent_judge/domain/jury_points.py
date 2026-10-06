@@ -12,17 +12,17 @@ MINUTES_PER_EDIT = 3
 COVERAGE_KEYS = ('quran', 'hadith')
 LABELS = {
     'en': {'accuracy': 'accuracy', 'completeness': 'completeness', 'terminology': 'terminology',
-           'readability': 'readability', 'seamlessness': 'assembly integrity',
+           'readability': 'readability', 'seamlessness': 'seamless assembly',
            'apparatus': 'scholarly apparatus', 'quran': 'Quran verses', 'hadith': 'hadith',
-           'takhrij': 'hadith takhrij', 'verse_refs': 'verse references', 'editing': 'editing'},
+           'takhrij': 'hadith takhrij', 'verse_refs': 'verse references', 'editing': 'editing', 'seams': 'seams without breaks'},
     'ru': {'accuracy': 'точность', 'completeness': 'полнота', 'terminology': 'терминология',
-           'readability': 'читаемость', 'seamlessness': 'целостность сборки',
+           'readability': 'читаемость', 'seamlessness': 'бесшовность сборки',
            'apparatus': 'научный аппарат', 'quran': 'аяты Корана', 'hadith': 'хадисы',
-           'takhrij': 'тахридж хадисов', 'verse_refs': 'ссылки на аяты', 'editing': 'редактура'},
+           'takhrij': 'тахридж хадисов', 'verse_refs': 'ссылки на аяты', 'editing': 'редактура', 'seams': 'стыки без разрывов'},
     'ar': {'accuracy': 'الدقة', 'completeness': 'الاكتمال', 'terminology': 'المصطلحات',
-           'readability': 'سهولة القراءة', 'seamlessness': 'سلامة التجميع',
+           'readability': 'سهولة القراءة', 'seamlessness': 'تجميع بلا فواصل',
            'apparatus': 'الجهاز العلمي', 'quran': 'آيات القرآن', 'hadith': 'الأحاديث',
-           'takhrij': 'تخريج الأحاديث', 'verse_refs': 'الإحالات إلى الآيات', 'editing': 'التحرير'},
+           'takhrij': 'تخريج الأحاديث', 'verse_refs': 'الإحالات إلى الآيات', 'editing': 'التحرير', 'seams': 'وصلات بلا انقطاع'},
 }
 PHRASES = {
     'en': {'tie': 'The translations are equal: {a} points each.',
@@ -70,7 +70,8 @@ def sides_without_notes(structural: dict | None, takhrij: dict | None) -> set:
 
 
 def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None = None,
-               without_notes: set | frozenset = frozenset(), editing: dict | None = None) -> dict | None:
+               without_notes: set | frozenset = frozenset(), editing: dict | None = None,
+               seams: dict | None = None) -> dict | None:
     if not rubric:
         return None
     indexed = {row['criterion']: row for row in rubric['criteria']}
@@ -97,6 +98,13 @@ def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None 
                         for s in ('a', 'b')},
                      'delivered': {s: group[s]['delivered'] for s in ('a', 'b')},
                      'wrong': {s: group[s]['wrong'] for s in ('a', 'b')}, 'total': group['total']})
+    if seams and any(seams[s]['joins'] for s in ('a', 'b')):
+        # Seams (seam_check): joins of two prose paragraphs without a broken sentence.
+        rows.append({'key': 'seams', 'kind': 'seams',
+                     **{s: _percent(seams[s]['joins'] - seams[s]['broken'], seams[s]['joins'])
+                        if seams[s]['joins'] else 100 for s in ('a', 'b')},
+                     'joins': {s: seams[s]['joins'] for s in ('a', 'b')},
+                     'broken': {s: seams[s]['broken'] for s in ('a', 'b')}})
     if editing and any(editing[s].get('done_edits') for s in ('a', 'b')):
         # Only when a side has measured editing work; without receipts the row tells nothing new.
         # Editing: the part of the whole editing work that is done before the reader gets the text.

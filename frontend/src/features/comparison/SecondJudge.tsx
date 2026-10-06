@@ -6,7 +6,7 @@ export function SecondJudge({opinion}:{opinion?:SecondOpinion|null}) {
   if(!opinion) return null;
   const labels:Record<string,string>={accuracy:t('Accuracy','Точность'),completeness:t('Completeness','Полнота'),
     terminology:t('Terminology','Терминология'),readability:t('Readability','Читаемость'),
-    seamlessness:t('Assembly integrity','Целостность сборки'),apparatus:t('Scholarly apparatus','Научный аппарат')};
+    seamlessness:t('Seamless assembly','Бесшовность сборки'),apparatus:t('Scholarly apparatus','Научный аппарат')};
   const name=(w:string|null)=>w==='a'?'A':w==='b'?'B':w==='tie'?t('tie','ничья'):'—';
   const {first,second}=opinion;
   const value=(v:number|null)=>v===null?'—':v;

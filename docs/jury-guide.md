@@ -20,8 +20,8 @@ published competitor translation (example 2).
 
 | Example | Source | A | Total A | Total B | Winner (judge 1 / judge 2) |
 |---|---|---|---:|---:|---|
-| 1 | Islamic child education, chapter 5 | Gemini | 31 | 82 | B / B |
-| 2 | Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai | 43 | 98 | B / B |
+| 1 | Islamic child education, chapter 5 | Gemini | 37 | 84 | B / B |
+| 2 | Abu Talib al-Makki, *Qut al-Qulub*, night prayers | nadwa.ai | 47 | 98 | B / B |
 
 Example 2 takes the Arabic text and translation A from the same pages (104–120)
 of the public nadwa.ai EPUB of *Qut al-Qulub*. In this passage nadwa.ai gives 12
@@ -95,6 +95,23 @@ The code finds each Quran verse of the source in the Quran text
 It also finds each hadith in seven collections (fawazahmed0/hadith-api:
 al-Bukhari, Muslim, Abu Dawud, at-Tirmidhi, an-Nasa'i, Ibn Majah, Malik).
 When the source gives a wrong reference, the screen shows it.
+
+### Seams
+
+A long text is translated in fragments, and the fragments join at paragraph
+breaks. The judge grades **Seamless assembly** (levels 1–5). The code also
+checks each join of two prose paragraphs in A and B with the same rule; no
+model takes part:
+
+- A join is broken when the first paragraph does not end a sentence or the
+  next paragraph starts in lowercase.
+- Headings, quotations, lists, notes, page numbers and the apparatus sections
+  are not prose and are not counted.
+
+Row points = joins without a break / all joins. In example 2, nadwa.ai breaks
+2 sentences of 28 joins, for example "…from the end of the night," followed
+by a new paragraph "And if he reads…". Kitabs has no break in 30 joins. The
+Kitabs pipeline joins its fragments at assembly and bridges each seam.
 
 ### Hadith takhrij check
 

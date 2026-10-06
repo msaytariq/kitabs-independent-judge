@@ -2,7 +2,7 @@
 from html import escape
 
 CRITERIA = {'accuracy': 'Точность', 'completeness': 'Полнота', 'terminology': 'Терминология',
-            'readability': 'Читаемость', 'seamlessness': 'Целостность сборки', 'apparatus': 'Научный аппарат'}
+            'readability': 'Читаемость', 'seamlessness': 'Бесшовность сборки', 'apparatus': 'Научный аппарат'}
 WINNERS = {'a': 'Лучше перевод A', 'b': 'Лучше перевод B', 'tie': 'Переводы равны'}
 TIME_ROWS = [('pipeline_seconds', 'Пайплайн, секунды'), ('audit_operations', 'Применённые правки аудита'),
              ('editor_operations', 'Применённые правки редактора'),
@@ -98,6 +98,10 @@ def rubric_html(view: dict) -> str:
             title = 'Ссылки на аяты' if row['key'] == 'verse_refs' else 'Тахридж хадисов: сборники и номера'
             rows += (f'<tr><th>{title}</th>' + ''.join(
                 f'<td><b>{row[s]}</b><br>верных {row["delivered"][s]} из {row["total"]}, неверных {row["wrong"][s]}</td>'
+                for s in ('a', 'b')) + '</tr>')
+        elif row['kind'] == 'seams':
+            rows += ('<tr><th>Стыки абзацев без разрыва предложения</th>' + ''.join(
+                f'<td><b>{row[s]}</b><br>разрывов {row["broken"][s]} из {row["joins"][s]}</td>'
                 for s in ('a', 'b')) + '</tr>')
         elif row['kind'] == 'editing':
             rows += ('<tr><th>Редактура: доля выполненной правки</th>' + ''.join(

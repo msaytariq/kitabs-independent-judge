@@ -6,7 +6,7 @@ export function CaseStudy({study}:{study?:Study|null}) {
   if(!study) return null;
   const labels:Record<string,string>={accuracy:t('accuracy','точность'),completeness:t('completeness','полнота'),
     terminology:t('terminology','терминология'),readability:t('readability','читаемость'),
-    seamlessness:t('assembly integrity','целостность сборки'),apparatus:t('scholarly apparatus','научный аппарат')};
+    seamlessness:t('seamless assembly','бесшовность сборки'),apparatus:t('scholarly apparatus','научный аппарат')};
   return <section className="panel case-study"><h2>{t('What the judge caught','Что поймал судья')}</h2>
     {(['a','b'] as const).map(side=><div key={side}>
       {study[side].length===0&&<p>{t(`${side.toUpperCase()} has no errors with quotations.`,`В ${side.toUpperCase()} ошибок с цитатами нет.`)}</p>}

@@ -221,3 +221,24 @@ def test_no_editing_row_without_measured_editing_work():
     effort = {'a': {'edits': 4, 'done_edits': 0}, 'b': {'edits': 2, 'done_edits': 0}}
     table = jury_table(rubric({'accuracy': (3, 4)}), None, editing=effort)
     assert 'editing' not in [r['key'] for r in table['rows']]
+
+
+def test_the_seam_row_counts_joins_without_a_broken_sentence():
+    seams = {'version': 'seams-v1', 'a': {'joins': 28, 'broken': 2, 'items': []},
+             'b': {'joins': 30, 'broken': 0, 'items': []}}
+    table = jury_table(rubric({'accuracy': (3, 4)}), None, seams=seams)
+    row = next(r for r in table['rows'] if r['key'] == 'seams')
+    assert row == {'key': 'seams', 'kind': 'seams', 'a': 93, 'b': 100,
+                   'joins': {'a': 28, 'b': 30}, 'broken': {'a': 2, 'b': 0}}
+    assert jury_summary(table)['ru'][1] == 'B лучше в: точность (+25), стыки без разрывов (+7).'
+    # A text of one paragraph has no seam to break.
+    one = {'version': 'seams-v1', 'a': {'joins': 0, 'broken': 0, 'items': []}, 'b': {'joins': 4, 'broken': 1, 'items': []}}
+    assert [(r['a'], r['b']) for r in jury_table(rubric({'accuracy': (3, 4)}), None, seams=one)['rows']
+            if r['key'] == 'seams'] == [(100, 75)]
+    assert 'seams' not in [r['key'] for r in jury_table(rubric({'accuracy': (3, 4)}), None)['rows']]
+
+
+def test_the_judge_row_of_seams_is_named_seamless_assembly():
+    from independent_judge.domain.jury_points import LABELS
+    assert LABELS['ru']['seamlessness'] == 'бесшовность сборки'
+    assert LABELS['en']['seamlessness'] == 'seamless assembly'

@@ -44,3 +44,13 @@ test('the editing row shows done and remaining edits',()=>{
   assert.ok(html.includes('Редактура: доля выполненной правки') && html.includes('сделано: 69') && html.includes('осталось: 6'));
   assert.ok(page('ar',React.createElement(RubricTable,{result,jury})).includes('منجزة: 69'));
 });
+
+test('the seams row shows breaks of joins',()=>{
+  const {RubricTable}=require('../src/features/comparison/RubricTable.tsx');
+  const result={version:'rubric-v1',winner:'b',totals:{a:2,b:4},unique_defects:{a:0,b:0},criteria:[]};
+  const jury={version:'points-v1',winner:'b',totals:{a:93,b:100},rows:[{key:'seams',kind:'seams',a:93,b:100,
+    joins:{a:28,b:30},broken:{a:2,b:0}}]};
+  const html=page('ru',React.createElement(RubricTable,{result,jury}));
+  assert.ok(html.includes('Стыки: абзацы без разрыва предложения') && html.includes('разрывов: 2 из 28'));
+  assert.ok(page('ar',React.createElement(RubricTable,{result,jury})).includes('انقطاعات: 2 من 28'));
+});

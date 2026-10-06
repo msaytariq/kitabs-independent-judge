@@ -2,6 +2,8 @@
 // A missing key falls back to English; tests/arabic.test.mjs keeps the table complete.
 export const AR: Record<string, string> = {
   "Hadith takhrij check": "فحص تخريج الأحاديث",
+  "Seams: paragraph joins without a broken sentence": "الوصلات: فقرات متتالية بلا جملة مقطوعة",
+  "The seams row: the code reads each join of two prose paragraphs, where also the fragments of a long text join. A join is broken when the first paragraph does not end a sentence or the next one starts in lowercase. No model takes part.": "صف الوصلات: يفحص البرنامج كل وصلة بين فقرتين من النص، وهناك أيضًا تتصل أجزاء النص الطويل. تكون الوصلة مقطوعة إذا لم تنتهِ الفقرة بجملة تامة أو بدأت التالية بحرف صغير. لا يشارك أي نموذج.",
   "Editing: the part of the editing work that is done": "التحرير: نسبة العمل التحريري المنجز",
   "The editing row: applied audit and editor edits with receipts, as a part of all edits (done and still needed). An editor makes the remaining edits: errors with quotations, missing quotations and references.": "صف التحرير: تعديلات التدقيق والتحرير المطبَّقة (بإيصالات) بوصفها نسبة من كل التعديلات المنجزة والمطلوبة. يُجري المحرِّر التعديلات الباقية: الأخطاء ذات الاقتباسات، والاقتباسات والإحالات الناقصة.",
   "Verse reference check": "فحص الإحالات إلى الآيات",
@@ -40,7 +42,7 @@ export const AR: Record<string, string> = {
   'Applied editor edits': 'تعديلات المحرِّر المطبَّقة',
   'Applied edits: before / after': 'التعديلات المطبَّقة: قبل / بعد',
   'Arabic source': 'الأصل العربي',
-  'Assembly integrity': 'سلامة التجميع',
+  'Seamless assembly': 'تجميع بلا فواصل',
   'Audit': 'التدقيق',
   'Autopilot is running': 'الطيار الآلي يعمل',
   'Autopilot output does not prove zero previous human work. Unknown history stays unknown. A candidate is not a confirmed required correction.':
@@ -214,7 +216,7 @@ export const AR: Record<string, string> = {
   'Zero-based Unicode character ranges; end excluded. A quote match locates evidence, it does not confirm the finding.':
     'نطاقات أحرف يونيكود تبدأ من الصفر، والنهاية غير مشمولة. مطابقة الاقتباس تحدِّد موضع الدليل ولا تؤكِّد الملاحظة.',
   'accuracy': 'الدقة',
-  'assembly integrity': 'سلامة التجميع',
+  'seamless assembly': 'تجميع بلا فواصل',
   'completeness': 'الاكتمال',
   'input method': 'طريقة الإدخال',
   'of them, errors with quotations': 'منها أخطاء مع اقتباسات',
@@ -230,6 +232,7 @@ export const AR: Record<string, string> = {
 export const AR_PATTERNS: [RegExp, string][] = [
   [/^wrong: (\d+)$/, 'خاطئة: {0}'],
   [/^done: (\d+)$/, 'منجزة: {0}'],
+  [/^breaks: (\d+) of (\d+)$/, 'انقطاعات: {0} من {1}'],
   [/^remaining: (\d+)$/, 'متبقية: {0}'],
   [/^(\d+) of the demonstration launches remain\.$/, 'التشغيلات المتبقية للعرض: {0}.'],
   [/^(\S+) of (\S+)$/, '{0} من {1}'],

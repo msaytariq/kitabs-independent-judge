@@ -12,6 +12,7 @@ from independent_judge.domain.processing_effort import processing_effort
 from independent_judge.domain.rubric_result import VERSION as RUBRIC_VERSION
 from independent_judge.domain.reference_coverage import coverage_counts
 from independent_judge.domain.case_study import case_study
+from independent_judge.domain.seam_check import seam_check
 from independent_judge.domain.takhrij_check import VERSION as TAKHRIJ_VERSION
 from independent_judge.domain.jury_points import (effort_reduction, jury_summary, jury_table, second_opinion,
                                                   sides_without_notes)
@@ -30,7 +31,9 @@ def _view(record: dict) -> dict:
     takhrij = (record.get('hadith') or {}).get('takhrij')
     without_notes = sides_without_notes(run.get('structural') if run else None, takhrij)
     effort = effort_reduction(rubric, coverage, processing, takhrij)
-    jury = jury_table(rubric, coverage, takhrij, without_notes, effort)
+    texts = record['scope'].get('texts') or {}
+    seams = seam_check(texts) if rubric and {'a', 'b'} <= set(texts) else None
+    jury = jury_table(rubric, coverage, takhrij, without_notes, effort, seams)
     return {key: record.get(key) for key in (
         'id', 'title', 'description', 'scope', 'provenance', 'boundary_review',
         'apparatus', 'references', 'matched_example_id')} | {
@@ -46,6 +49,7 @@ def _view(record: dict) -> dict:
         'jury': jury,
         'effort_reduction': effort,
         'takhrij': takhrij,
+        'seams': seams,
         'jury_summary': jury_summary(jury),
         'case_study': case_study(rubric, processing),
         'second_judge': second_opinion(rubric, ', '.join(manifest.get('actual_models', [])), record.get('second_judge'),
