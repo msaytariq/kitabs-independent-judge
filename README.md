@@ -9,6 +9,7 @@ each translation and shows where each text comes from.
 
 - Live demonstration: <https://app.kitabs.ai/judge>
 - Guide for the jury: [docs/jury-guide.md](docs/jury-guide.md)
+- Competition description: [docs/competition-description.md](docs/competition-description.md)
 - License: [MIT](LICENSE)
 
 Independent Judge is the competition entry of [Kitabs.ai](https://kitabs.ai).
