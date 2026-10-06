@@ -64,7 +64,7 @@ class QuranIndex:
     def _verse_at(self, position: int) -> dict:
         return self.refs[max(0, bisect_right(self.starts, position - 1) - 1)]
 
-    def locate(self, quote: str, *, anchored: bool = False) -> dict | None:
+    def locate(self, quote: str, *, anchored: bool = False, prefer: dict | None = None) -> dict | None:
         """Longest contiguous run of the quotation found in the Quran (at least three words)."""
         words = folded(quote).split()
         best = None
@@ -83,6 +83,9 @@ class QuranIndex:
             return None
         i, end, at = best
         first, last = self._verse_at(at + 1), self._verse_at(at + len(' '.join(words[i:end])))
+        # The rest of a quotation broken by one damaged word stays in the verse where it began.
+        if prefer is not None and (' ' + ' '.join(words[i:end]) + ' ') in (' ' + folded(prefer['text']) + ' '):
+            first = last = prefer
         ayah = f"{first['chapter']}:{first['verse']}"
         if last is not first:
             ayah += f"-{last['verse']}" if last['chapter'] == first['chapter'] else f"–{last['chapter']}:{last['verse']}"

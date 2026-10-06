@@ -29,9 +29,11 @@ def verify_references(texts: dict[str, str], quran_library, hadith_library, *, q
             'authenticity': 'not_adjudicated', 'limit_reached': len(detected) > LIMIT}
     detected = detected[:LIMIT]
     ayat, reports = [], []
+    previous = None  # (end in the source, verse) of the last verse found
     for item in detected:
         unmarked_verse = item['kind'] == 'quran' and not item['marked']
-        located = quran.locate(item['quote'], anchored=unmarked_verse)
+        near = previous if previous and item['start'] - previous[0] <= 30 else None
+        located = quran.locate(item['quote'], anchored=unmarked_verse, prefer=near and near[1])
         if unmarked_verse and not located:
             continue  # the formula was not followed by a verse
         is_quran = item['kind'] == 'quran' or (
@@ -46,6 +48,9 @@ def verify_references(texts: dict[str, str], quran_library, hadith_library, *, q
             entry = {k: item[k] for k in ('quote', 'start', 'end')} | {
                 'status': 'found' if located else 'not_found', **(located or {})}
             ayat.append(entry | label_check(source, item['end'], located))
+            if located and located.get('verse_text'):
+                previous = (item['end'], {'chapter': located['surah'], 'verse': int(located['ayah'].split(':')[1]),
+                                          'text': located['verse_text']})
         else:
             reports.append({k: item[k] for k in ('quote', 'start', 'end')} | hadith.match(item['quote']))
     found = [r for r in reports if r['status'] in FOUND]

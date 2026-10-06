@@ -170,3 +170,11 @@ def test_the_basmala_and_an_opening_praise_are_not_a_verse():
     source = 'بسم الله الرحمن الرحيم الحمد لله الذي قصم بالموت رقاب الجبابرة'
     result = verify_references({'source': source, 'a': '', 'b': ''}, Library([basmala, opening]), Library(HADITH))
     assert result['quran']['total'] == 0
+
+
+def test_the_rest_of_a_verse_after_a_damaged_word_keeps_the_verse_of_its_start():
+    other = {'chapter': 9, 'verse': 94, 'text': 'قُلْ لَا تَعْتَذِرُوا ثُمَّ تُرَدُّونَ إِلَىٰ عَالِمِ الْغَيْبِ وَالشَّهَادَةِ فَيُنَبِّئُكُمْ بِمَا كُنْتُمْ تَعْمَلُونَ'}
+    source = ('قال الله فيهم قل إن الموت الذي تفرون منه فإنه مالقيكم ثم تردون إلي عالم الغيب والشهادة '
+              'فينبئكم بما كنتم تعملون وقال الحسن')
+    result = verify_references({'source': source, 'a': '', 'b': ''}, Library([other, DEATH]), Library(HADITH))
+    assert [a['ayah'] for a in result['quran']['items']] == ['62:8', '62:8']
