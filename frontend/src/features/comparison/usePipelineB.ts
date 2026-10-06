@@ -9,7 +9,11 @@ export function usePipelineB(onReady:(job:PipelineState)=>void){
   const [error,setError]=useState(''),[detail,setDetail]=useState('');
   const callback=useRef(onReady);callback.current=onReady;
   const busyRef=useRef(false),delivered=useRef<string|null>(null);
-  useEffect(()=>{let active=true;setRequestId(localStorage.getItem(STORAGE));
+  useEffect(()=>{let active=true;
+    // ?request=<id> follows a launch from another tab or browser; otherwise the last launch of this browser.
+    const linked=new URLSearchParams(location.search).get('request');
+    if(linked&&/^[A-Za-z0-9_-]{1,80}$/.test(linked))localStorage.setItem(STORAGE,linked);
+    setRequestId(localStorage.getItem(STORAGE));
     void pipelineCapabilities().then(r=>{if(active){setEnabled(r.enabled);setRemaining(r.remaining??null);}}).catch(()=>{});
     return()=>{active=false;};},[]);
   useEffect(()=>{if(!requestId)return;let active=true;
@@ -25,10 +29,11 @@ export function usePipelineB(onReady:(job:PipelineState)=>void){
   }},[job]);
   async function start(source:PipelineSource){if(busyRef.current||requestId)return;
     busyRef.current=true;setStarting(true);setError('');
-    const id=crypto.randomUUID();localStorage.setItem(STORAGE,id);setRequestId(id);
-    try{setJob(await startPipeline(id,source));}catch(e){
+    // Follow the request only after the server has saved it: an earlier status read finds nothing.
+    const id=crypto.randomUUID();localStorage.setItem(STORAGE,id);
+    try{setJob(await startPipeline(id,source));setRequestId(id);}catch(e){
       if(e instanceof PipelineRefusal){forget();setError(e.code);setDetail(e.detail);}  // nothing was started
-      else setError('pipeline_unavailable');}
+      else{setRequestId(id);setError('pipeline_unavailable');}}  // the answer is lost: follow the same request
     finally{busyRef.current=false;setStarting(false);}}
   function forget(){setRequestId(null);setJob(null);delivered.current=null;localStorage.removeItem(STORAGE);}
   function clear(){forget();setError('');setDetail('');}
