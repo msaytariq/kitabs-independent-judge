@@ -30,7 +30,7 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
       <br/><small>{t(`wrong: ${row.wrong?.[side]}`,`неверных: ${row.wrong?.[side]}`)}</small></td>;
     const source=indexed[row.key]?.[side];const level=row.level?.[side];
     return <td key={side}>{points(row[side])}{level!=null&&<><br/><small>{t(`level ${level} of 5`,`уровень ${level} из 5`)}</small></>}
-      {row.no_notes?.includes(side)&&<><br/><small>{t('No notes','Сносок нет')}</small></>}
+      {row.no_notes?.includes(side)&&<><br/><small>{t('No apparatus','Аппарата нет')}</small></>}
       {source&&row[side]!==null&&evidence(source,side)}</td>;
   };
   return <section className="panel"><h2>{jury.winner?winners[jury.winner]:t('The assessment did not finish.','Оценка не завершена.')}</h2>
@@ -44,8 +44,8 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
       '100 — замечаний нет; 75 — мелкие местные дефекты; 50 — заметные дефекты; 25 — много существенных ошибок; 0 — смысл систематически искажён.')}</p>
     <p className="muted">{t('An AI judge gives levels 1–5 with the same criteria for A and B: 1 = 0, 2 = 25, 3 = 50, 4 = 75, 5 = 100 points. The verse and hadith rows show the part of the source quotations found in the translation. The total is the mean of all rows.',
       'ИИ-судья выставляет уровни 1–5 по одинаковым критериям для A и B: 1 = 0, 2 = 25, 3 = 50, 4 = 75, 5 = 100 баллов. Строки аятов и хадисов — доля цитат оригинала, найденных в переводе. Итог — среднее всех строк.')}</p>
-    {jury.rows.some(row=>row.no_notes?.length)&&<p className="muted">{t('Scholarly apparatus: the source gives references, and a translation without anchored notes gets 0 points. The code counts the notes.',
-      'Научный аппарат: в оригинале есть ссылки, и перевод без сносок получает 0 баллов. Сноски считает код.')}</p>}
+    {jury.rows.some(row=>row.no_notes?.length)&&<p className="muted">{t('Scholarly apparatus: the source gives references, and a translation without an apparatus (anchored notes, glossary or person index) gets 0 points. The code counts them.',
+      'Научный аппарат: в оригинале есть ссылки, и перевод без аппарата (сносок, глоссария или списка лиц) получает 0 баллов. Их считает код.')}</p>}
     {jury.rows.some(row=>row.kind==='seams')&&<p className="muted">{t('The seams row: the code reads each join of two prose paragraphs, where also the fragments of a long text join. A join is broken when the first paragraph does not end a sentence or the next one starts in lowercase. No model takes part.',
       'Строка стыков: код проверяет каждый стык двух абзацев текста — там же стыкуются фрагменты длинного текста. Стык разорван, если абзац не закончил предложение или следующий начинается со строчной буквы. Модель не участвует.')}</p>}
     {jury.rows.some(row=>row.kind==='editing')&&<p className="muted">{t('The editing row: applied audit and editor edits with receipts, as a part of all edits (done and still needed). An editor makes the remaining edits: errors with quotations, missing quotations and references.',

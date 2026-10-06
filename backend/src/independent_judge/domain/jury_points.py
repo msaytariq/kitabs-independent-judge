@@ -59,14 +59,17 @@ def _reference_groups(takhrij: dict | None) -> list[tuple[str, dict]]:
 
 
 def sides_without_notes(structural: dict | None, takhrij: dict | None) -> set:
-    """Sides that give no anchored note although the source gives references to deliver.
+    """Sides that give no scholarly apparatus although the source gives references.
 
-    The code counts the notes (apparatus_inventory); no model takes part. References
-    inside the author's sentences are not an apparatus.
+    An apparatus is anchored notes, a glossary or a person index; the code counts them
+    (apparatus_inventory), no model takes part. References inside the author's sentences
+    alone are not an apparatus.
     """
     if not structural or not _reference_groups(takhrij):
         return set()
-    return {s for s in ('a', 'b') if not ((structural.get(s) or {}).get('inventory') or {}).get('notes')}
+    parts = ('notes', 'glossary', 'persons')
+    return {s for s in ('a', 'b')
+            if not any(((structural.get(s) or {}).get('inventory') or {}).get(p) for p in parts)}
 
 
 def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None = None,

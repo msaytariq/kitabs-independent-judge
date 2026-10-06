@@ -242,3 +242,13 @@ def test_the_judge_row_of_seams_is_named_seamless_assembly():
     from independent_judge.domain.jury_points import LABELS
     assert LABELS['ru']['seamlessness'] == 'бесшовность сборки'
     assert LABELS['en']['seamlessness'] == 'seamless assembly'
+
+
+def test_a_glossary_or_person_index_is_an_apparatus_even_without_notes():
+    from independent_judge.domain.jury_points import sides_without_notes
+    # The source has no note to move out; B gives a glossary, A gives nothing.
+    structural = {'a': {'inventory': {'notes': 0, 'glossary': 0, 'persons': 0}},
+                  'b': {'inventory': {'notes': 0, 'glossary': 8, 'persons': 3}}}
+    verses = {'total': 0, 'a': {'delivered': 0, 'wrong': 0}, 'b': {'delivered': 0, 'wrong': 0},
+              'verses': {'total': 2, 'a': {'delivered': 0, 'wrong': 0}, 'b': {'delivered': 2, 'wrong': 0}}}
+    assert sides_without_notes(structural, verses) == {'a'}

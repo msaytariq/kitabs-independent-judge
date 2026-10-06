@@ -202,9 +202,9 @@ export const AR: Record<string, string> = {
   'Editor time saved, minutes': 'وقت المحرِّر الموفَّر، بالدقائق',
   'Each edit has a receipt with the text before and after (section Processing time). The judge grades the text after these edits.':
     'لكل تعديل إيصال بالنص قبله وبعده (قسم زمن المعالجة). يقيِّم المحكِّم النص بعد هذه التعديلات.',
-  'No notes': 'لا حواشي',
-  'Scholarly apparatus: the source gives references, and a translation without anchored notes gets 0 points. The code counts the notes.':
-    'الجهاز العلمي: في الأصل إحالات، والترجمة التي لا حواشي فيها تنال 0 نقطة. يعدّ البرنامج الحواشي.',
+  'No apparatus': 'لا جهاز علمي',
+  'Scholarly apparatus: the source gives references, and a translation without an apparatus (anchored notes, glossary or person index) gets 0 points. The code counts them.':
+    'الجهاز العلمي: في الأصل إحالات، والترجمة التي ليس فيها جهاز علمي (حواشٍ أو مسرد أو فهرس أعلام) تنال 0 نقطة. يعدّها البرنامج.',
   'The displayed indices are equal.': 'المؤشرات المعروضة متساوية.',
   'The editing time is equal': 'زمن التحرير متساوٍ',
   'The operator has not enabled the pipeline connection. You can upload any completed B.':

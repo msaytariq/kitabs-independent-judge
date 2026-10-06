@@ -19,7 +19,8 @@ def inventory(text: str) -> dict:
             section = HEADINGS[heading]
         elif line.lstrip().startswith('#'):
             section = None
-        elif section and (GLOSSARY if section == 'glossary' else ENTRY).match(line):
+        # A person index lists "Name — description" lines with or without a list marker.
+        elif section and (GLOSSARY.match(line) if section == 'glossary' else (ENTRY.match(line) or GLOSSARY.match(line))):
             result[section] += 1
     return result
 
