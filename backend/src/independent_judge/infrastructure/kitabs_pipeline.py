@@ -5,6 +5,7 @@ from datetime import datetime
 from urllib.parse import urlsplit
 import httpx
 from independent_judge.domain.errors import InputError
+from independent_judge.domain.pipeline_progress import pipeline_progress
 from independent_judge.domain.scope import text_hash
 from independent_judge.infrastructure.platform_processing import processing_packet
 
@@ -119,6 +120,23 @@ class KitabsPipeline:
             raise
         except (httpx.HTTPError, ValueError, KeyError, TypeError):
             raise InputError('pipeline_unavailable', 'Cannot read platform status.') from None
+
+    def progress(self, job_id):
+        """Finished steps of a running job; the payloads stay on the platform."""
+        self._valid_id(job_id)
+        def read(client):
+            job = self._get(client, f'pipeline/jobs/{job_id}')['job']
+            artifacts = self._get(client, f'pipeline/jobs/{job_id}/artifacts')['artifacts']
+            return job, [{'kind': a['kind'], 'stageId': a.get('stageId'), 'chunkId': a.get('chunkId'),
+                          **({'chunks': len(a['payload']['chunks'])} if a['kind'] == 'chunks' else {})}
+                         for a in artifacts]
+        try:
+            job, artifacts = self._authorized(read)
+        except InputError:
+            raise
+        except (httpx.HTTPError, ValueError, KeyError, TypeError):
+            raise InputError('pipeline_unavailable', 'Cannot read platform progress.') from None
+        return pipeline_progress(job['status'], job.get('currentStage'), artifacts)
 
     def start(self, job_id):
         self._valid_id(job_id)

@@ -75,3 +75,14 @@ test('intake errors respect language and do not expose unsupported Russian serve
   assert.match(intakeError('private_url','', 'ru'),/локальн/);
   assert.ok(!/[А-Яа-я]/.test(intakeError('unexpected','Русский серверный текст','en')));
 });
+
+test('a running Kitabs launch shows a progress bar with the fragment, stage and steps',()=>{
+  const {PipelineProgressBar}=require('../src/features/comparison/PipelineProgressBar.tsx');
+  const job={id:'r',status:'running',source:null,source_sha256:null,job_id:'job',error:null,result:null,started_at:null,
+    progress:{percent:35,stage:'audit',chunk:2,chunks:3,steps:[{key:'preparation',state:'done'},{key:'translation',state:'current'},
+      {key:'apparatus',state:'waiting'},{key:'assembly',state:'waiting'}]}};
+  const {JudgeLocale}=require('../src/features/comparison/JudgeLocale.tsx');
+  const html=render(React.createElement(JudgeLocale,{initial:'ru'},React.createElement(PipelineProgressBar,{job})));
+  assert.ok(html.includes('role="progressbar"') && html.includes('aria-valuenow="35"') && html.includes('width:35%'));
+  assert.ok(html.includes('Фрагмент 2 из 3 · аудит') && html.includes('✓ Подготовка') && html.includes('● Фрагменты'));
+});

@@ -3,6 +3,7 @@ import type {PipelineSource,PipelineState} from '../../shared/api/pipeline';
 import {intakeError} from '../../shared/i18n/intake';
 import {usePipelineB} from './usePipelineB';
 import {useJudgeLocale} from './JudgeLocale';
+import {PipelineProgressBar} from './PipelineProgressBar';
 export function LaunchesLeft({remaining}:{remaining:number|null}){
   const {t}=useJudgeLocale();
   if(remaining===null) return null;
@@ -24,7 +25,8 @@ export function KitabsAction({source,onReady,busy}:{source:PipelineSource;onRead
     {!work.requestId&&<button type="button" className="primary" disabled={busy||noSource||!work.enabled||work.running||work.remaining===0}
       onClick={()=>void work.start(source)}>{t('Start the autopilot on Kitabs.ai','Запустить автопилот Kitabs.ai')}</button>}
     {!work.requestId&&noSource&&<p className="muted">{t('First add the Arabic source.','Сначала добавьте арабский оригинал.')}</p>}
-    {work.job&&<p role="status">{states[work.job.status]||work.job.status} · {work.job.job_id||work.job.id}</p>}
+    {work.job&&['queued','uploading','creating','running','completed'].includes(work.job.status)&&<PipelineProgressBar job={work.job}/>}
+    {work.job&&<p role="status" className="muted">{states[work.job.status]||work.job.status} · {work.job.job_id||work.job.id}</p>}
     {work.error&&<p role="alert">{intakeError(work.error,work.detail,locale)}</p>}
     {work.requestId&&!work.running&&<button type="button" onClick={work.clear}>{t('Use a new request','Использовать новый запрос')}</button>}
   </div>;

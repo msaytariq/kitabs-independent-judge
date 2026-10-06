@@ -13,6 +13,7 @@ import time
 
 # Kitabs reads these files with its production intake (Arabic text layer repair, OCR), as on its desk.
 PLATFORM_READS = ('.pdf', '.docx')
+PROGRESS_SECONDS = 10
 
 
 def handoff(source: str, mode: str, web_origin: str) -> dict:
@@ -115,10 +116,22 @@ class PipelineBService:
                     self.jobs.update(request_id, status='completed', result=result, error=None, **source)
                 elif job['status'] in ('failed', 'cancelled', 'paused', 'waiting_review'):
                     self.jobs.update(request_id, status='failed', error='pipeline_' + job['status'])
+                else:
+                    self._progress(request_id, packet)
             except InputError:
                 pass
         return self._public(self.jobs.get(request_id))
 
+    def _progress(self, request_id, packet):
+        """Finished steps of the running job; read at most every 10 seconds, never needed for the result."""
+        if not hasattr(self.platform, 'progress') or time.time() - packet.get('progress_at', 0) < PROGRESS_SECONDS:
+            return
+        try:
+            progress = self.platform.progress(packet['job_id'])
+        except InputError:
+            return
+        self.jobs.update(request_id, progress=progress, progress_at=time.time())
+
     @staticmethod
     def _public(packet):
-        return {k: v for k, v in packet.items() if k != 'original'}
+        return {k: v for k, v in packet.items() if k not in ('original', 'progress_at')}

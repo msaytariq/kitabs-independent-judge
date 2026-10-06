@@ -2,6 +2,14 @@
 // A missing key falls back to English; tests/arabic.test.mjs keeps the table complete.
 export const AR: Record<string, string> = {
   "Hadith takhrij check": "فحص تخريج الأحاديث",
+  "translation": "الترجمة",
+  "audit": "التدقيق",
+  "editing": "التحرير",
+  "proofreading": "التصحيح",
+  "assembly": "التجميع",
+  "Preparation": "التحضير",
+  "Fragments: translation, audit, editing, proofreading": "الأجزاء: الترجمة والتدقيق والتحرير والتصحيح",
+  "Preparing the source": "تحضير الأصل",
   "Uploading the source": "تحميل الأصل",
   "Autopilot is running. You can close this page.": "الطيار الآلي يعمل. يمكنك إغلاق هذه الصفحة.",
   "The Kitabs.ai pipeline translates the source: translator, audit, editor, proofreader, apparatus and assembly. Edits are accepted automatically, and B appears here.": "يترجم خط معالجة Kitabs.ai الأصل: المترجم والتدقيق والمحرِّر والمصحِّح والجهاز العلمي والتجميع. تُقبَل التعديلات آليًّا، وتظهر B هنا.",
@@ -239,6 +247,7 @@ export const AR: Record<string, string> = {
 export const AR_PATTERNS: [RegExp, string][] = [
   [/^wrong: (\d+)$/, 'خاطئة: {0}'],
   [/^done: (\d+)$/, 'منجزة: {0}'],
+  [/^Fragment (\d+) of (\d+)$/, 'الجزء {0} من {1}'],
   [/^breaks: (\d+) of (\d+)$/, 'انقطاعات: {0} من {1}'],
   [/^remaining: (\d+)$/, 'متبقية: {0}'],
   [/^(\d+) of the demonstration launches remain\.$/, 'التشغيلات المتبقية للعرض: {0}.'],

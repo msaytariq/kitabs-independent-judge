@@ -131,3 +131,17 @@ def test_a_file_source_is_sent_as_the_original_file_and_kitabs_text_is_the_sourc
     # Without a judge source, the platform source text of the job is the source of the comparison.
     result = adapter(packets()).completed('j', None)
     assert result['source'] == 'source' and result['source_sha256'] == text_hash('source')
+
+
+def test_progress_reads_the_job_and_its_artifacts_without_payloads_in_the_answer():
+    from independent_judge.infrastructure.kitabs_pipeline import KitabsPipeline
+    def handle(request):
+        if request.url.path.endswith('/artifacts'):
+            return httpx.Response(200, json={'artifacts': [
+                {'kind': 'chunks', 'stageId': 'chunking', 'chunkId': None, 'payload': {'chunks': [{'id': 'a'}, {'id': 'b'}]}},
+                {'kind': 'translated_chunk', 'stageId': 'translator', 'chunkId': 'a', 'payload': {'text': 'long'}}]})
+        return httpx.Response(200, json={'job': {'id': 'job', 'status': 'running', 'currentStage': 'audit'}})
+    port = KitabsPipeline('https://platform.example/api', 'test-only', transport=httpx.MockTransport(handle))
+    progress = port.progress('job')
+    assert (progress['chunk'], progress['chunks'], progress['stage']) == (1, 2, 'audit')
+    assert progress['percent'] == 17  # 1 preparation + 1 stage of 12 steps

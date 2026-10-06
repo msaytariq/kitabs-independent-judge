@@ -243,3 +243,26 @@ def test_the_source_limits_apply_to_a_pdf_before_any_paid_work(tmp_path):
             s.submit('big', Upload(b'3000', 'book.pdf', 'application/pdf'), 'ar', 'en')
         assert caught.value.code == 'scope_too_large' and port.creates == port.starts == 0
     finally: s.close()
+
+
+class PlatformWithProgress(Platform):
+    def __init__(self): super().__init__(); self.reads = 0
+    def start(self, job_id): self.starts += 1  # the job keeps running
+    def progress(self, job_id):
+        self.reads += 1
+        return {'percent': 35, 'stage': 'audit', 'chunk': 2, 'chunks': 3, 'steps': []}
+
+
+def test_a_running_launch_shows_the_kitabs_progress_and_reads_it_at_most_every_10_seconds(tmp_path):
+    port = PlatformWithProgress()
+    s = service(tmp_path, port)
+    try:
+        submit(s)
+        for _ in range(100):
+            if s.status('r')['status'] == 'running': break
+            time.sleep(.01)
+        first = s.status('r')
+        assert first['progress']['percent'] == 35 and first['progress']['chunk'] == 2
+        s.status('r')
+        assert port.reads == 1
+    finally: s.close()
