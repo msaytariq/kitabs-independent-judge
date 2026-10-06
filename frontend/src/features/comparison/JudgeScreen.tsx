@@ -43,7 +43,7 @@ function JudgeContent(){
     {visible&&work.reference&&<>
       <section className="panel comparison-action"><div><h2>{mode==='own'?t('Materials ready','Материалы готовы'):view.title}</h2>
         <p className="muted">{t('Same source · same criteria for A and B','Один оригинал · одинаковые критерии для A и B')}</p>
-        {mode==='example'&&<ExampleProvenance description={view.description} provenance={view.provenance}/>}</div>
+        {mode==='example'&&<ExampleProvenance description={view.description} provenance={view.provenance} localized={view.localized}/>}</div>
         <CompareButton kind={work.reference.kind} hasReport={!!view.run} enabled={run.enabled}
           busy={busy} hasJob={!!run.job?.id} running={run.running} checking={run.checking} onClick={()=>void compare()}/>
         {mode==='own'&&!run.enabled&&!view.run&&<p className="notice">{t('Materials saved. Live judging requires an operator-configured model and approved budget.','Материалы сохранены. Живому судье нужна настроенная модель и утверждённый бюджет.')}</p>}

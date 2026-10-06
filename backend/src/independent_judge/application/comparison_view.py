@@ -36,7 +36,7 @@ def _view(record: dict) -> dict:
     seams = seam_check(texts) if rubric and {'a', 'b'} <= set(texts) else None
     jury = jury_table(rubric, coverage, takhrij, without_notes, effort, seams)
     return {key: record.get(key) for key in (
-        'id', 'title', 'description', 'scope', 'provenance', 'boundary_review',
+        'id', 'title', 'description', 'localized', 'scope', 'provenance', 'boundary_review',
         'apparatus', 'references', 'matched_example_id')} | {
         'summary': summary,
         'demonstration': record.get('demonstration') is True,

@@ -152,3 +152,16 @@ test('the example provenance shows where A and B come from in every locale',()=>
   assert.ok(ar.includes('الترجمة B') && ar.includes('engine 16c995ec'));
   assert.equal(show('ExampleProvenance',{description:null,provenance:null},'en'),'');
 });
+test('the example provenance speaks the interface language when the record gives it',()=>{
+  const provenance={a:'Gemini chat translation.',b:'Kitabs.ai autopilot on the production server.'};
+  const localized={ru:{description:'Арабский → английский',provenance:{a:'Перевод из чата Gemini.',b:'Автопилот Kitabs.ai на боевом сервере.'}},
+    ar:{description:'من العربية إلى الإنجليزية',provenance:{a:'ترجمة من محادثة Gemini.',b:'الطيار الآلي في Kitabs.ai على خادم الإنتاج.'}}};
+  const ru=show('ExampleProvenance',{description:'Arabic → English',provenance,localized});
+  assert.ok(ru.includes('Арабский → английский') && ru.includes('Перевод B: Автопилот Kitabs.ai на боевом сервере.') && !ru.includes('production server'));
+  const ar=show('ExampleProvenance',{description:'Arabic → English',provenance,localized},'ar');
+  assert.ok(ar.includes('من العربية إلى الإنجليزية') && ar.includes('الطيار الآلي في Kitabs.ai'));
+  const en=show('ExampleProvenance',{description:'Arabic → English',provenance,localized},'en');
+  assert.ok(en.includes('Arabic → English') && en.includes('Translation B: Kitabs.ai autopilot on the production server.'));
+  const partial=show('ExampleProvenance',{description:'Arabic → English',provenance,localized:{ru:{description:'Только описание'}}});
+  assert.ok(partial.includes('Только описание') && partial.includes('Перевод B: Kitabs.ai autopilot on the production server.'));
+});

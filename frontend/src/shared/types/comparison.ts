@@ -24,7 +24,9 @@ export type SideSummary = {candidates: number | null; text_candidates: number | 
 export type GeneratedApparatusEvidence = {artifact_sha256:string;label_ru:string;scope_label_ru:string;
   quality_status:'not_adjudicated'; groups:{id:string;title_ru:string;purpose_ru:string;count:number;
     examples:{text:string;start:number;end:number;sha256:string}[]}[]};
+export type LocalizedExampleText = {description?: string; provenance?: Record<string, string>};
 export type ComparisonView = {id: string; title: string; description: string; scope: Scope;
+  localized?: Partial<Record<'ru'|'ar', LocalizedExampleText>> | null;
   demonstration?:boolean;ratings:Ratings;decision_effort:DecisionEffort;
   rubric?:RubricResult|null;rubric_protocol?:boolean;reference_coverage?:ReferenceCoverage|null;processing_effort?:ProcessingEffort;
   jury?:JuryTable|null;effort_reduction?:EffortReduction|null;jury_summary?:JurySummary|null;case_study?:CaseStudy|null;second_judge?:SecondOpinion|null;takhrij?:TakhrijCheck|null;edition?:Edition|null;

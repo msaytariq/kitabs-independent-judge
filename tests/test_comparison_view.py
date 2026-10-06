@@ -3,6 +3,7 @@ from copy import deepcopy
 import json
 from fastapi.testclient import TestClient
 from independent_judge.api.app import create_app
+from independent_judge.application.comparison_view import _view
 from independent_judge.domain.scope import text_hash
 from test_comparison_summary import record
 
@@ -100,3 +101,10 @@ def test_generated_apparatus_is_positive_evidence_without_changing_findings(tmp_
         sidecar.write_text(json.dumps(evidence))
         assert client.get('/api/examples/example').status_code == 422
     assert path.read_bytes() == original
+
+
+def test_localized_description_and_provenance_reach_the_view():
+    data = record()
+    data['localized'] = {'ru': {'description': 'Арабский → английский', 'provenance': {'a': 'Чат', 'b': 'Автопилот'}},
+                         'ar': {'description': 'من العربية إلى الإنجليزية'}}
+    assert _view(data)['localized'] == data['localized']
