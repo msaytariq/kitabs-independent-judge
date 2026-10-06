@@ -9,9 +9,11 @@ Link: <https://app.kitabs.ai/judge>
 
 ## Use a saved example (no upload, no cost)
 
-1. Open the link. Click **Example**.
-2. Select an example. Click **Show comparison**.
-3. Read the table from top to bottom (see "What the screen shows").
+1. Open the link. The screen opens on **Example** and shows the result of the
+   first example at once.
+2. To open the other example, select it in the list next to the tabs.
+3. Read the result from top to bottom, or use the section menu at the top of the
+   screen: **Result**, **Scores**, **Errors**, **Sources**, **Edition**, **Method**.
 
 Each example has an Arabic source of about 5 to 7 pages with Quran verses and
 hadith. Translation B comes from the Kitabs.ai pipeline (Autopilot, no manual
@@ -76,6 +78,10 @@ The verse and hadith rows show the part of the source quotations that the
 translation contains. A quotation counts only when the judge gives the exact
 sentence and the code finds this sentence in the translation. The total is the
 mean of all rows.
+
+Under the score table, the block **How the total is made** gives the sum and the
+mean with the numbers of the open example. The full method, with the definition
+of each level of each criterion: [rating-method.md](rating-method.md).
 
 ### Critical errors
 
