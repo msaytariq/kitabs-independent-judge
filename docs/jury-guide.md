@@ -70,6 +70,21 @@ translation contains. A quotation counts only when the judge gives the exact
 sentence and the code finds this sentence in the translation. The total is the
 mean of all rows.
 
+### Scholarly apparatus
+
+The judge grades the apparatus as a scholarly edition. The same rule applies to
+A and B, and the judge does not know which system made each translation.
+
+- Level 5 needs all notes of the source, separate from the author's text as
+  anchored notes, each note at the correct place.
+- Notes that stay inside the author's text get level 3 or lower. A note that
+  interrupts an author's sentence is also a readability defect.
+- Takhrij and editor notes that the source prints inside the text are notes,
+  not author text.
+- An added note, glossary or person index is a strength only when it is
+  correct. A wrong or invented added note is a defect. Length alone gives no
+  points.
+
 ### Sources in the original
 
 The code finds each Quran verse of the source in the Quran text
