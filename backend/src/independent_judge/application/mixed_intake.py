@@ -24,7 +24,9 @@ class MixedIntake:
             if item['kind'] == 'file':
                 uploads.append(files[role])
             elif item['kind'] == 'text':
-                uploads.append(Upload(item['value'].encode('utf-8'), role + '.txt', 'text/plain'))
+                # A browser sends form line breaks as CRLF; the text on the screen has LF.
+                text = item['value'].replace('\r\n', '\n')
+                uploads.append(Upload(text.encode('utf-8'), role + '.txt', 'text/plain'))
             else:
                 remote = self.retriever.fetch(item['value'])
                 uploads.append(Upload(remote.content, remote.filename, remote.content_type, remote.provenance))

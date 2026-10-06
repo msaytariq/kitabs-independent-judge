@@ -79,3 +79,16 @@ def test_mixed_intake_saves_url_provenance_and_rejects_partial_triples(tmp_path)
         assert saved['materials']['a']['provenance']['final_url'] == 'https://example.org/a.txt'
         assert saved['materials']['b']['text'] == 'Translation B.'
         assert client.post('/api/comparisons/mixed', data={'source_kind':'text'}).status_code == 422
+
+
+def test_pasted_text_keeps_the_line_breaks_of_the_screen(tmp_path):
+    # A browser sends the line breaks of a form field as CRLF; the screen and the Kitabs text use LF.
+    from fastapi.testclient import TestClient
+    from independent_judge.api.app import create_app
+    with TestClient(create_app(tmp_path)) as client:
+        result = client.post('/api/comparisons/mixed', data={
+            'source_kind': 'text', 'source_value': 'سطر\r\nسطر', 'a_kind': 'text', 'a_value': 'A\r\nA',
+            'b_kind': 'text', 'b_value': 'B', 'source_language': 'ar', 'target_language': 'en'})
+        assert result.status_code == 201, result.text
+        saved = client.get('/api/comparisons/' + result.json()['id']).json()
+        assert saved['materials']['source']['text'] == 'سطر\nسطر' and saved['materials']['a']['text'] == 'A\nA'
