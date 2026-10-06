@@ -1,7 +1,8 @@
 """Takhrij accuracy: do the references of a translation agree with the source and the libraries?
 
-The source gives the units: each Quran verse that it quotes, each hadith collection that it names
-and each numbered hadith reference. A translation delivers a unit when it gives the same reference.
+Takhrij is the hadith part: each hadith collection that the source names and each numbered hadith
+reference. Verse references are counted apart (key 'verses'): each Quran verse that the source quotes.
+A translation delivers a unit when it gives the same reference.
 A reference that the source does not support is wrong: a verse that the source does not quote or a
 hadith number whose text is not in the source. A collection that the source does not name is correct
 only when the library finds a hadith of the source in it; otherwise it stays unchecked.
@@ -13,7 +14,7 @@ from independent_judge.domain.arabic_text import folded
 from independent_judge.domain.hadith_matching import correspondence
 from independent_judge.domain.reference_detection import detect_references
 
-VERSION = 'takhrij-v1'
+VERSION = 'takhrij-v2'
 NAMES = {'bukhari': 'Sahih al-Bukhari', 'muslim': 'Sahih Muslim', 'abudawud': 'Sunan Abi Dawud',
          'tirmidhi': "Jami' at-Tirmidhi", 'nasai': "Sunan an-Nasa'i", 'ibnmajah': 'Sunan Ibn Majah',
          'malik': 'Muwatta Malik', 'ahmad': 'Musnad Ahmad', 'hakim': 'al-Mustadrak of al-Hakim',
@@ -139,14 +140,15 @@ def _verse_units(verses: list[str]) -> list[tuple[int, int, int, str]]:
 def _side(source_refs: dict, verses: list, quotes: list[str], text: str, lookup, quoted, found_in) -> dict:
     found = translation_takhrij(text)
     items, delivered, wrong = [], 0, 0
+    verse_counts = {'delivered': 0, 'wrong': 0}
     cited = [(r['surah'], r['ayah']) for r in found['quran']]
     for chapter, first, last, label in verses:
         hit = any(s == chapter and first <= a <= last for s, a in cited)
-        delivered += hit
+        verse_counts['delivered'] += hit
         items.append({'kind': 'quran', 'reference': f'Quran {label}', 'status': 'correct' if hit else 'missing'})
     for s, a in cited:
         if not any(s == c and f <= a <= l for c, f, l, _ in verses) and not quoted(s, a):
-            wrong += 1
+            verse_counts['wrong'] += 1
             items.append({'kind': 'quran', 'reference': f'Quran {s}:{a}', 'status': 'wrong'})
     def verified(key):
         texts = lookup(*key)
@@ -182,7 +184,7 @@ def _side(source_refs: dict, verses: list, quotes: list[str], text: str, lookup,
         # (al-Bukhari's hadith of Salman and Abu al-Darda in Qut al-Qulub), and no search finds it.
         status = 'correct' if key in found_in else 'unchecked'
         items.append({'kind': 'collection', 'reference': NAMES[key], 'status': status})
-    return {'delivered': delivered, 'wrong': wrong, 'items': items}
+    return {'delivered': delivered, 'wrong': wrong, 'items': items}, verse_counts
 
 
 def takhrij_check(source: str, translations: dict[str, str], verses: list[str], lookup, quoted=None,
@@ -195,9 +197,11 @@ def takhrij_check(source: str, translations: dict[str, str], verses: list[str], 
     quoted = quoted or (lambda surah, ayah: False)
     source_refs = source_takhrij(source)
     units = _verse_units(verses)
-    total = len(units) + len(source_refs['collections']) + len(source_refs['numbered'])
-    if not total:
+    total = len(source_refs['collections']) + len(source_refs['numbered'])
+    if not total and not units:
         return None
     quotes = [r['quote'] for r in detect_references(source) if r['kind'] != 'quran']
-    return {'version': VERSION, 'total': total,
-            **{side: _side(source_refs, units, quotes, translations.get(side, ''), lookup, quoted, found_in) for side in ('a', 'b')}}
+    sides = {side: _side(source_refs, units, quotes, translations.get(side, ''), lookup, quoted, found_in)
+             for side in ('a', 'b')}
+    return {'version': VERSION, 'total': total, **{side: hadith for side, (hadith, _) in sides.items()},
+            'verses': {'total': len(units), **{side: verses for side, (_, verses) in sides.items()}}}

@@ -20,7 +20,7 @@ or the user can start the Kitabs.ai pipeline from the Judge screen.
 | Measure | Screen section |
 |---|---|
 | Quality | A table of six criteria (accuracy, completeness, terminology, readability, assembly integrity, scholarly apparatus) with points 0–100 for A and B, a total and a winner |
-| Text accuracy | Rows "Quran verses in the translation", "Hadith in the translation" and "Takhrij"; the sections "Takhrij check" and "Sources in the original" |
+| Text accuracy | Rows "Quran verses in the translation", "Hadith in the translation", "Hadith takhrij" and "Verse references"; the sections "Hadith takhrij check", "Verse reference check" and "Sources in the original" |
 | Effort reduction | "Editing to publication": edits that remain, editor minutes and the saving in percent |
 | Bias mitigation | "Second judge": a model of a different family grades the same criteria |
 | Case study | "What the judge caught": source quote, translation quote and explanation |

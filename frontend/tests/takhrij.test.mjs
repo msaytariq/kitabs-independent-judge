@@ -14,7 +14,10 @@ const page=(locale,element)=>render(React.createElement(JudgeLocale,{initial:loc
 test('the takhrij check lists wrong and missing references for each translation',()=>{
   const {TakhrijCheck}=require('../src/features/comparison/TakhrijCheck.tsx');
   const html=page('en',React.createElement(TakhrijCheck,{check}));
-  assert.ok(html.includes('Takhrij check'));
+  // Hadith takhrij and verse references are two separate checks.
+  assert.ok(html.includes('Hadith takhrij check') && html.includes('Verse reference check'));
+  assert.ok(html.indexOf('Quran 16:42') > html.indexOf('Verse reference check'));
+  assert.ok(html.indexOf('Sahih Muslim') < html.indexOf('Verse reference check'));
   assert.ok(html.includes('Quran 16:42') && html.includes('Wrong'));
   assert.ok(html.includes('Missing') && html.includes('Sahih Muslim'));
   assert.ok(html.includes('As in the source'));
@@ -26,7 +29,7 @@ test('the takhrij row shows correct and wrong references',()=>{
   const jury={version:'points-v1',winner:'b',totals:{a:0,b:100},rows:[{key:'takhrij',kind:'takhrij',a:0,b:100,
     delivered:{a:1,b:3},wrong:{a:1,b:0},total:3}]};
   const html=page('en',React.createElement(RubricTable,{result,jury}));
-  assert.ok(html.includes('Takhrij: references to verses and hadith collections'));
+  assert.ok(html.includes('Hadith takhrij: collections and hadith numbers'));
   assert.ok(html.includes('1 of 3') && html.includes('wrong: 1'));
   const arabicHtml=page('ar',React.createElement(RubricTable,{result,jury}));
   assert.ok(arabicHtml.includes('خاطئة: 1'));

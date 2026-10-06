@@ -14,15 +14,15 @@ LABELS = {
     'en': {'accuracy': 'accuracy', 'completeness': 'completeness', 'terminology': 'terminology',
            'readability': 'readability', 'seamlessness': 'assembly integrity',
            'apparatus': 'scholarly apparatus', 'quran': 'Quran verses', 'hadith': 'hadith',
-           'takhrij': 'takhrij references'},
+           'takhrij': 'hadith takhrij', 'verse_refs': 'verse references'},
     'ru': {'accuracy': 'точность', 'completeness': 'полнота', 'terminology': 'терминология',
            'readability': 'читаемость', 'seamlessness': 'целостность сборки',
            'apparatus': 'научный аппарат', 'quran': 'аяты Корана', 'hadith': 'хадисы',
-           'takhrij': 'тахридж'},
+           'takhrij': 'тахридж хадисов', 'verse_refs': 'ссылки на аяты'},
     'ar': {'accuracy': 'الدقة', 'completeness': 'الاكتمال', 'terminology': 'المصطلحات',
            'readability': 'سهولة القراءة', 'seamlessness': 'سلامة التجميع',
            'apparatus': 'الجهاز العلمي', 'quran': 'آيات القرآن', 'hadith': 'الأحاديث',
-           'takhrij': 'التخريج'},
+           'takhrij': 'تخريج الأحاديث', 'verse_refs': 'الإحالات إلى الآيات'},
 }
 PHRASES = {
     'en': {'tie': 'The translations are equal: {a} points each.',
@@ -50,13 +50,21 @@ def _percent(found: int, total: int) -> int:
     return _round(100 * found / total)
 
 
+def _reference_groups(takhrij: dict | None) -> list[tuple[str, dict]]:
+    """Hadith takhrij and verse references are separate rows; a group without units gives no row."""
+    if not takhrij:
+        return []
+    groups = [('takhrij', takhrij), ('verse_refs', takhrij.get('verses'))]
+    return [(key, group) for key, group in groups if group and group.get('total')]
+
+
 def sides_without_notes(structural: dict | None, takhrij: dict | None) -> set:
     """Sides that give no anchored note although the source gives references to deliver.
 
     The code counts the notes (apparatus_inventory); no model takes part. References
     inside the author's sentences are not an apparatus.
     """
-    if not structural or not takhrij or not takhrij.get('total'):
+    if not structural or not _reference_groups(takhrij):
         return set()
     return {s for s in ('a', 'b') if not ((structural.get(s) or {}).get('inventory') or {}).get('notes')}
 
@@ -82,13 +90,13 @@ def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None 
             rows.append({'key': key, 'kind': 'coverage', 'a': _percent(counts['a'], counts['total']),
                          'b': _percent(counts['b'], counts['total']),
                          'found': {'a': counts['a'], 'b': counts['b']}, 'total': counts['total']})
-    if takhrij and takhrij.get('total'):
+    for key, group in _reference_groups(takhrij):
         # A wrong reference cancels a delivered one: a reader cannot tell which of them to trust.
-        rows.append({'key': 'takhrij', 'kind': 'takhrij',
-                     **{s: _percent(max(0, takhrij[s]['delivered'] - takhrij[s]['wrong']), takhrij['total'])
+        rows.append({'key': key, 'kind': 'takhrij',
+                     **{s: _percent(max(0, group[s]['delivered'] - group[s]['wrong']), group['total'])
                         for s in ('a', 'b')},
-                     'delivered': {s: takhrij[s]['delivered'] for s in ('a', 'b')},
-                     'wrong': {s: takhrij[s]['wrong'] for s in ('a', 'b')}, 'total': takhrij['total']})
+                     'delivered': {s: group[s]['delivered'] for s in ('a', 'b')},
+                     'wrong': {s: group[s]['wrong'] for s in ('a', 'b')}, 'total': group['total']})
     # The total compares like with like: only rows with a value for both sides.
     both = [r for r in rows if r['a'] is not None and r['b'] is not None]
     totals = {s: _round(sum(r[s] for r in both) / len(both)) if both else None for s in ('a', 'b')}
@@ -111,7 +119,7 @@ def effort_reduction(rubric: dict | None, coverage: dict | None, processing: dic
         review_seconds = measured.get('simulated_seconds') or 0
         review = _round(review_seconds / 60)
         # Each reference that is missing or wrong is one edit: the editor adds or corrects it.
-        references = (takhrij['total'] - takhrij[side]['delivered'] + takhrij[side]['wrong']) if takhrij else 0
+        references = sum(g['total'] - g[side]['delivered'] + g[side]['wrong'] for _, g in _reference_groups(takhrij))
         edits = defects + missing + references
         # Applied audit and editor edits with receipts: work that an editor does not have to do.
         done = (measured.get('audit_operations') or 0) + (measured.get('editor_operations') or 0)

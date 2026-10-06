@@ -42,14 +42,17 @@ def test_correct_wrong_and_missing_references_are_counted():
     bad = ('Narrated by al-Bukhari (5971). Narrated by Muslim. And among His signs (Quran 16:42). '
            'Recorded by Abu Dawud.')
     result = takhrij_check(SOURCE, {'a': bad, 'b': good}, VERSES, lookup, found_in={'muslim'})
-    assert result['total'] == 6  # 1 verse + 4 collections + 1 numbered hadith
+    # Takhrij is about hadith only: 4 collections + 1 numbered hadith. Verse references are counted apart.
+    assert result['total'] == 5 and result['verses']['total'] == 1
     b = result['b']
-    assert (b['delivered'], b['wrong']) == (6, 0)
+    assert (b['delivered'], b['wrong']) == (5, 0)
+    assert (result['verses']['b']['delivered'], result['verses']['b']['wrong']) == (1, 0)
     a = result['a']
     # Muslim is right. Wrong: a number of a hadith that is not in the source (its collection is
-    # judged by the number, not twice) and a verse that the source does not quote. Abu Dawud, which
-    # the source does not name, stays unchecked: the code cannot prove it wrong.
-    assert (a['delivered'], a['wrong']) == (1, 2)
+    # judged by the number, not twice). Abu Dawud, which the source does not name, stays unchecked:
+    # the code cannot prove it wrong. The verse that the source does not quote is a wrong verse reference.
+    assert (a['delivered'], a['wrong']) == (1, 1)
+    assert (result['verses']['a']['delivered'], result['verses']['a']['wrong']) == (0, 1)
     assert ('Sunan Abi Dawud', 'unchecked') in {(i['reference'], i['status']) for i in a['items']}
     statuses = {(i['reference'], i['status']) for i in a['items']}
     assert ('Sahih al-Bukhari 5971', 'wrong') in statuses
@@ -57,7 +60,7 @@ def test_correct_wrong_and_missing_references_are_counted():
     assert ("Sunan an-Nasa'i 3053", 'missing') in statuses
     assert ("Sunan an-Nasa'i 3053", 'correct') in {(i['reference'], i['status']) for i in b['items']}
     assert ('Quran 30:21', 'missing') in statuses
-    assert result['version'] == 'takhrij-v1'
+    assert result['version'] == 'takhrij-v2'
 
 
 def test_a_number_outside_the_libraries_is_unchecked_not_wrong():
@@ -78,9 +81,9 @@ def test_a_verse_of_a_quoted_passage_is_not_wrong_when_the_source_quotes_it():
     source = '﴿قال إنما أشكو بثي وحزني إلى الله﴾ [يوسف: ١٢/٨٤-٨٧]'
     text = 'I complain of my grief only to Allah (12:86).'
     alone = takhrij_check(source, {'a': text, 'b': ''}, ['12:84'], lookup)
-    assert alone['a']['wrong'] == 1
+    assert alone['verses']['a']['wrong'] == 1 and alone['total'] == 0
     passage = takhrij_check(source, {'a': text, 'b': ''}, ['12:84'], lookup, quoted=lambda s, a: (s, a) == (12, 86))
-    assert passage['a']['wrong'] == 0
+    assert passage['verses']['a']['wrong'] == 0
 
 
 def test_a_range_cites_every_verse_in_it():

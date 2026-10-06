@@ -1,16 +1,20 @@
 // Arabic interface text, keyed by the English text of each t(en, ru) call.
 // A missing key falls back to English; tests/arabic.test.mjs keeps the table complete.
 export const AR: Record<string, string> = {
-  "Takhrij: references to verses and hadith collections": "التخريج: الإحالات إلى الآيات وكتب الحديث",
-  "Takhrij check": "فحص التخريج",
+  "Hadith takhrij check": "فحص تخريج الأحاديث",
+  "Verse reference check": "فحص الإحالات إلى الآيات",
+  "Hadith takhrij: collections and hadith numbers": "تخريج الأحاديث: الكتب وأرقام الأحاديث",
+  "Verse references: surah and verse numbers": "الإحالات إلى الآيات: أرقام السور والآيات",
+  "The code reads each hadith collection and hadith number in A and B and compares it with the source. It opens each hadith number in the library and compares the hadith text with the source. No model takes part.": "يقرأ البرنامج في A وB كل كتاب حديث ورقم حديث ويقارنه بالأصل. ويفتح كل رقم حديث في المكتبة ويقارن نص الحديث بالأصل. لا يشارك أي نموذج.",
+  "A hadith reference is wrong when the hadith under that number is not in the source. A collection that the source does not name is correct only when the library finds a hadith of the source in it.": "تكون الإحالة إلى الحديث خاطئة إذا لم يكن الحديث الذي تحت ذلك الرقم في الأصل. ولا يُعدّ الكتاب الذي لا يذكره الأصل صحيحًا إلا إذا وجدت المكتبة فيه حديثًا من الأصل.",
+  "The code reads each surah and verse number in A and B and compares it with the verses that the source quotes. No model takes part.": "يقرأ البرنامج في A وB كل رقم سورة وآية ويقارنه بالآيات التي يقتبسها الأصل. لا يشارك أي نموذج.",
+  "A verse reference is wrong when the source does not quote that verse.": "تكون الإحالة إلى الآية خاطئة إذا لم يقتبس الأصل تلك الآية.",
+  "The takhrij and verse reference rows: correct references less wrong references, as a part of the references in the source.": "صفّا التخريج والإحالات إلى الآيات: الإحالات الصحيحة ناقص الخاطئة، بوصفها نسبة من إحالات الأصل.",
   "Wrong": "خاطئة",
   "Missing": "غير موجودة في الترجمة",
   "As in the source; the library has a different text under this number": "كما في الأصل؛ وفي المكتبة نص آخر تحت هذا الرقم",
   "Not checked: the code cannot open this reference": "لم تُفحص: لا يستطيع البرنامج فتح هذه الإحالة",
   "Correct": "صحيحة",
-  "The code reads each reference to a Quran verse or a hadith collection in A and B and compares it with the source. It opens each hadith number in the library and compares the hadith text with the source. No model takes part.": "يقرأ البرنامج في A وB كل إحالة إلى آية أو كتاب حديث ويقارنها بالأصل. ويفتح كل رقم حديث في المكتبة ويقارن نص الحديث بالأصل. لا يشارك أي نموذج.",
-  "A reference is wrong when the source does not quote that verse or when the hadith under that number is not in the source. A collection that the source does not name is correct only when the library finds a hadith of the source in it.": "تكون الإحالة خاطئة إذا لم يقتبس الأصل تلك الآية أو لم يكن الحديث الذي تحت ذلك الرقم في الأصل. ولا يُعدّ الكتاب الذي لا يذكره الأصل صحيحًا إلا إذا وجدت المكتبة فيه حديثًا من الأصل.",
-  "The takhrij row: correct references less wrong references, as a part of the references in the source.": "صف التخريج: الإحالات الصحيحة ناقص الإحالات الخاطئة، بوصفها نسبة من إحالات الأصل.",
   "of them, missing or wrong references": "منها إحالات ناقصة أو خاطئة",
   '1,800-character units': 'وحدات من 1800 حرف',
   '100 — no defects; 75 — small local defects; 50 — notable defects; 25 — many substantive errors; 0 — meaning is systematically distorted.':

@@ -135,9 +135,9 @@ def test_effort_adds_one_edit_for_each_missing_or_wrong_reference():
 
 def test_takhrij_label_is_in_every_summary_language():
     summary = jury_summary(jury_table(rubric({'accuracy': (4, 4)}), None, TAKHRIJ))
-    assert summary['en'][1] == 'B is better in: takhrij references (+70).'
-    assert summary['ru'][1] == 'B лучше в: тахридж (+70).'
-    assert summary['ar'][1] == 'B أفضل في: التخريج (+70).'
+    assert summary['en'][1] == 'B is better in: hadith takhrij (+70).'
+    assert summary['ru'][1] == 'B лучше в: тахридж хадисов (+70).'
+    assert summary['ar'][1] == 'B أفضل في: تخريج الأحاديث (+70).'
 
 
 def test_a_translation_without_notes_gets_no_apparatus_points():
@@ -173,3 +173,29 @@ def test_the_edits_that_kitabs_already_applied_count_as_editor_work_done():
     # 69 applied edits x 3 minutes: an editor does not have to make them.
     assert (result['b']['done_edits'], result['b']['done_minutes']) == (69, 207)
     assert (result['a']['done_edits'], result['a']['done_minutes']) == (0, 0)
+
+
+SPLIT = {'version': 'takhrij-v2', 'total': 10, 'a': {'delivered': 3, 'wrong': 1, 'items': []},
+         'b': {'delivered': 9, 'wrong': 0, 'items': []},
+         'verses': {'total': 4, 'a': {'delivered': 1, 'wrong': 2}, 'b': {'delivered': 4, 'wrong': 0}}}
+
+
+def test_verse_references_have_their_own_row_apart_from_the_takhrij_of_hadith():
+    table = jury_table(rubric({'accuracy': (4, 4)}), None, SPLIT)
+    rows = {r['key']: r for r in table['rows']}
+    assert (rows['takhrij']['a'], rows['takhrij']['b']) == (20, 90)
+    assert rows['verse_refs'] == {'key': 'verse_refs', 'kind': 'takhrij', 'a': 0, 'b': 100,
+                                  'delivered': {'a': 1, 'b': 4}, 'wrong': {'a': 2, 'b': 0}, 'total': 4}
+    only_verses = SPLIT | {'total': 0}
+    keys = [r['key'] for r in jury_table(rubric({'accuracy': (4, 4)}), None, only_verses)['rows']]
+    assert 'takhrij' not in keys and 'verse_refs' in keys
+    effort = effort_reduction(rubric(PAIRS), None, None, SPLIT)
+    assert (effort['a']['references'], effort['b']['references']) == (8 + 5, 1)
+    summary = jury_summary(jury_table(rubric({'accuracy': (4, 4)}), None, SPLIT))
+    assert summary['ru'][1] == 'B лучше в: тахридж хадисов (+70), ссылки на аяты (+100).'
+
+
+def test_verse_references_alone_make_the_notes_due():
+    from independent_judge.domain.jury_points import sides_without_notes
+    structural = {'a': {'inventory': {'notes': 0}}, 'b': {'inventory': {'notes': 2}}}
+    assert sides_without_notes(structural, SPLIT | {'total': 0}) == {'a'}

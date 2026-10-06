@@ -48,7 +48,7 @@ The four rows below answer the four measures that our mentor asked for.
 | Measure | Where on the screen |
 |---|---|
 | Effort reduction | **Editing to publication**: edits that remain, editor minutes for A and B, and the saving in percent |
-| Text accuracy | Rows **Quran verses in the translation**, **Hadith in the translation** and **Takhrij**, the section **Takhrij check** and the section **Sources in the original** |
+| Text accuracy | Rows **Quran verses in the translation**, **Hadith in the translation**, **Hadith takhrij** and **Verse references**, the sections **Hadith takhrij check**, **Verse reference check** and **Sources in the original** |
 | Bias mitigation | **Second judge: bias check**: a second model of a different family grades the same criteria |
 | Live case study | **What the judge caught**: source quote, translation quote and explanation for each error |
 
@@ -96,29 +96,36 @@ It also finds each hadith in seven collections (fawazahmed0/hadith-api:
 al-Bukhari, Muslim, Abu Dawud, at-Tirmidhi, an-Nasa'i, Ibn Majah, Malik).
 When the source gives a wrong reference, the screen shows it.
 
-### Takhrij check
+### Hadith takhrij check
 
-The code reads each reference in A and B: a Quran verse such as (30:21), a hadith
-collection such as "Narrated by Muslim", or a hadith number such as "al-Nasa'i
-(3053)". No model takes part.
+Takhrij tells where a hadith is recorded: the collection and the hadith number.
+The code reads each hadith reference in A and B: a collection such as "Narrated
+by Muslim" or a hadith number such as "al-Nasa'i (3053)". No model takes part.
 
-- The source gives the references to deliver: each verse that it quotes, each
-  collection that it names and each hadith number that it gives.
+- The source gives the references to deliver: each collection that it names and
+  each hadith number that it gives.
 - A reference is correct when the translation gives the same reference.
-- A reference is wrong when the source does not quote that verse or when the
-  hadith under that number is not in the source.
+- A hadith number is wrong when the hadith under that number is not in the
+  source. The code opens each hadith number in the library and compares the
+  hadith text with the source. A number from a collection that no open library
+  has (for example Musnad Ahmad) stays unchecked.
 - A collection that the source does not name is correct only when the code finds
   a hadith of the source in it. Otherwise it stays unchecked: a source can retell
   a hadith in its own words, and the code cannot prove such a reference wrong.
-- The code opens each hadith number in the library and compares the hadith text
-  with the source. A number from a collection that no open library has (for
-  example Musnad Ahmad) stays unchecked.
 
-Row points = (correct references − wrong references) / references in the source.
+### Verse reference check
 
-In the saved example, A (Gemini) gives no hadith collection at all and lists the
-verse references in a summary instead of translating the verses. B keeps all
-collections and verse references but loses three hadith numbers of the source.
+Verse references are not takhrij, and the screen shows them in a separate
+section and row. The code reads each surah and verse number in A and B, for
+example (30:21), and compares it with the verses that the source quotes. A verse
+reference is wrong when the source does not quote that verse.
+
+Row points for both rows = (correct references − wrong references) / references
+in the source.
+
+In example 1, A (Gemini) gives no hadith collection at all (0 of 12); B gives 9
+of 12 and loses three hadith numbers of the source. In example 2, nadwa.ai gives
+10 wrong verse references of 12; B gives all 13 verse references of the source.
 
 ### Editing to publication
 

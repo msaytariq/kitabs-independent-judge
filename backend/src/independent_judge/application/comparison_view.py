@@ -12,6 +12,7 @@ from independent_judge.domain.processing_effort import processing_effort
 from independent_judge.domain.rubric_result import VERSION as RUBRIC_VERSION
 from independent_judge.domain.reference_coverage import coverage_counts
 from independent_judge.domain.case_study import case_study
+from independent_judge.domain.takhrij_check import VERSION as TAKHRIJ_VERSION
 from independent_judge.domain.jury_points import (effort_reduction, jury_summary, jury_table, second_opinion,
                                                   sides_without_notes)
 from independent_judge.application.local_evaluation import reference_key
@@ -76,7 +77,7 @@ class ComparisonViewService:
             # The reference key covers the texts, so a takhrij saved for them stays valid
             # when a newer check from an earlier code version has none.
             saved = (record.get('hadith') or {}).get('takhrij')
-            if newer and saved and not newer.get('takhrij'):
+            if newer and saved and (newer.get('takhrij') or {}).get('version') != TAKHRIJ_VERSION:
                 newer = newer | {'takhrij': saved}
             record = record | {'hadith': newer}
         return _view(record)

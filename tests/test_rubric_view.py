@@ -127,3 +127,17 @@ def test_a_newer_check_without_takhrij_keeps_the_saved_takhrij_of_the_same_texts
 
     view = ComparisonViewService(None, None, renderer=str, jobs=Jobs()).project(saved)
     assert view['hadith']['quran'] == {'found': 2} and view['takhrij'] == takhrij
+
+
+def test_a_cached_check_of_an_earlier_takhrij_version_keeps_the_saved_current_one():
+    from independent_judge.application.comparison_view import ComparisonViewService
+    saved_takhrij = {'version': 'takhrij-v2', 'total': 1, 'a': {'delivered': 0, 'wrong': 0, 'items': []},
+                     'b': {'delivered': 1, 'wrong': 0, 'items': []},
+                     'verses': {'total': 0, 'a': {'delivered': 0, 'wrong': 0}, 'b': {'delivered': 0, 'wrong': 0}}}
+    saved = record() | {'hadith': {'status': 'checked', 'takhrij': saved_takhrij}}
+
+    class Jobs:
+        def reference(self, key): return {'status': 'checked', 'takhrij': {'version': 'takhrij-v1', 'total': 3}}
+
+    view = ComparisonViewService(None, None, renderer=str, jobs=Jobs()).project(saved)
+    assert view['takhrij'] == saved_takhrij
