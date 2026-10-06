@@ -69,7 +69,7 @@ export const AR: Record<string, string> = {
     'يتلقى المحكِّمان النصوص دون أسماء المزوِّدين أو النماذج. لم تشارك عائلة المحكِّم الثاني في أي من الترجمتين ولا في التقييم الأول. صفّا الآيات والأحاديث مبنيان على اقتباسات متحقَّق منها ولا يُكرَّران.',
   'Candidates for review': 'مرشَّحات للمراجعة',
   'Change inputs': 'تغيير المدخلات',
-  'Check materials': 'فحص المواد',
+  'Continue to comparison': 'الانتقال إلى المقارنة',
   'Checking sources…': 'جارٍ فحص المصادر…',
   'Choose a file for each file input.': 'اختر ملفًا لكل حقل ملف.',
   'Close text with differences': 'نص قريب مع اختلافات',

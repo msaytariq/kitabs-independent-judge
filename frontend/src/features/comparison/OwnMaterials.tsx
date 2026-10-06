@@ -6,7 +6,7 @@ import {MaterialInput} from './MaterialInput';
 import {useJudgeLocale} from './JudgeLocale';
 import {inputWarning} from '../../shared/i18n/intake';
 import {KitabsAction} from './KitabsAction';
-type Props = {draft:Draft|null;busy:boolean;intake:(inputs:Inputs,files:Partial<Record<Role,File>>|null,methods?:Record<Role,InputMethod>,pipelineRequestId?:string)=>Promise<void>;
+type Props = {draft:Draft|null;busy:boolean;intake:(inputs:Inputs,files:Partial<Record<Role,File>>|null,methods?:Record<Role,InputMethod>,pipelineRequestId?:string,profile?:string)=>Promise<void>;
   prepare:(profile:string)=>Promise<void>;clearDraft:()=>void};
 export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
   const {t,locale}=useJudgeLocale();
@@ -30,7 +30,7 @@ export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
     <form onSubmit={e=>{e.preventDefault();setLocalError('');setConfirmed(false);
       if(bKitabs){setLocalError(t('Start the autopilot and wait for B, or select another input for B.','Запустите автопилот и дождитесь B или выберите для B другой способ ввода.'));return;}
       if((['source','a','b'] as const).some(r=>methods[r]==='file'&&!files[r])){setLocalError(t('Choose a file for each file input.','Выберите файл для каждого файлового поля.'));return;}
-      void intake(inputs,files,methods,pipelineRequestId);}}>
+      void intake(inputs,files,methods,pipelineRequestId,profile);}}>
       <div className="material-grid">{(['source','a','b'] as const).map(role=><MaterialInput key={role} role={role} busy={busy}
         method={role==='b'&&bKitabs?'kitabs':methods[role]} value={inputs[role]}
         setMethod={v=>{if(role==='b')setBKitabs(v==='kitabs');if(v!=='kitabs')setMethods({...methods,[role]:v});}}
@@ -44,6 +44,6 @@ export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
         <label>{t('Review profile','Профиль')}<select value={profile} onChange={e=>setProfile(e.target.value)}>
           <option value="general">{t('General','Общий')}</option><option value="islamic-scholarly">{t('Islamic scholarly texts','Исламская научная литература')}</option></select></label></details>
       <p className="muted">{t('TXT, MD, DOCX, HTML or selectable-text PDF · 20 MiB each · no OCR','TXT, MD, DOCX, HTML или PDF с текстовым слоем · по 20 МиБ · без OCR')}</p>
-      {localError&&<p role="alert">{localError}</p>}<button className="primary" disabled={busy}>{t('Check materials','Проверить материалы')}</button>
+      {localError&&<p role="alert">{localError}</p>}<button className="primary" disabled={busy}>{t('Continue to comparison','Перейти к сравнению')}</button>
     </form></section>;
 }
