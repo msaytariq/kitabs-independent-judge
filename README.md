@@ -20,7 +20,7 @@ or the user can start the Kitabs.ai pipeline from the Judge screen.
 | Measure | Screen section |
 |---|---|
 | Quality | A table of six criteria (accuracy, completeness, terminology, readability, assembly integrity, scholarly apparatus) with points 0–100 for A and B, a total and a winner |
-| Text accuracy | Rows "Quran verses in the translation" and "Hadith in the translation", and the section "Sources in the original" |
+| Text accuracy | Rows "Quran verses in the translation", "Hadith in the translation" and "Takhrij"; the sections "Takhrij check" and "Sources in the original" |
 | Effort reduction | "Editing to publication": edits that remain, editor minutes and the saving in percent |
 | Bias mitigation | "Second judge": a model of a different family grades the same criteria |
 | Case study | "What the judge caught": source quote, translation quote and explanation |
@@ -32,7 +32,7 @@ A quoted error counts only when the code finds the exact quotation in the text.
 
 | Example | Translation A | Total A | Total B (Kitabs.ai) | Winner, judge 1 / judge 2 |
 |---|---|---:|---:|---|
-| Islamic child education, chapter 5 | Gemini | 28 | 77 | B / B |
+| Islamic child education, chapter 5 | Gemini | 31 | 78 | B / B |
 
 Judge 1: Gemini 3.8 Flash. Judge 2: Grok 4.1 Fast.
 
@@ -106,4 +106,4 @@ Each change in the Git history is one commit with its tests.
 - The editing time uses assumptions (3 minutes for one edit by an editor,
   5 seconds to accept one edit that Kitabs.ai has already applied), not a
   measurement of a human editor.
-- The judge does not check the takhrij in the footnotes of a translation.
+- The takhrij check opens hadith numbers in seven open collections only; other numbers stay unchecked.

@@ -14,6 +14,15 @@ COLLECTIONS = {'bukhari': 'Sahih al-Bukhari', 'muslim': 'Sahih Muslim', 'abudawu
 MAX_BYTES = 64 * 1024 * 1024
 
 
+def _whole(value) -> int | None:
+    """'538.01' -> 538: references in books give the Abd al-Baqi number without the letter."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return int(number) if math.isfinite(number) and number > 0 else None
+
+
 class HadithLibrary:
     def __init__(self, directory: Path, *, collections=tuple(COLLECTIONS), transport=None):
         if not collections or any(c not in COLLECTIONS for c in collections):
@@ -22,6 +31,7 @@ class HadithLibrary:
         self.collections, self.transport = collections, transport
         self.lock = Lock()
         self.cached = None
+        self.numbers = None
 
     def records(self) -> list[dict]:
         with self.lock:
@@ -32,6 +42,19 @@ class HadithLibrary:
                 return self.cached
             except (httpx.HTTPError, OSError, ValueError, TypeError, KeyError) as exc:
                 raise LibraryUnavailable('Reference collection unavailable or invalid') from exc
+
+    def lookup(self, collection: str, number: int) -> list[str] | None:
+        """Texts under this number in either numbering; None when no library holds the collection."""
+        if collection not in self.collections:
+            return None
+        if self.numbers is None:
+            numbers = {}
+            for record in self.records():
+                key = record['id'].split(':', 1)[0]
+                for value in {record['number'], record.get('arabic_number')} - {None}:
+                    numbers.setdefault((key, int(value)), []).append(record['text'])
+            self.numbers = numbers
+        return self.numbers.get((collection, number), [])
 
     def _collection(self, collection: str) -> list[dict]:
         path = self.directory / f'ara-{collection}.json'
@@ -51,7 +74,8 @@ class HadithLibrary:
                 omitted += 1
                 continue
             records.append({'id': f'{collection}:{number}', 'collection': COLLECTIONS[collection],
-                            'number': number, 'text': text, 'edition': f'ara-{collection}',
+                            'number': number, 'arabic_number': _whole(item.get('arabicnumber')),
+                            'text': text, 'edition': f'ara-{collection}',
                             'url': f'{BASE}/ara-{collection}/{number}.json',
                             'reference': item.get('reference', {}),
                             'grades': item.get('grades', []),

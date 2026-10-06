@@ -6,7 +6,8 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
   const labels:Record<string,string>={accuracy:t('Accuracy','Точность'),completeness:t('Completeness','Полнота'),
     terminology:t('Terminology','Терминология'),readability:t('Readability','Читаемость'),
     seamlessness:t('Assembly integrity','Целостность сборки'),apparatus:t('Scholarly apparatus','Научный аппарат'),
-    quran:t('Quran verses in the translation','Аяты Корана в переводе'),hadith:t('Hadith in the translation','Хадисы в переводе')};
+    quran:t('Quran verses in the translation','Аяты Корана в переводе'),hadith:t('Hadith in the translation','Хадисы в переводе'),
+    takhrij:t('Takhrij: references to verses and hadith collections','Тахридж: ссылки на аяты и сборники хадисов')};
   const winners:Record<string,string>={a:t('Translation A is better','Лучше перевод A'),
     b:t('Translation B is better','Лучше перевод B'),tie:t('The translations are equal','Переводы равны')};
   const indexed=Object.fromEntries(result.criteria.map(row=>[row.criterion,row]));
@@ -19,6 +20,8 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
   </details>;
   const cell=(row:JuryRow,side:'a'|'b')=>{
     if(row.kind==='coverage') return <td key={side}>{points(row[side])}<br/><small>{t(`${row.found?.[side]} of ${row.total}`,`${row.found?.[side]} из ${row.total}`)}</small></td>;
+    if(row.kind==='takhrij') return <td key={side}>{points(row[side])}<br/><small>{t(`${row.delivered?.[side]} of ${row.total}`,`${row.delivered?.[side]} из ${row.total}`)}</small>
+      <br/><small>{t(`wrong: ${row.wrong?.[side]}`,`неверных: ${row.wrong?.[side]}`)}</small></td>;
     const source=indexed[row.key]?.[side];const level=row.level?.[side];
     return <td key={side}>{points(row[side])}{level!=null&&<><br/><small>{t(`level ${level} of 5`,`уровень ${level} из 5`)}</small></>}
       {source&&row[side]!==null&&evidence(source,side)}</td>;
@@ -34,5 +37,7 @@ export function RubricTable({result,jury,summary}:{result:RubricResult;jury:Jury
       '100 — замечаний нет; 75 — мелкие местные дефекты; 50 — заметные дефекты; 25 — много существенных ошибок; 0 — смысл систематически искажён.')}</p>
     <p className="muted">{t('An AI judge gives levels 1–5 with the same criteria for A and B: 1 = 0, 2 = 25, 3 = 50, 4 = 75, 5 = 100 points. The verse and hadith rows show the part of the source quotations found in the translation. The total is the mean of all rows.',
       'ИИ-судья выставляет уровни 1–5 по одинаковым критериям для A и B: 1 = 0, 2 = 25, 3 = 50, 4 = 75, 5 = 100 баллов. Строки аятов и хадисов — доля цитат оригинала, найденных в переводе. Итог — среднее всех строк.')}</p>
+    {jury.rows.some(row=>row.kind==='takhrij')&&<p className="muted">{t('The takhrij row: correct references less wrong references, as a part of the references in the source.',
+      'Строка тахриджа: верные ссылки минус неверные, как доля ссылок оригинала.')}</p>}
   </section>;
 }

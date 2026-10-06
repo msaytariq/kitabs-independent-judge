@@ -52,10 +52,12 @@ def test_effort_counts_defects_and_missing_quotations_and_the_kitabs_review_time
     result = effort_reduction(rubric(PAIRS, defects=(6, 1)), COVERAGE, effort)
     # A: 6 defects + 3 missing verses = 9 edits x 3 min = 27 min.
     # B: 1 defect = 3 min, plus 120 s of accepting Kitabs edits = 5 min.
-    assert result['a'] == {'edits': 9, 'defects': 6, 'missing_quotations': 3, 'review_minutes': 0, 'minutes': 27}
-    assert result['b'] == {'edits': 1, 'defects': 1, 'missing_quotations': 0, 'review_minutes': 2, 'minutes': 5}
+    assert result['a'] == {'edits': 9, 'defects': 6, 'missing_quotations': 3, 'references': 0,
+                           'review_minutes': 0, 'minutes': 27}
+    assert result['b'] == {'edits': 1, 'defects': 1, 'missing_quotations': 0, 'references': 0,
+                           'review_minutes': 2, 'minutes': 5}
     assert result['reduction_percent'] == 81  # 1 - 5/27
-    assert result['minutes_per_edit'] == 3 and result['version'] == 'effort-v1'
+    assert result['minutes_per_edit'] == 3 and result['version'] == 'effort-v2'
 
 
 def test_effort_reduction_is_not_shown_when_a_needs_no_work():
@@ -111,3 +113,28 @@ def test_summary_has_arabic_lines():
         'متساويتان في: المصطلحات.']
     tie = jury_summary(jury_table(rubric({'accuracy': (4, 4)}), None))
     assert tie['ar'][0] == 'الترجمتان متساويتان: 75 نقطة لكل منهما.'
+
+
+TAKHRIJ = {'version': 'takhrij-v1', 'total': 10, 'a': {'delivered': 3, 'wrong': 1, 'items': []},
+           'b': {'delivered': 9, 'wrong': 0, 'items': []}}
+
+
+def test_takhrij_row_counts_delivered_references_less_wrong_ones():
+    table = jury_table(rubric({'accuracy': (4, 4)}), None, TAKHRIJ)
+    row = next(r for r in table['rows'] if r['key'] == 'takhrij')
+    assert row == {'key': 'takhrij', 'kind': 'takhrij', 'a': 20, 'b': 90, 'delivered': {'a': 3, 'b': 9},
+                   'wrong': {'a': 1, 'b': 0}, 'total': 10}
+    assert table['totals'] == {'a': 48, 'b': 83}  # (75 + 20) / 2 and (75 + 90) / 2
+
+
+def test_effort_adds_one_edit_for_each_missing_or_wrong_reference():
+    result = effort_reduction(rubric(PAIRS, defects=(6, 1)), COVERAGE, None, TAKHRIJ)
+    assert result['a']['references'] == 8 and result['b']['references'] == 1  # 7 missing + 1 wrong; 1 missing
+    assert result['a']['edits'] == 6 + 3 + 8 and result['version'] == 'effort-v2'
+
+
+def test_takhrij_label_is_in_every_summary_language():
+    summary = jury_summary(jury_table(rubric({'accuracy': (4, 4)}), None, TAKHRIJ))
+    assert summary['en'][1] == 'B is better in: takhrij references (+70).'
+    assert summary['ru'][1] == 'B лучше в: тахридж (+70).'
+    assert summary['ar'][1] == 'B أفضل في: التخريج (+70).'

@@ -25,7 +25,8 @@ def _view(record: dict) -> dict:
     rubric = run.get('rubric') if rubric_protocol and run['status'] == 'completed' else None
     coverage = coverage_counts(record.get('hadith'), record.get('coverage') or (run or {}).get('coverage'))
     processing = processing_effort(record)
-    jury = jury_table(rubric, coverage)
+    takhrij = (record.get('hadith') or {}).get('takhrij')
+    jury = jury_table(rubric, coverage, takhrij)
     return {key: record.get(key) for key in (
         'id', 'title', 'description', 'scope', 'provenance', 'boundary_review',
         'apparatus', 'references', 'matched_example_id')} | {
@@ -39,7 +40,8 @@ def _view(record: dict) -> dict:
         'rubric_protocol': rubric_protocol,
         'reference_coverage': coverage,
         'jury': jury,
-        'effort_reduction': effort_reduction(rubric, coverage, processing),
+        'effort_reduction': effort_reduction(rubric, coverage, processing, takhrij),
+        'takhrij': takhrij,
         'jury_summary': jury_summary(jury),
         'case_study': case_study(rubric, processing),
         'second_judge': second_opinion(rubric, ', '.join(manifest.get('actual_models', [])), record.get('second_judge')),

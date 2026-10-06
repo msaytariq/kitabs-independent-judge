@@ -1,6 +1,17 @@
 // Arabic interface text, keyed by the English text of each t(en, ru) call.
 // A missing key falls back to English; tests/arabic.test.mjs keeps the table complete.
 export const AR: Record<string, string> = {
+  "Takhrij: references to verses and hadith collections": "التخريج: الإحالات إلى الآيات وكتب الحديث",
+  "Takhrij check": "فحص التخريج",
+  "Wrong": "خاطئة",
+  "Missing": "غير موجودة في الترجمة",
+  "As in the source; the library has a different text under this number": "كما في الأصل؛ وفي المكتبة نص آخر تحت هذا الرقم",
+  "Not checked: no open library has this collection": "لم تُفحص: هذا الكتاب غير موجود في المكتبات المفتوحة",
+  "Correct": "صحيحة",
+  "The code reads each reference to a Quran verse or a hadith collection in A and B and compares it with the source. It opens each hadith number in the library and compares the hadith text with the source. No model takes part.": "يقرأ البرنامج في A وB كل إحالة إلى آية أو كتاب حديث ويقارنها بالأصل. ويفتح كل رقم حديث في المكتبة ويقارن نص الحديث بالأصل. لا يشارك أي نموذج.",
+  "A reference is wrong when the source does not quote that verse, when the hadith under that number is not in the source, or when the source does not name that collection.": "تكون الإحالة خاطئة إذا لم يقتبس الأصل تلك الآية، أو لم يكن الحديث الذي تحت ذلك الرقم في الأصل، أو لم يذكر الأصل ذلك الكتاب.",
+  "The takhrij row: correct references less wrong references, as a part of the references in the source.": "صف التخريج: الإحالات الصحيحة ناقص الإحالات الخاطئة، بوصفها نسبة من إحالات الأصل.",
+  "of them, missing or wrong references": "منها إحالات ناقصة أو خاطئة",
   '1,800-character units': 'وحدات من 1800 حرف',
   '100 — no defects; 75 — small local defects; 50 — notable defects; 25 — many substantive errors; 0 — meaning is systematically distorted.':
     '100 — لا ملاحظات؛ 75 — عيوب موضعية صغيرة؛ 50 — عيوب ملحوظة؛ 25 — أخطاء جوهرية كثيرة؛ 0 — المعنى محرَّف على نحو منهجي.',
@@ -203,6 +214,7 @@ export const AR: Record<string, string> = {
 
 // Texts with values: the English pattern and its Arabic form; {0}, {1} keep their order.
 export const AR_PATTERNS: [RegExp, string][] = [
+  [/^wrong: (\d+)$/, 'خاطئة: {0}'],
   [/^(\d+) of the demonstration launches remain\.$/, 'التشغيلات المتبقية للعرض: {0}.'],
   [/^(\S+) of (\S+)$/, '{0} من {1}'],
   [/^(\S+) has no errors with quotations\.$/, 'لا أخطاء مع اقتباسات في {0}.'],

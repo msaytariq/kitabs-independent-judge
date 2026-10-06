@@ -115,3 +115,13 @@ def test_short_fully_matching_quotation_is_a_quran_verse():
                                Library(verses), Library(HADITH))
     assert [i['ayah'] for i in result['quran']['items']] == ['24:32']
     assert result['hadith']['total'] == 0
+
+
+def test_translation_references_are_checked_against_the_source():
+    texts = {'source': SOURCE, 'a': 'Narrated by Muslim. Give glad tidings to the patient (2:155). (Quran 9:1)', 'b': ''}
+    result = verify_references(texts, Library(VERSES), Library(HADITH))['takhrij']
+    assert result['version'] == 'takhrij-v1'
+    statuses = {(i['reference'], i['status']) for i in result['a']['items']}
+    assert {('Sahih Muslim', 'correct'), ('Quran 2:155', 'correct'), ('Quran 9:1', 'wrong'),
+            ("Jami' at-Tirmidhi", 'missing')} <= statuses
+    assert result['b']['delivered'] == 0

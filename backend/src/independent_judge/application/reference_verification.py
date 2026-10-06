@@ -1,7 +1,8 @@
 """Count Quran verses and hadith of the source that the reference texts contain."""
 import re
 from independent_judge.domain.hadith_matching import HadithIndex, FOUND
-from independent_judge.domain.quran_matching import QuranIndex, label_check
+from independent_judge.domain.quran_matching import QuranIndex, label_check, verse_quoted
+from independent_judge.domain.takhrij_check import takhrij_check
 from independent_judge.domain.reference_detection import detect_references
 from independent_judge.reference_ports import LibraryUnavailable
 
@@ -39,6 +40,8 @@ def verify_references(texts: dict[str, str], quran_library, hadith_library, *, q
         else:
             reports.append({k: item[k] for k in ('quote', 'start', 'end')} | hadith.match(item['quote']))
     found = [r for r in reports if r['status'] in FOUND]
+    takhrij = takhrij_check(source, texts, [a['ayah'] for a in ayat if a['status'] == 'found'],
+                            _lookup(hadith_library), verse_quoted(quran, source))
     by_collection = {}
     for report in found:
         name = report['candidates'][0].get('collection', '')
@@ -46,4 +49,15 @@ def verify_references(texts: dict[str, str], quran_library, hadith_library, *, q
     return base | {'status': 'checked',
                    'quran': {'found': sum(a['status'] == 'found' for a in ayat), 'total': len(ayat), 'items': ayat,
                              'label_differs': sum(a['label_status'] == 'label_differs' for a in ayat)},
-                   'hadith': {'found': len(found), 'total': len(reports), 'items': reports, 'by_collection': by_collection}}
+                   'hadith': {'found': len(found), 'total': len(reports), 'items': reports, 'by_collection': by_collection},
+                   'takhrij': takhrij}
+
+
+def _lookup(library):
+    """A library that cannot open a number leaves the reference unchecked, never wrong."""
+    def lookup(collection, number):
+        try:
+            return library.lookup(collection, number) if hasattr(library, 'lookup') else None
+        except LibraryUnavailable:
+            return None
+    return lookup

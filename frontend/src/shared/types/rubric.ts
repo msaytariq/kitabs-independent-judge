@@ -8,10 +8,11 @@ export type ProcessingSide={pipeline_seconds:number|null;audit_operations:number
   operations:{stage:string;chunk_id:string;edit_id:string;before:string;after:string}[]};
 export type ProcessingEffort={sides:Record<'a'|'b',ProcessingSide>;version:string};
 export type ReferenceCoverage=Record<'quran'|'hadith',{total:number;a:number;b:number}>;
-export type JuryRow={key:string;kind:'criterion'|'coverage';a:number|null;b:number|null;
-  level?:Record<'a'|'b',number|null>;found?:Record<'a'|'b',number>;total?:number};
+export type JuryRow={key:string;kind:'criterion'|'coverage'|'takhrij';a:number|null;b:number|null;
+  level?:Record<'a'|'b',number|null>;found?:Record<'a'|'b',number>;total?:number;
+  delivered?:Record<'a'|'b',number>;wrong?:Record<'a'|'b',number>};
 export type JuryTable={version:string;rows:JuryRow[];totals:Record<'a'|'b',number|null>;winner:'a'|'b'|'tie'|null};
-export type EffortSide={edits:number;defects:number;missing_quotations:number;review_minutes:number;minutes:number};
+export type EffortSide={edits:number;defects:number;missing_quotations:number;references?:number;review_minutes:number;minutes:number};
 export type EffortReduction={version:string;minutes_per_edit:number;reduction_percent:number|null;a:EffortSide;b:EffortSide};
 export type JurySummary={en:string[];ru:string[];ar?:string[]};
 export type CaughtDefect={id:string;criterion:string;source_quote:string;translation_quote:string;explanation_en:string;explanation_ru:string};
@@ -19,3 +20,7 @@ export type CaseStudy={a:CaughtDefect[];b:CaughtDefect[];kitabs_corrections:{sta
 export type JudgeTotals={model:string;totals:Record<'a'|'b',number|null>;winner:'a'|'b'|'tie'|null;run_id?:string|null};
 export type SecondOpinion={first:JudgeTotals;second:JudgeTotals;agree:boolean;
   rows:{key:string;first:Record<'a'|'b',number|null>;second:Record<'a'|'b',number|null>}[]};
+export type TakhrijItem={kind:'quran'|'hadith'|'collection';reference:string;
+  status:'correct'|'wrong'|'missing'|'as_in_source'|'unchecked'};
+export type TakhrijSide={delivered:number;wrong:number;items:TakhrijItem[]};
+export type TakhrijCheck={version:string;total:number;a:TakhrijSide;b:TakhrijSide};

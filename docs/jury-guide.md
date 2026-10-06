@@ -19,7 +19,7 @@ Kitabs.ai pipeline (Autopilot, no manual edits).
 
 | Example | Source | A | Total A | Total B | Winner (judge 1 / judge 2) |
 |---|---|---|---:|---:|---|
-| 1 | Islamic child education, chapter 5 | Gemini | 28 | 77 | B / B |
+| 1 | Islamic child education, chapter 5 | Gemini | 31 | 78 | B / B |
 
 ## Use your own texts
 
@@ -39,7 +39,7 @@ The four rows below answer the four measures that our mentor asked for.
 | Measure | Where on the screen |
 |---|---|
 | Effort reduction | **Editing to publication**: edits that remain, editor minutes for A and B, and the saving in percent |
-| Text accuracy | Rows **Quran verses in the translation** and **Hadith in the translation**, and the section **Sources in the original** |
+| Text accuracy | Rows **Quran verses in the translation**, **Hadith in the translation** and **Takhrij**, the section **Takhrij check** and the section **Sources in the original** |
 | Bias mitigation | **Second judge: bias check**: a second model of a different family grades the same criteria |
 | Live case study | **What the judge caught**: source quote, translation quote and explanation for each error |
 
@@ -69,9 +69,32 @@ It also finds each hadith in seven collections (fawazahmed0/hadith-api:
 al-Bukhari, Muslim, Abu Dawud, at-Tirmidhi, an-Nasa'i, Ibn Majah, Malik).
 When the source gives a wrong reference, the screen shows it.
 
+### Takhrij check
+
+The code reads each reference in A and B: a Quran verse such as (30:21), a hadith
+collection such as "Narrated by Muslim", or a hadith number such as "al-Nasa'i
+(3053)". No model takes part.
+
+- The source gives the references to deliver: each verse that it quotes, each
+  collection that it names and each hadith number that it gives.
+- A reference is correct when the translation gives the same reference.
+- A reference is wrong when the source does not quote that verse, when the
+  hadith under that number is not in the source, or when the source does not
+  name that collection.
+- The code opens each hadith number in the library and compares the hadith text
+  with the source. A number from a collection that no open library has (for
+  example Musnad Ahmad) stays unchecked.
+
+Row points = (correct references − wrong references) / references in the source.
+
+In the saved example, A (Gemini) gives no hadith collection at all and lists the
+verse references in a summary instead of translating the verses. B keeps all
+collections and verse references but loses three hadith numbers of the source.
+
 ### Editing to publication
 
-Edits that remain = errors with quotations + missing verses and hadith.
+Edits that remain = errors with quotations + missing verses and hadith +
+missing or wrong references.
 We assume 3 minutes for one edit by an editor. For B we also count 5 seconds to
 accept each edit that the Kitabs pipeline has already applied. These numbers are
 assumptions, not a time measurement of a human editor.
@@ -87,8 +110,9 @@ same winner.
 ## Limits
 
 - The grades are a machine assessment. An expert review is still necessary.
-- The judge does not check the takhrij in the footnotes of B (collection and
-  number of each hadith). The code checks the hadith of the source only.
+- The takhrij check opens hadith numbers in seven collections only (see "Sources
+  in the original"). Books often use another numbering; the code accepts both
+  numbers that the library gives for each hadith.
 - Model answers can change from run to run. Each saved example shows its run
   ID, model, cost and Git commit under **Method and provenance**.
 

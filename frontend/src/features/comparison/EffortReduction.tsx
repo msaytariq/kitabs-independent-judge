@@ -7,6 +7,7 @@ export function EffortReduction({effort}:{effort?:Effort|null}) {
   const rows:[string,keyof Effort['a']][]=[[t('Edits that remain','Осталось правок'),'edits'],
     [t('of them, errors with quotations','из них ошибки с цитатами'),'defects'],
     [t('of them, missing verses and hadith','из них пропущенные аяты и хадисы'),'missing_quotations'],
+    ...(effort.version==='effort-v2'?[[t('of them, missing or wrong references','из них пропущенные или неверные ссылки'),'references']] as [string,keyof Effort['a']][]:[]),
     [t('Acceptance of Kitabs edits, minutes','Принятие правок Kitabs, минуты'),'review_minutes'],
     [t('Editor time, minutes','Время редактора, минуты'),'minutes']];
   const percent=effort.reduction_percent,a=effort.a.minutes,b=effort.b.minutes;

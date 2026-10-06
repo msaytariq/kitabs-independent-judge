@@ -104,3 +104,13 @@ def test_view_compares_the_second_judge_on_the_same_criteria():
     assert view['second_judge']['first']['model'] == 'google/gemini-3.8-flash'
     assert view['second_judge']['second']['totals'] == {'a': 38, 'b': 75}
     assert _view(data)['second_judge'] is None
+
+
+def test_view_adds_the_takhrij_row_from_the_saved_reference_check():
+    from test_rubric_report import rubric_record
+    takhrij = {'version': 'takhrij-v1', 'total': 4, 'a': {'delivered': 0, 'wrong': 2, 'items': []},
+               'b': {'delivered': 4, 'wrong': 0, 'items': []}}
+    view = _view(rubric_record() | {'hadith': {'status': 'checked', 'takhrij': takhrij}})
+    assert view['takhrij'] == takhrij
+    assert [r['key'] for r in view['jury']['rows']][-1] == 'takhrij'
+    assert view['effort_reduction']['a']['references'] == 6

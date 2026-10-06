@@ -76,3 +76,16 @@ def label_check(source: str, end: int, located: dict | None) -> dict:
     first = int(re.split(r'[-–]', verses)[0])
     same = surah == int(chapter) and number == first
     return {'label': label, 'label_status': 'label_matches' if same else 'label_differs'}
+
+
+def verse_quoted(index: QuranIndex, source: str):
+    """quoted(surah, ayah): does the source give at least four words in a row of this verse?"""
+    texts = {(v['chapter'], v['verse']): folded(v['text']).split() for v in index.refs}
+    padded = ' ' + folded(source) + ' '
+
+    def quoted(surah: int, ayah: int) -> bool:
+        words = texts.get((surah, ayah)) or []
+        size = min(4, len(words))
+        return bool(words) and any(' ' + ' '.join(words[i:i + size]) + ' ' in padded
+                                   for i in range(len(words) - size + 1))
+    return quoted

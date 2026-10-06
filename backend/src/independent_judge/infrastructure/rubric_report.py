@@ -94,6 +94,10 @@ def rubric_html(view: dict) -> str:
             source = indexed[row['key']]
             rows += (f'<tr><th>{CRITERIA.get(row["key"], escape(row["key"]))}</th>'
                      f'{_cell(source["a"], row["a"])}{_cell(source["b"], row["b"])}</tr>')
+        elif row['kind'] == 'takhrij':
+            rows += ('<tr><th>Тахридж: ссылки на аяты и сборники хадисов</th>' + ''.join(
+                f'<td><b>{row[s]}</b><br>верных {row["delivered"][s]} из {row["total"]}, неверных {row["wrong"][s]}</td>'
+                for s in ('a', 'b')) + '</tr>')
         else:
             rows += (f'<tr><th>{COVERAGE_LABELS[row["key"]]}</th>' + ''.join(
                 f'<td><b>{row[s]}</b><br>{row["found"][s]} из {row["total"]}</td>' for s in ('a', 'b')) + '</tr>')

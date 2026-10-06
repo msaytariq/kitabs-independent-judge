@@ -7,19 +7,22 @@ import math
 from independent_judge.domain.paired_rubric import RUBRIC
 
 VERSION = 'points-v1'
-EFFORT_VERSION = 'effort-v1'
+EFFORT_VERSION = 'effort-v2'
 MINUTES_PER_EDIT = 3
 COVERAGE_KEYS = ('quran', 'hadith')
 LABELS = {
     'en': {'accuracy': 'accuracy', 'completeness': 'completeness', 'terminology': 'terminology',
            'readability': 'readability', 'seamlessness': 'assembly integrity',
-           'apparatus': 'scholarly apparatus', 'quran': 'Quran verses', 'hadith': 'hadith'},
+           'apparatus': 'scholarly apparatus', 'quran': 'Quran verses', 'hadith': 'hadith',
+           'takhrij': 'takhrij references'},
     'ru': {'accuracy': 'точность', 'completeness': 'полнота', 'terminology': 'терминология',
            'readability': 'читаемость', 'seamlessness': 'целостность сборки',
-           'apparatus': 'научный аппарат', 'quran': 'аяты Корана', 'hadith': 'хадисы'},
+           'apparatus': 'научный аппарат', 'quran': 'аяты Корана', 'hadith': 'хадисы',
+           'takhrij': 'тахридж'},
     'ar': {'accuracy': 'الدقة', 'completeness': 'الاكتمال', 'terminology': 'المصطلحات',
            'readability': 'سهولة القراءة', 'seamlessness': 'سلامة التجميع',
-           'apparatus': 'الجهاز العلمي', 'quran': 'آيات القرآن', 'hadith': 'الأحاديث'},
+           'apparatus': 'الجهاز العلمي', 'quran': 'آيات القرآن', 'hadith': 'الأحاديث',
+           'takhrij': 'التخريج'},
 }
 PHRASES = {
     'en': {'tie': 'The translations are equal: {a} points each.',
@@ -47,7 +50,7 @@ def _percent(found: int, total: int) -> int:
     return _round(100 * found / total)
 
 
-def jury_table(rubric: dict | None, coverage: dict | None) -> dict | None:
+def jury_table(rubric: dict | None, coverage: dict | None, takhrij: dict | None = None) -> dict | None:
     if not rubric:
         return None
     indexed = {row['criterion']: row for row in rubric['criteria']}
@@ -63,6 +66,13 @@ def jury_table(rubric: dict | None, coverage: dict | None) -> dict | None:
             rows.append({'key': key, 'kind': 'coverage', 'a': _percent(counts['a'], counts['total']),
                          'b': _percent(counts['b'], counts['total']),
                          'found': {'a': counts['a'], 'b': counts['b']}, 'total': counts['total']})
+    if takhrij and takhrij.get('total'):
+        # A wrong reference cancels a delivered one: a reader cannot tell which of them to trust.
+        rows.append({'key': 'takhrij', 'kind': 'takhrij',
+                     **{s: _percent(max(0, takhrij[s]['delivered'] - takhrij[s]['wrong']), takhrij['total'])
+                        for s in ('a', 'b')},
+                     'delivered': {s: takhrij[s]['delivered'] for s in ('a', 'b')},
+                     'wrong': {s: takhrij[s]['wrong'] for s in ('a', 'b')}, 'total': takhrij['total']})
     # The total compares like with like: only rows with a value for both sides.
     both = [r for r in rows if r['a'] is not None and r['b'] is not None]
     totals = {s: _round(sum(r[s] for r in both) / len(both)) if both else None for s in ('a', 'b')}
@@ -72,7 +82,8 @@ def jury_table(rubric: dict | None, coverage: dict | None) -> dict | None:
     return {'version': VERSION, 'rows': rows, 'totals': totals, 'winner': winner}
 
 
-def effort_reduction(rubric: dict | None, coverage: dict | None, processing: dict | None) -> dict | None:
+def effort_reduction(rubric: dict | None, coverage: dict | None, processing: dict | None,
+                     takhrij: dict | None = None) -> dict | None:
     """Editing time that remains to reach the same standard, with the assumptions stated."""
     if not rubric:
         return None
@@ -83,8 +94,10 @@ def effort_reduction(rubric: dict | None, coverage: dict | None, processing: dic
         measured = ((processing or {}).get('sides') or {}).get(side) or {}
         review_seconds = measured.get('simulated_seconds') or 0
         review = _round(review_seconds / 60)
-        edits = defects + missing
-        sides[side] = {'edits': edits, 'defects': defects, 'missing_quotations': missing,
+        # Each reference that is missing or wrong is one edit: the editor adds or corrects it.
+        references = (takhrij['total'] - takhrij[side]['delivered'] + takhrij[side]['wrong']) if takhrij else 0
+        edits = defects + missing + references
+        sides[side] = {'edits': edits, 'defects': defects, 'missing_quotations': missing, 'references': references,
                        'review_minutes': review, 'minutes': _round(edits * MINUTES_PER_EDIT + review_seconds / 60)}
     a, b = sides['a']['minutes'], sides['b']['minutes']
     return sides | {'reduction_percent': _round(100 * (1 - b / a)) if a else None,

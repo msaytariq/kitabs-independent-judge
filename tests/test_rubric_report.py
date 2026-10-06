@@ -127,3 +127,12 @@ def test_html_export_shows_the_second_judge():
     html = comparison_html(_view(data))
     assert 'Второй судья' in html and 'spacexai/grok-4.1-fast-reasoning' in html
     assert 'Победитель совпал: B' in html
+
+
+def test_report_shows_the_takhrij_row():
+    from independent_judge.application.comparison_view import _view
+    from independent_judge.infrastructure.rubric_report import rubric_html
+    takhrij = {'version': 'takhrij-v1', 'total': 4, 'a': {'delivered': 1, 'wrong': 2, 'items': []},
+               'b': {'delivered': 4, 'wrong': 0, 'items': []}}
+    html = rubric_html(_view(rubric_record() | {'hadith': {'status': 'checked', 'takhrij': takhrij}}))
+    assert 'Тахридж' in html and 'верных 1 из 4, неверных 2' in html
