@@ -21,20 +21,23 @@ test('rubric table shows points 0-100 in every cell, a total, a winner and a leg
   const summary={en:['Translation B is better: 81 against 29 points.','B is better in: accuracy (+50).'],
     ru:['Перевод B лучше: 81 против 29 баллов.','B лучше в: точность (+50).']};
   const ru=show('RubricTable',{result,jury,summary});
-  assert.ok(ru.includes('Лучше перевод B'));
+  assert.ok(ru.includes('>Оценки<') && !ru.includes('Лучше перевод B'));
   assert.ok(ru.includes('>25<') && ru.includes('>75<') && ru.includes('уровень 2 из 5'));
   assert.ok(ru.includes('Итог, 0–100') && ru.includes('>29<') && ru.includes('>81<'));
   assert.ok(ru.includes('Аяты Корана в переводе') && ru.includes('0 из 17') && ru.includes('17 из 17'));
   assert.ok(ru.includes('Хадисы в переводе') && ru.includes('3 из 8'));
-  assert.ok(ru.includes('Перевод B лучше: 81 против 29 баллов.'));
+  assert.ok(!ru.includes('Перевод B лучше: 81 против 29 баллов.'));
   assert.ok(ru.includes('100 — замечаний нет'));
   assert.ok(ru.includes('Ошибки с цитатами: A — 3; B — 0'));
   assert.ok(ru.includes('المصدر') && ru.includes('Почему так'));
   for(const word of ['Неустойчиво','Не оценено','Проходы','Unstable','/ 5']) assert.ok(!ru.includes(word));
   assert.ok(!ru.includes('<details open'));
   const en=show('RubricTable',{result,jury:{...jury,winner:'tie',totals:{a:60,b:60}},summary},'en');
-  assert.ok(en.includes('The translations are equal') && en.includes('Total, 0–100') && en.includes('level 2 of 5'));
-  assert.ok(en.includes('0 of 17') && en.includes('100 — no defects') && en.includes('Translation B is better: 81 against 29 points.'));
+  assert.ok(en.includes('>Scores<') && en.includes('Total, 0–100') && en.includes('level 2 of 5'));
+  assert.ok(en.includes('0 of 17') && en.includes('100 — no defects'));
+  // The winner and the summary lines are in the verdict card at the top of the result.
+  const card=show('VerdictCard',{jury:{...jury,winner:'tie',totals:{a:60,b:60}},summary},'en');
+  assert.ok(card.includes('The translations are equal') && card.includes('Translation B is better: 81 against 29 points.'));
 });
 test('remaining editing work shows edits, minutes, saving and the assumption',()=>{
   const effort={version:'effort-v1',minutes_per_edit:3,reduction_percent:81,

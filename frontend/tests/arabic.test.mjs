@@ -33,7 +33,9 @@ test('the Arabic table shows Arabic labels and the Arabic summary',()=>{
   const result={version:'rubric-v1',winner:'b',totals:{a:2,b:4},unique_defects:{a:1,b:0},criteria:[{criterion:'accuracy',a:side(2),b:side(4)}]};
   const jury={version:'points-v1',winner:'b',totals:{a:25,b:75},rows:[{key:'accuracy',kind:'criterion',a:25,b:75,level:{a:2,b:4}}]};
   const summary={en:['Translation B is better: 75 against 25 points.'],ru:['Перевод B лучше'],ar:['الترجمة B أفضل: 75 مقابل 25 نقطة.']};
-  const html=render(React.createElement(JudgeLocale,{initial:'ar'},React.createElement(RubricTable,{result,jury,summary})));
-  assert.ok(html.includes('الترجمة B أفضل') && html.includes('الدقة') && html.includes('المستوى 2 من 5'));
-  assert.ok(html.includes('الترجمة B أفضل: 75 مقابل 25 نقطة.') && !html.includes('Перевод'));
+  const html=render(React.createElement(JudgeLocale,{initial:'ar'},React.createElement(RubricTable,{result,jury})));
+  assert.ok(html.includes('الدقة') && html.includes('المستوى 2 من 5'));
+  const {VerdictCard}=require('../src/features/comparison/VerdictCard.tsx');
+  const card=render(React.createElement(JudgeLocale,{initial:'ar'},React.createElement(VerdictCard,{jury,summary})));
+  assert.ok(card.includes('الترجمة B أفضل') && card.includes('الترجمة B أفضل: 75 مقابل 25 نقطة.') && !card.includes('Перевод'));
 });

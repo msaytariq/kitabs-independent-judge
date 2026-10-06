@@ -265,6 +265,17 @@ export const AR: Record<string, string> = {
   'terminology': 'المصطلحات',
   'tie': 'تعادل',
   'unresolved reserve': 'حجز غير مسوًّى',
+  'Independent Judge': 'المحكِّم المستقل',
+  'Result sections': 'أقسام النتيجة',
+  'Result': 'النتيجة',
+  'Scores': 'الدرجات',
+  'Errors': 'الأخطاء',
+  'Sources': 'المصادر',
+  'Edition': 'الطبعة',
+  'Method': 'المنهجية',
+  'How to read the table': 'كيف يُقرأ الجدول',
+  'Critical errors': 'الأخطاء الجسيمة',
+  'Second judge': 'المحكِّم الثاني',
 };
 
 // Texts with values: the English pattern and its Arabic form; {0}, {1} keep their order.

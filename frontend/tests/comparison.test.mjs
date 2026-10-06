@@ -19,8 +19,8 @@ test('missing assessment never displays as zero errors', () => {
   assert.equal(countLabel(0), '0');
   assert.equal(countLabel(4), '4');
 });
-test('reload preserves example tab while a fresh visit starts with uploads',()=>{
+test('a fresh visit and a reload open the example; own materials open by their scope link',()=>{
   assert.equal(initialMode('#example=h-01-v2'),'example');
   assert.equal(initialMode('#scope=abc123'),'own');
-  assert.equal(initialMode(''),'own');
+  assert.equal(initialMode(''),'example');
 });
