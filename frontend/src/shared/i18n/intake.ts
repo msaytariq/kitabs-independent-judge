@@ -36,6 +36,11 @@ const englishErrors:Record<string,string>={
   network:'The local server is unavailable. Your materials remain on screen.',
   polling:'Cannot read the run status. Work continues on the server.',
   references:'Cannot check sources now. Try again later.',
+  pipeline_auth_required:'No Kitabs.ai account is connected for launches. The operator connects it in the admin panel.',
+  pipeline_disabled:'The operator has not enabled launches on Kitabs.ai. You can upload a completed B.',
+  pipeline_limit_reached:'All demonstration launches are used. You can upload a completed B.',
+  language_mismatch:'Autopilot currently translates from Arabic to English only.',
+  pipeline_unavailable:'The server did not answer. Reload the page: if a launch was created, its status appears again.',
 };
 Object.assign(intakeErrors,{
   source_page_limit:'Загрузите не более 10 физических страниц оригинала PDF. Ничего не обрезано.',
@@ -46,6 +51,11 @@ Object.assign(intakeErrors,{
   network:'Локальный сервер недоступен. Материалы на экране сохранены.',
   polling:'Не удалось получить состояние. Запуск продолжается на сервере.',
   references:'Не удалось проверить источники. Повторите позднее.',
+  pipeline_auth_required:'Счёт Kitabs.ai для запусков не подключён. Оператор подключает его в админ-панели.',
+  pipeline_disabled:'Оператор не включил запуск на Kitabs.ai. Можно загрузить готовый B.',
+  pipeline_limit_reached:'Все запуски для демонстрации использованы. Можно загрузить готовый B.',
+  language_mismatch:'Автопилот сейчас переводит только с арабского на английский.',
+  pipeline_unavailable:'Сервер не ответил. Обновите страницу: если запуск был создан, его состояние появится снова.',
 });
 export function intakeError(code:string,message:string,locale:string):string{
   if(locale==='ru')return intakeErrors[code]||message||'Не удалось выполнить действие.';

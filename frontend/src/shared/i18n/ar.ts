@@ -2,6 +2,13 @@
 // A missing key falls back to English; tests/arabic.test.mjs keeps the table complete.
 export const AR: Record<string, string> = {
   "Hadith takhrij check": "فحص تخريج الأحاديث",
+  "Uploading the source": "تحميل الأصل",
+  "Autopilot is running. You can close this page.": "الطيار الآلي يعمل. يمكنك إغلاق هذه الصفحة.",
+  "The Kitabs.ai pipeline translates the source: translator, audit, editor, proofreader, apparatus and assembly. Edits are accepted automatically, and B appears here.": "يترجم خط معالجة Kitabs.ai الأصل: المترجم والتدقيق والمحرِّر والمصحِّح والجهاز العلمي والتجميع. تُقبَل التعديلات آليًّا، وتظهر B هنا.",
+  "Start the autopilot on Kitabs.ai": "تشغيل الطيار الآلي على Kitabs.ai",
+  "First add the Arabic source.": "أضف الأصل العربي أولًا.",
+  "Kitabs.ai autopilot": "الطيار الآلي Kitabs.ai",
+  "Start the autopilot and wait for B, or select another input for B.": "شغِّل الطيار الآلي وانتظر B، أو اختر طريقة إدخال أخرى لـ B.",
   "Seams: paragraph joins without a broken sentence": "الوصلات: فقرات متتالية بلا جملة مقطوعة",
   "The seams row: the code reads each join of two prose paragraphs, where also the fragments of a long text join. A join is broken when the first paragraph does not end a sentence or the next one starts in lowercase. No model takes part.": "صف الوصلات: يفحص البرنامج كل وصلة بين فقرتين من النص، وهناك أيضًا تتصل أجزاء النص الطويل. تكون الوصلة مقطوعة إذا لم تنتهِ الفقرة بجملة تامة أو بدأت التالية بحرف صغير. لا يشارك أي نموذج.",
   "Editing: the part of the editing work that is done": "التحرير: نسبة العمل التحريري المنجز",

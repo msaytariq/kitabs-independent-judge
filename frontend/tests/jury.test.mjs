@@ -43,9 +43,12 @@ test('effort labels hypothesis and keeps unknown prior work separate',()=>{
 test('input parity and embedded KITABS launch appear without an external handoff',()=>{
   const html=component('OwnMaterials',{draft:null,busy:false,intake:()=>{},prepare:()=>{},clearDraft:()=>{}});
   assert.ok(html.includes('URL'));
-  assert.ok(html.includes('Process B on Kitabs.ai') && html.includes('Start processing on Kitabs.ai'));
+  // B offers the Kitabs.ai autopilot as its first input choice, inside the B column.
+  assert.ok(html.includes('<option value="kitabs" selected=""') || html.includes('value="kitabs"'));
+  assert.ok(html.includes('Kitabs.ai autopilot') && html.includes('Start the autopilot on Kitabs.ai'));
+  assert.ok(html.indexOf('Start the autopilot on Kitabs.ai') > html.indexOf('Text B'));
   assert.ok(!html.includes('https://app.kitabs.ai/workspace'));
-  assert.ok(html.includes('Autopilot'));
+  assert.ok(html.includes('autopilot'));
   assert.ok(html.includes('18,000'));
   assert.ok(!html.includes('minutes'));
 });

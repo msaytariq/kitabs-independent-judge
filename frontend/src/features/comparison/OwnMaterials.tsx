@@ -12,6 +12,7 @@ export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
   const {t,locale}=useJudgeLocale();
   const [profile,setProfile]=useState('islamic-scholarly'),[confirmed,setConfirmed]=useState(false);
   const [methods,setMethods]=useState<Record<Role,InputMethod>>({source:'file',a:'file',b:'file'});
+  const [bKitabs,setBKitabs]=useState(true);  // B comes from the Kitabs.ai autopilot until the jury selects another input
   const [inputs,setInputs]=useState<Inputs>({source:'',a:'',b:'',source_language:'ar',target_language:'en'});
   const [files,setFiles]=useState<Partial<Record<Role,File>>>({});
   const [localError,setLocalError]=useState('');
@@ -27,14 +28,16 @@ export function OwnMaterials({draft,busy,intake,prepare,clearDraft}:Props) {
   return <section className="panel own-materials"><h2>{t('One source. Two translations.','Один оригинал. Два перевода.')}</h2>
     <p>{t('Up to 10 physical PDF pages and 18,000 source characters. Text and DOCX use 1,800-character page units. Nothing is truncated.','До 10 физических страниц PDF и 18 000 знаков оригинала. Для текста и DOCX — условные страницы по 1800 знаков. Ничего не обрезается.')}</p>
     <form onSubmit={e=>{e.preventDefault();setLocalError('');setConfirmed(false);
+      if(bKitabs){setLocalError(t('Start the autopilot and wait for B, or select another input for B.','Запустите автопилот и дождитесь B или выберите для B другой способ ввода.'));return;}
       if((['source','a','b'] as const).some(r=>methods[r]==='file'&&!files[r])){setLocalError(t('Choose a file for each file input.','Выберите файл для каждого файлового поля.'));return;}
       void intake(inputs,files,methods,pipelineRequestId);}}>
       <div className="material-grid">{(['source','a','b'] as const).map(role=><MaterialInput key={role} role={role} busy={busy}
-        method={methods[role]} value={inputs[role]} setMethod={v=>setMethods({...methods,[role]:v})}
-        setValue={v=>setInputs({...inputs,[role]:v})} setFile={v=>setFiles({...files,[role]:v})}/>)}</div>
-      <KitabsAction busy={busy} source={{method:methods.source,value:inputs.source,file:files.source,source_language:inputs.source_language,target_language:inputs.target_language}}
-        onReady={job=>{if(job.result){setInputs(current=>({...current,source:job.source,b:job.result!.text}));
-          setMethods(current=>({...current,source:'text',b:'text'}));setPipelineRequestId(job.id);}}}/>
+        method={role==='b'&&bKitabs?'kitabs':methods[role]} value={inputs[role]}
+        setMethod={v=>{if(role==='b')setBKitabs(v==='kitabs');if(v!=='kitabs')setMethods({...methods,[role]:v});}}
+        setValue={v=>setInputs({...inputs,[role]:v})} setFile={v=>setFiles({...files,[role]:v})}
+        kitabs={role==='b'?<KitabsAction busy={busy} source={{method:methods.source,value:inputs.source,file:files.source,source_language:inputs.source_language,target_language:inputs.target_language}}
+          onReady={job=>{if(job.result){setInputs(current=>({...current,source:job.source,b:job.result!.text}));
+            setMethods(current=>({...current,source:'text',b:'text'}));setBKitabs(false);setPipelineRequestId(job.id);}}}/>:undefined}/>)}</div>
       <details><summary>{t('Languages and review profile','Языки и профиль проверки')}</summary><div className="row">
         <label>{t('Source language','Язык оригинала')}<input required value={inputs.source_language} onChange={e=>setInputs({...inputs,source_language:e.target.value})}/></label>
         <label>{t('Translation language','Язык переводов')}<input required value={inputs.target_language} onChange={e=>setInputs({...inputs,target_language:e.target.value})}/></label></div>
